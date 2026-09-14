@@ -14,7 +14,7 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #111;
+            background-color: #333;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -24,7 +24,7 @@
             width: 100vw;
             height: 100vh;
             height: 100dvh;
-            background-color: #000;
+            background-color: #222;
             overflow: hidden;
             display: flex;
             justify-content: center;
@@ -40,203 +40,35 @@
         .avatar-img.active {
             display: block;
         }
+        /* 操作パネルを目立つように修正 */
         #control-panel {
             position: absolute;
-            bottom: 20px;
+            bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            padding: 10px 15px;
-            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            padding: 12px 18px;
+            border-radius: 30px;
             display: flex;
-            gap: 10px;
+            gap: 12px;
             z-index: 10;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         button, label {
             color: #fff;
-            background: #444;
-            padding: 8px 14px;
+            background: #ff69b4; /* 可愛いピンク色に変更！ */
+            padding: 10px 16px;
             border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
-            font-family: sans-serif;
-        }
-        button:active, label:active {
-            background: #666;
-        }
-        input[type="file"] {
-            display: none;
-        }
-    </style>
-</head>
-<body>
-
-    <div id="stage">
-        <!-- アバター用画像 (最大3枚) -->
-        <img id="avatar-normal" class="avatar-img active" alt="Normal">
-        <img id="avatar-talking" class="avatar-img" alt="Talking">
-        <img id="avatar-extra" class="avatar-img" alt="Extra">
-
-        <!-- 操作パネル -->
-        <div id="control-panel">
-            <label>画像設定 <input type="file" id="image-loader" accept="image/*" multiple></label>
-            <button id="mic-btn">マイク開始</button>
-            <button id="reset-btn">リセット</button>
-        </div>
-    </div>
-
-    <script>
-        const avatarNormal = document.getElementById('avatar-normal');
-        const avatarTalking = document.getElementById('avatar-talking');
-        const avatarExtra = document.getElementById('avatar-extra');
-        const imageLoader = document.getElementById('image-loader');
-        const micBtn = document.getElementById('mic-btn');
-        const resetBtn = document.getElementById('reset-btn');
-
-        let images = [];
-        let audioContext, analyser, microphone, javascriptNode;
-        let isMicActive = false;
-
-        // 画像読み込み処理
-        imageLoader.addEventListener('change', (e) => {
-            const files = e.target.files;
-            if (files.length === 0) return;
-
-            images = [];
-            let loadedCount = 0;
-            const maxFiles = Math.min(files.length, 3);
-
-            for (let i = 0; i < maxFiles; i++) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    images[i] = event.target.result;
-                    loadedCount++;
-                    if (loadedCount === maxFiles) {
-                        updateAvatarDisplay();
-                    }
-                };
-                reader.readAsDataURL(files[i]);
-            }
-        });
-
-        function updateAvatarDisplay() {
-            avatarNormal.classList.remove('active');
-            avatarTalking.classList.remove('active');
-            avatarExtra.classList.remove('active');
-
-            if (images.length > 0 && images[0]) {
-                avatarNormal.src = images[0];
-                avatarNormal.classList.add('active');
-            }
-            if (images.length > 1 && images[1]) {
-                avatarTalking.src = images[1];
-            }
-            if (images.length > 2 && images[2]) {
-                avatarExtra.src = images[2];
-            }
-        }
-
-        // リセットボタンの処理
-        resetBtn.addEventListener('click', () => {
-            if (isMicActive && audioContext) {
-                audioContext.close();
-                isMicActive = false;
-                micBtn.textContent = 'マイク開始';
-                micBtn.style.background = '#444';
-            }
-            images = [];
-            imageLoader.value = '';
-            avatarNormal.src = '';
-            avatarTalking.src = '';
-            avatarExtra.src = '';
-            avatarNormal.classList.remove('active');
-            avatarTalking.classList.remove('active');
-            avatarExtra.classList.remove('active');
-        });
-
-        // マイク音量解析と口パク切り替え
-        micBtn.addEventListener('click', async () => {
-            if (!isMicActive) {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    analyser = audioContext.createAnalyser();
-                    microphone = audioContext.createMediaStreamSource(stream);
-                    javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
-
-                    analyser.smoothingTimeConstantお待たせしました！CSSの修正とリセット機能、そして画面いっぱいに綺麗に表示されるようにすべてをまとめた完全版のコードだよ！✨
-
-以下のコードを丸ごとコピーして、GitHubの `index.html` に上書き保存してね！
-
-```html
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>PNGTuber Mobile</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body, html {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #111;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        #stage {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            height: 100dvh;
-            background-color: #000;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .avatar-img {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            display: none;
-        }
-        .avatar-img.active {
-            display: block;
-        }
-        /* 操作パネルを画面下部に固定 */
-        #control-panel {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            padding: 10px 15px;
             border-radius: 20px;
-            display: flex;
-            gap: 10px;
-            z-index: 10;
-        }
-        button, label {
-            color: #fff;
-            background: #444;
-            padding: 8px 14px;
-            border: none;
-            border-radius: 8px;
             font-size: 14px;
+            font-weight: bold;
             cursor: pointer;
             font-family: sans-serif;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
         button:active, label:active {
-            background: #666;
+            background: #ff1493;
         }
         input[type="file"] {
             display: none;
