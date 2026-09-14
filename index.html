@@ -369,7 +369,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.sourceNode = this.audioContext.createMediaStreamSource(this.stream);
                 this.analyser = this.audioContext.createAnalyser();
                 this.analyser.fftSize = 2048;
+                
+                // アナライザーに繋ぐと同時に、destination（スピーカー/イヤホン出力）にも繋ぐ！
                 this.sourceNode.connect(this.analyser);
+                this.sourceNode.connect(this.audioContext.destination); // ★ここを追加！
+
                 this.monitorLoop();
 
                 this.btnStart.disabled = true;
@@ -379,7 +383,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('エラー: ' + e);
             }
         }
-
         stopMic() {
             if (this.rafId) {
                 cancelAnimationFrame(this.rafId);
