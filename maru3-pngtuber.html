@@ -13,7 +13,7 @@
         html, body {
             width: 100%;
             height: 100%;
-            /* デフォルトをグリーンバックに変更！ */
+            /* デフォルトの背景色はグリーン（#00ff00）からスタート */
             background: #00ff00;
             overflow: hidden;
             display: flex;
@@ -26,9 +26,7 @@
             width: 100vw;
             height: 100vh;
             height: 100dvh;
-            background-color: #00ff00;
-            background-size: cover;
-            background-position: center;
+            background-color: #00ff00; /* ここもJSで連動して色が変わるよ */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -160,7 +158,8 @@
     <label>通常絵 <input type="file" id="loader-idle" accept="image/*"></label>
     <label>喋り絵 <input type="file" id="loader-active" accept="image/*"></label>
     <label>瞬き絵 <input type="file" id="loader-blink" accept="image/*"></label>
-    <label style="background: #4169e1;">背景絵 <input type="file" id="loader-bg" accept="image/*"></label>
+    <!-- 背景画像ボタンを「背景色切り替えボタン」に変更！ -->
+    <button id="btnBgColor" style="background: #008000;">背景: グリーン</button>
     <div class="setting-group">
       閾値:<input id="threshold" type="range" min="0.01" max="0.5" step="0.01" value="0.04">
     </div>
@@ -175,11 +174,11 @@ document.addEventListener('DOMContentLoaded', () => {
         btnStart = document.getElementById('btnStart');
         btnStop = document.getElementById('btnStop');
         btnReset = document.getElementById('btnReset');
+        btnBgColor = document.getElementById('btnBgColor');
         
         loaderIdle = document.getElementById('loader-idle');
         loaderActive = document.getElementById('loader-active');
         loaderBlink = document.getElementById('loader-blink');
-        loaderBg = document.getElementById('loader-bg');
 
         stage = document.getElementById('stage');
         imgIdle = document.getElementById('img-idle');
@@ -205,17 +204,25 @@ document.addEventListener('DOMContentLoaded', () => {
         bounceHeight = 20;
         maxTiltDegree = 3;
 
+        // 背景色のリスト（カラーコードとボタンに表示するテキスト）
+        bgColors = [
+            { name: 'グリーン', color: '#00ff00', btnColor: '#008000' },
+            { name: 'ブルー',   color: '#0000ff', btnColor: '#0000cc' },
+            { name: 'マゼンダ', color: '#ff00ff', btnColor: '#cc00cc' }
+        ];
+        currentBgIndex = 0;
+
         constructor() {
             this.btnStart.addEventListener('click', () => this.startMic());
             this.btnStop.addEventListener('click', () => this.stopMic());
             this.btnReset.addEventListener('click', () => this.resetState());
+            this.btnBgColor.addEventListener('click', () => this.cycleBgColor());
             this.thresholdInput.addEventListener('input', () => this.updateThresholdLine());
 
             // 画像読み込みイベント
             this.loaderIdle.addEventListener('change', (e) => this.loadImage(e, 'IDLE'));
             this.loaderActive.addEventListener('change', (e) => this.loadImage(e, 'ACTIVE'));
             this.loaderBlink.addEventListener('change', (e) => this.loadImage(e, 'BLINK'));
-            this.loaderBg.addEventListener('change', (e) => this.loadImage(e, 'BG'));
 
             // 画面タップでUIの表示/非表示を切り替え
             this.stage.addEventListener('click', (e) => {
@@ -227,6 +234,17 @@ document.addEventListener('DOMContentLoaded', () => {
             this.scheduleNextBlink();
             this.updateThresholdLine();
             this.updateAvatarAppearance(false, performance.now());
+        }
+
+        // 背景色を切り替えるメソッド
+        cycleBgColor() {
+            this.currentBgIndex = (this.currentBgIndex + 1) % this.bgColors.length;
+            const current = this.bgColors[this.currentBgIndex];
+            
+            document.body.style.background = current.color;
+            this.stage.style.backgroundColor = current.color;
+            this.btnBgColor.style.background = current.btnColor;
+            this.btnBgColor.textContent = `背景: ${current.name}`;
         }
 
         loadImage(e, type) {
@@ -241,8 +259,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.imgActive.src = event.target.result;
                 } else if (type === 'BLINK') {
                     this.imgBlink.src = event.target.result;
-                } else if (type === 'BG') {
-                    this.stage.style.backgroundImage = `url(${event.target.result})`;
                 }
             };
             reader.readAsDataURL(file);
@@ -406,12 +422,18 @@ document.addEventListener('DOMContentLoaded', () => {
             this.loaderIdle.value = '';
             this.loaderActive.value = '';
             this.loaderBlink.value = '';
-            this.loaderBg.value = '';
 
             this.imgIdle.src = '';
             this.imgActive.src = '';
             this.imgBlink.src = '';
-            this.stage.style.backgroundImage = 'none';
+
+            // 背景色を初期のグリーンに戻す
+            this.currentBgIndex = 0;
+            const current = this.bgColors[0];
+            document.body.style.background = current.color;
+            this.stage.style.backgroundColor = current.color;
+            this.btnBgColor.style.background = current.btnColor;
+            this.btnBgColor.textContent = `背景: ${current.name}`;
 
             this.imgIdle.classList.remove('active');
             this.imgActive.classList.remove('active');
