@@ -36,9 +36,12 @@
         }
         img.layer {
             position: absolute;
-            width: 100%;
-            height: 100%;
+            width: 120%;  /* 120%に大きくするニャ */
+            height: 120%;
             object-fit: contain;
+            /* 大きくした分、上下左右の中心（中央揃え）にズラす */
+            left: -10%;
+            top: -10%;
             pointer-events: none;
             transition: transform 0.05s ease-out;
             transform-origin: center bottom;
