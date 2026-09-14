@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>PNGTuber Mobile</title>
     <style>
         * {
@@ -10,259 +10,393 @@
             margin: 0;
             padding: 0;
         }
-        body, html {
+        html, body {
             width: 100%;
             height: 100%;
+            background: #222;
             overflow: hidden;
-            background-color: #333;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
         }
-        #stage {
+        .stage {
             position: relative;
             width: 100vw;
             height: 100vh;
             height: 100dvh;
-            background-color: #222;
-            overflow: hidden;
+            background: rgba(0,0,0,0);
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
         }
-        .avatar-img {
+        img.layer {
             position: absolute;
             width: 100%;
             height: 100%;
-            object-fit: contain;
+            object-fit: contain; /* 比率を維持してスマホ画面いっぱいに収める */
+            pointer-events: none;
+            transition: transform 0.05s ease-out;
+            transform-origin: center bottom;
             display: none;
         }
-        .avatar-img.active {
+        img.layer.active {
             display: block;
         }
-        #control-panel {
+        
+        /* コントロール類 (スマホで見やすいように配置) */
+        .controls {
             position: absolute;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-            padding: 10px 15px;
-            border-radius: 20px;
+            width: 95vw;
+            max-width: 450px;
+            font-family: system-ui;
             display: flex;
+            gap: 6px;
+            align-items: center;
+            padding: 10px;
+            box-sizing: border-box;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 8px;
             z-index: 10;
-            max-width: 95vw;
         }
         button, label {
             color: #fff;
             background: #ff69b4;
             padding: 8px 10px;
             border: none;
-            border-radius: 15px;
+            border-radius: 8px;
             font-size: 11px;
             font-weight: bold;
             cursor: pointer;
-            font-family: sans-serif;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             text-align: center;
         }
-        button:active, label:active {
-            background: #ff1493;
+        button:disabled {
+            background: #555;
+            color: #888;
+            cursor: not-allowed;
         }
         input[type="file"] {
             display: none;
+        }
+        .setting-group {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            color: white;
+            font-size: 11px;
+        }
+        input[type="range"], input[type="number"] {
+            width: 60px;
+        }
+        
+        #meter {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80vw;
+            max-width: 300px;
+            height: 8px;
+            background: #222;
+            border-radius: 4px;
+            overflow: hidden;
+            z-index: 10;
+        }
+        #meter > div:last-child {
+            height: 100%;
+            width: 0%;
+            background: lime;
+            transition: width 0.05s ease-out;
+        }
+        #threshold-line {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: red;
+            z-index: 10;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
 
-    <div id="stage">
-        <!-- アバター用画像 -->
-        <img id="avatar-normal" class="avatar-img active" alt="Normal">
-        <img id="avatar-talking" class="avatar-img" alt="Talking">
-        <img id="avatar-blink" class="avatar-img" alt="Blink">
+  <div class="stage" id="stage">
+    <!-- 3つの画像レイヤー (通常、喋り、まばたき) -->
+    <img id="img-idle" class="layer active" alt="idle">
+    <img id="img-active" class="layer" alt="active">
+    <img id="img-blink" class="layer" alt="blink">
+  </div>
 
-        <!-- 操作パネル -->
-        <div id="control-panel">
-            <label>通常 <input type="file" id="loader-normal" accept="image/*"></label>
-            <label>喋り <input type="file" id="loader-talking" accept="image/*"></label>
-            <label>瞬き <input type="file" id="loader-blink" accept="image/*"></label>
-            <button id="mic-btn">マイク開始</button>
-            <button id="reset-btn">リセット</button>
-        </div>
+  <div id="meter">
+    <div id="threshold-line"></div>
+    <div></div>
+  </div>
+
+  <div class="controls">
+    <button id="btnStart">マイク開始</button>
+    <button id="btnStop" disabled>停止</button>
+    <button id="btnReset">リセット</button>
+    <label>通常絵 <input type="file" id="loader-idle" accept="image/*"></label>
+    <label>喋り絵 <input type="file" id="loader-active" accept="image/*"></label>
+    <label>瞬き絵 <input type="file" id="loader-blink" accept="image/*"></label>
+    <div class="setting-group">
+      閾値:<input id="threshold" type="range" min="0.01" max="0.5" step="0.01" value="0.04">
     </div>
+    <div class="setting-group">
+      保持:<input id="hold" type="number" min="100" max="5000" step="100" value="500">
+    </div>
+  </div>
 
-    <script>
-        const avatarNormal = document.getElementById('avatar-normal');
-        const avatarTalking = document.getElementById('avatar-talking');
-        const avatarBlink = document.getElementById('avatar-blink');
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    class MicMonitor {
+        btnStart = document.getElementById('btnStart');
+        btnStop = document.getElementById('btnStop');
+        btnReset = document.getElementById('btnReset');
         
-        const loaderNormal = document.getElementById('loader-normal');
-        const loaderTalking = document.getElementById('loader-talking');
-        const loaderBlink = document.getElementById('loader-blink');
-        
-        const micBtn = document.getElementById('mic-btn');
-        const resetBtn = document.getElementById('reset-btn');
+        loaderIdle = document.getElementById('loader-idle');
+        loaderActive = document.getElementById('loader-active');
+        loaderBlink = document.getElementById('loader-blink');
 
-        let audioContext, analyser, microphone, dataArray;
-        let isMicActive = false;
-        let animationId;
-        let blinkTimer = null;
-        let isBlinking = false;
+        imgIdle = document.getElementById('img-idle');
+        imgActive = document.getElementById('img-active');
+        imgBlink = document.getElementById('img-blink');
 
-        // 通常画像の読み込み
-        loaderNormal.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                avatarNormal.src = event.target.result;
-                avatarNormal.classList.add('active');
-            };
-            reader.readAsDataURL(file);
-        });
+        meterFill = document.querySelector('#meter > div:last-child');
+        thresholdLine = document.getElementById('threshold-line');
+        thresholdInput = document.getElementById('threshold');
+        holdInput = document.getElementById('hold');
 
-        // 喋り画像の読み込み
-        loaderTalking.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                avatarTalking.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
+        audioContext = null;
+        analyser = null;
+        sourceNode = null;
+        stream = null;
+        rafId = null;
+        lastTrigger = 0;
 
-        // 瞬き画像の読み込み
-        loaderBlink.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                avatarBlink.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
+        nextBlinkTime = 0;
+        isBlinking = false;
+        blinkEndTime = 0;
 
-        // リセット処理
-        resetBtn.addEventListener('click', () => {
-            loaderNormal.value = '';
-            loaderTalking.value = '';
-            loaderBlink.value = '';
-            
-            avatarNormal.src = '';
-            avatarTalking.src = '';
-            avatarBlink.src = '';
-            
-            avatarNormal.classList.remove('active');
-            avatarTalking.classList.remove('active');
-            avatarBlink.classList.remove('active');
-            
-            if (isMicActive) {
-                if (audioContext) audioContext.close();
-                isMicActive = false;
-                micBtn.textContent = "マイク開始";
-                cancelAnimationFrame(animationId);
-            }
-            stopBlinkLoop();
-        });
+        bounceHeight = 20;
+        maxTiltDegree = 3;
 
-        // ランダムまばたき制御
-        function startBlinkLoop() {
-            if (blinkTimer) return;
-            const triggerBlink = () => {
-                let isTalkingNow = avatarTalking.classList.contains('active');
-                // 瞬き画像が設定されていて、喋っていなくて、通常画像がある場合のみ
-                if (avatarBlink.getAttribute('src') && !isTalkingNow && avatarNormal.getAttribute('src')) {
-                    isBlinking = true;
-                    avatarNormal.classList.remove('active');
-                    avatarTalking.classList.remove('active');
-                    avatarBlink.classList.add('active');
-                    
-                    setTimeout(() => {
-                        isBlinking = false;
-                        avatarBlink.classList.remove('active');
-                        if (!avatarTalking.classList.contains('active') && avatarNormal.getAttribute('src')) {
-                            avatarNormal.classList.add('active');
-                        }
-                    }, 150); // 瞬きの持続時間 (0.15秒)
-                }
-                const nextTime = Math.random() * 3000 + 2000;
-                blinkTimer = setTimeout(triggerBlink, nextTime);
-            };
-            blinkTimer = setTimeout(triggerBlink, 3000);
+        constructor() {
+            this.btnStart.addEventListener('click', () => this.startMic());
+            this.btnStop.addEventListener('click', () => this.stopMic());
+            this.btnReset.addEventListener('click', () => this.resetState());
+            this.thresholdInput.addEventListener('input', () => this.updateThresholdLine());
+
+            // 画像読み込みイベント
+            this.loaderIdle.addEventListener('change', (e) => this.loadImage(e, 'IDLE'));
+            this.loaderActive.addEventListener('change', (e) => this.loadImage(e, 'ACTIVE'));
+            this.loaderBlink.addEventListener('change', (e) => this.loadImage(e, 'BLINK'));
+
+            this.scheduleNextBlink();
+            this.updateThresholdLine();
+            this.updateAvatarAppearance(false, performance.now());
         }
 
-        function stopBlinkLoop() {
-            if (blinkTimer) {
-                clearTimeout(blinkTimer);
-                blinkTimer = null;
-            }
-            isBlinking = false;
+        loadImage(e, type) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                if (type === 'IDLE') {
+                    this.imgIdle.src = event.target.result;
+                    this.imgIdle.classList.add('active');
+                } else if (type === 'ACTIVE') {
+                    this.imgActive.src = event.target.result;
+                } else if (type === 'BLINK') {
+                    this.imgBlink.src = event.target.result;
+                }
+            };
+            reader.readAsDataURL(file);
         }
 
-        // マイク音量解析と口パク切り替え
-        micBtn.addEventListener('click', async () => {
-            if (!isMicActive) {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    analyser = audioContext.createAnalyser();
-                    microphone = audioContext.createMediaStreamSource(stream);
-                    microphone.connect(analyser);
-                    analyser.fftSize = 256;
-                    const bufferLength = analyser.frequencyBinCount;
-                    dataArray = new Uint8Array(bufferLength);
-
-                    isMicActive = true;
-                    micBtn.textContent = "マイク停止";
-                    startBlinkLoop();
-                    detectAudio();
-                } catch (err) {
-                    alert("マイクの許可が必要です。");
-                }
-            } else {
-                if (audioContext) audioContext.close();
-                isMicActive = false;
-                micBtn.textContent = "マイク開始";
-                cancelAnimationFrame(animationId);
-                stopBlinkLoop();
-                avatarTalking.classList.remove('active');
-                avatarBlink.classList.remove('active');
-                if (avatarNormal.getAttribute('src')) {
-                    avatarNormal.classList.add('active');
-                }
-            }
-        });
-
-        function detectAudio() {
-            if (!isMicActive) return;
-            animationId = requestAnimationFrame(detectAudio);
-            analyser.getByteFrequencyData(dataArray);
+        rmsFromTimeDomain(buf) {
             let sum = 0;
-            for (let i = 0; i < dataArray.length; i++) {
-                sum += dataArray[i];
+            for (let i = 0; i < buf.length; i++) {
+                sum += buf[i] * buf[i];
             }
-            let average = sum / dataArray.length;
+            return Math.sqrt(sum / buf.length);
+        }
 
-            // 音量が一定以上で「喋り」絵に切り替え
-            if (average > 12) {
-                if (avatarTalking.getAttribute('src')) {
-                    avatarNormal.classList.remove('active');
-                    avatarBlink.classList.remove('active');
-                    avatarTalking.classList.add('active');
+        scheduleNextBlink() {
+            const randomSec = 2000 + Math.random() * 3000;
+            this.nextBlinkTime = performance.now() + randomSec;
+        }
+
+        updateAvatarAppearance(isSpeaking, now) {
+            // すべてのレイヤーをいったん非表示
+            this.imgIdle.classList.remove('active');
+            this.imgActive.classList.remove('active');
+            this.imgBlink.classList.remove('active');
+
+            const hasIdle = !!this.imgIdle.getAttribute('src');
+            const hasActive = !!this.imgActive.getAttribute('src');
+            const hasBlink = !!this.imgBlink.getAttribute('src');
+
+            if (isSpeaking) {
+                this.isBlinking = false;
+                const toggleInterval = 300;
+                const shouldBeActive = Math.floor(now / toggleInterval) % 2 === 0;
+
+                if (shouldBeActive && hasActive) {
+                    this.imgActive.classList.add('active');
+                } else if (hasIdle) {
+                    this.imgIdle.classList.add('active');
+                } else if (hasActive) {
+                    this.imgActive.classList.add('active');
                 }
             } else {
-                if (!isBlinking && avatarNormal.getAttribute('src')) {
-                    avatarTalking.classList.remove('active');
-                    avatarBlink.classList.remove('active');
-                    avatarNormal.classList.add('active');
+                if (!this.isBlinking && now >= this.nextBlinkTime && hasBlink) {
+                    this.isBlinking = true;
+                    this.blinkEndTime = now + 120;
+                }
+
+                if (this.isBlinking && now >= this.blinkEndTime) {
+                    this.isBlinking = false;
+                    this.scheduleNextBlink();
+                }
+
+                if (this.isBlinking && hasBlink) {
+                    this.imgBlink.classList.add('active');
+                } else if (hasIdle) {
+                    this.imgIdle.classList.add('active');
                 }
             }
         }
-    </script>
+
+        updateThresholdLine() {
+            const thresholdValue = Number(this.thresholdInput.value);
+            const posPct = Math.min(1, thresholdValue * 3) * 100;
+            this.thresholdLine.style.left = posPct + '%';
+        }
+
+        monitorLoop = () => {
+            if (!this.analyser) return;
+            const buf = new Float32Array(this.analyser.fftSize);
+            this.analyser.getFloatTimeDomainData(buf);
+
+            const level = this.rmsFromTimeDomain(buf);
+            const meterPct = Math.min(1, level * 3);
+
+            this.meterFill.style.width = (meterPct * 100) + '%';
+
+            const holdMs = Number(this.holdInput.value);
+            const threshold = Number(this.thresholdInput.value);
+            const now = performance.now();
+
+            let isSpeaking = false;
+            if (level > threshold) {
+                this.lastTrigger = now;
+                isSpeaking = true;
+            } else {
+                if (now - this.lastTrigger <= holdMs) {
+                    isSpeaking = true;
+                }
+            }
+
+            this.updateAvatarAppearance(isSpeaking, now);
+
+            const currentActiveLayer = document.querySelector('img.layer.active');
+            if (isSpeaking && currentActiveLayer) {
+                const translateY = meterPct * -this.bounceHeight;
+                const tilt = Math.sin(now / 80) * (meterPct * this.maxTiltDegree);
+                currentActiveLayer.style.transform = `translateY(${translateY}px) rotate(${tilt}deg)`;
+            } else if (currentActiveLayer) {
+                currentActiveLayer.style.transform = `translateY(0px) rotate(0deg)`;
+            }
+
+            this.rafId = requestAnimationFrame(this.monitorLoop);
+        }
+
+        async startMic() {
+            if (this.audioContext && this.audioContext.state === 'running') return;
+            try {
+                this.stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        automaticGainControl: false,
+                        noiseSuppression: false,
+                        echoCancellation: false
+                    }
+                });
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                if (this.audioContext.state === 'suspended') {
+                    await this.audioContext.resume();
+                }
+                this.sourceNode = this.audioContext.createMediaStreamSource(this.stream);
+                this.analyser = this.audioContext.createAnalyser();
+                this.analyser.fftSize = 2048;
+                this.sourceNode.connect(this.analyser);
+                this.monitorLoop();
+
+                this.btnStart.disabled = true;
+                this.btnStop.disabled = false;
+                this.btnStart.textContent = 'マイク入力中...';
+            } catch (e) {
+                alert('エラー: ' + e);
+            }
+        }
+
+        stopMic() {
+            if (this.rafId) {
+                cancelAnimationFrame(this.rafId);
+                this.rafId = null;
+            }
+            if (this.stream) {
+                this.stream.getTracks().forEach(track => track.stop());
+                this.stream = null;
+            }
+            if (this.audioContext) {
+                this.audioContext.close();
+                this.audioContext = null;
+            }
+            this.analyser = null;
+            this.sourceNode = null;
+
+            this.meterFill.style.width = '0%';
+            document.querySelectorAll('img.layer').forEach(img => {
+                img.style.transform = 'translateY(0px) rotate(0deg)';
+            });
+            this.updateAvatarAppearance(false, performance.now());
+
+            this.btnStart.disabled = false;
+            this.btnStop.disabled = true;
+            this.btnStart.textContent = 'マイク開始';
+        }
+
+        resetState() {
+            this.stopMic();
+            this.loaderIdle.value = '';
+            this.loaderActive.value = '';
+            this.loaderBlink.value = '';
+
+            this.imgIdle.src = '';
+            this.imgActive.src = '';
+            this.imgBlink.src = '';
+
+            this.imgIdle.classList.remove('active');
+            this.imgActive.classList.remove('active');
+            this.imgBlink.classList.remove('active');
+
+            this.thresholdInput.value = 0.04;
+            this.holdInput.value = 500;
+            this.updateThresholdLine();
+            this.isBlinking = false;
+            this.scheduleNextBlink();
+        }
+    }
+    new MicMonitor();
+});
+</script>
 </body>
 </html>
