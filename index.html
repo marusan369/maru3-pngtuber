@@ -86,7 +86,39 @@
         padding-left: 20px;
     }
     .steps li {
-        margin-bottom: 3px;
+        margin-bottom: 4px;
+    }
+    /* サンプル画像プレビューのスタイル */
+    .sample-preview {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed rgba(255, 255, 255, 0.2);
+        text-align: center;
+    }
+    .sample-preview p {
+        margin: 0 0 6px 0;
+        font-size: 11px;
+        color: #ff69b4;
+    }
+    .sample-images {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+    }
+    .sample-item {
+        font-size: 10px;
+        color: #aaa;
+        text-align: center;
+    }
+    .sample-item img {
+        width: 50px;
+        height: 50px;
+        object-fit: contain;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        border: 1px solid #555;
+        display: block;
+        margin-bottom: 2px;
     }
 </style>
 </head>
@@ -120,6 +152,7 @@
 本規約は、予告なく変更される場合があります。</p>
     </div>
 
+    <!-- 使い方 ＋ サンプル画像エリア -->
     <div class="steps">
         <strong>【 使い方 】</strong>
         <ol>
@@ -129,6 +162,25 @@
             <li>「マイク開始」を押して声を連動させる</li>
             <li>画面をクリックしてメニュー画面を消す</li>
         </ol>
+
+        <!-- すぐ試せるサンプル画像プレビュー -->
+        <div class="sample-preview">
+            <p><strong>💡 お試し用サンプル画像（右クリックで保存して使えます）</strong></p>
+            <div class="sample-images">
+                <div class="sample-item">
+                    <img src="sample_normal.png" alt="通常">
+                    <span>通常</span>
+                </div>
+                <div class="sample-item">
+                    <img src="sample_talk.png" alt="喋り">
+                    <span>喋り</span>
+                </div>
+                <div class="sample-item">
+                    <img src="sample_blink.png" alt="瞬き">
+                    <span>瞬き</span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
