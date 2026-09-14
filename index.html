@@ -25,13 +25,14 @@
             width: 100vw;
             height: 100vh;
             height: 100dvh;
-            background-color: #000; /* デフォルトの背景色 */
+            background-color: #000;
             background-size: cover;
             background-position: center;
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
+            cursor: pointer; /* タップできることがわかるように */
         }
         img.layer {
             position: absolute;
@@ -47,7 +48,15 @@
             display: block;
         }
         
-        /* コントロール類 */
+        /* コントロール類 & メーターのラップ用クラス (非表示切り替え用) */
+        .hideable {
+            transition: opacity 0.3s ease;
+        }
+        body.ui-hidden .hideable {
+            opacity: 0;
+            pointer-events: none;
+        }
+
         .controls {
             position: absolute;
             bottom: 20px;
@@ -136,12 +145,12 @@
     <img id="img-blink" class="layer" alt="blink">
   </div>
 
-  <div id="meter">
+  <div id="meter" class="hideable">
     <div id="threshold-line"></div>
     <div></div>
   </div>
 
-  <div class="controls">
+  <div class="controls hideable">
     <button id="btnStart">マイク開始</button>
     <button id="btnStop" disabled>停止</button>
     <button id="btnReset">リセット</button>
@@ -204,6 +213,13 @@ document.addEventListener('DOMContentLoaded', () => {
             this.loaderActive.addEventListener('change', (e) => this.loadImage(e, 'ACTIVE'));
             this.loaderBlink.addEventListener('change', (e) => this.loadImage(e, 'BLINK'));
             this.loaderBg.addEventListener('change', (e) => this.loadImage(e, 'BG'));
+
+            // 画面タップでUIの表示/非表示を切り替え（ボタン等のパーツ操作時は誤爆しないように除外）
+            this.stage.addEventListener('click', (e) => {
+                if (e.target === this.stage || e.target.classList.contains('layer')) {
+                    document.body.classList.toggle('ui-hidden');
+                }
+            });
 
             this.scheduleNextBlink();
             this.updateThresholdLine();
