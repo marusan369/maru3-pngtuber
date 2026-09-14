@@ -21,6 +21,8 @@
         border-radius: 12px;
         text-align: center;
         box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        max-width: 440px;
+        width: 90%;
     }
     h1 {
         font-size: 20px;
@@ -40,11 +42,22 @@
     button:hover {
         opacity: 0.9;
     }
-    p {
-        font-size: 13px;
-        color: #bbb;
+    .steps {
+        font-size: 12px;
+        color: #ddd;
         margin-top: 20px;
+        text-align: left;
         line-height: 1.5;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 15px;
+        border-radius: 8px;
+    }
+    .steps ol {
+        margin: 0;
+        padding-left: 20px;
+    }
+    .steps li {
+        margin-bottom: 4px;
     }
 </style>
 </head>
@@ -53,17 +66,23 @@
 <div class="container">
     <h1>PNGTuber コントロールパネル</h1>
     <button id="launchButton">アバターウィンドウを開く</button>
-    <p>
-        ※ ボタンを押すと、マイク連動アバターが専用ウィンドウで開きます。<br>
-        開いたウィンドウで「マイク開始」を押してね！
-    </p>
+    <div class="steps">
+        <strong>【 使い方 】</strong>
+        <ol>
+            <li>画像を3枚用意する（通常・喋り・瞬き）</li>
+            <li>ボタンを押してウィンドウを出し、各画像を設定する</li>
+            <li>背景ボタンで透過色を選ぶ（緑・青・マゼンダ）</li>
+            <li>「マイク開始」を押して声を連動させる</li>
+            <li>画面をクリックしてメニュー画面を消す</li>
+        </ol>
+    </div>
 </div>
 
 <script>
     // 本体のアバターファイルのファイル名（同じフォルダにあるファイル名に合わせる）
     const targetFile = 'maru3-pngtuber.html'; 
     const width = 1280;
-    const height = 720; // 必要に応じてタイトルの高さを足して微調整してね！
+    const height = 720; // 16:9配信サイズ
 
     document.getElementById('launchButton').onclick = () => {
         // 画面中央にウィンドウを配置するための計算
