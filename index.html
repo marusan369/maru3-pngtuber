@@ -40,32 +40,35 @@
         .avatar-img.active {
             display: block;
         }
-        /* 操作パネルを目立つように修正 */
+        /* 操作パネルを画面下部にスッキリ配置 */
         #control-panel {
             position: absolute;
-            bottom: 30px;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(5px);
-            padding: 12px 18px;
-            border-radius: 30px;
+            padding: 10px 15px;
+            border-radius: 20px;
             display: flex;
-            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
             z-index: 10;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            max-width: 95vw;
         }
         button, label {
             color: #fff;
-            background: #ff69b4; /* 可愛いピンク色に変更！ */
-            padding: 10px 16px;
+            background: #ff69b4;
+            padding: 8px 12px;
             border: none;
-            border-radius: 20px;
-            font-size: 14px;
+            border-radius: 15px;
+            font-size: 12px;
             font-weight: bold;
             cursor: pointer;
             font-family: sans-serif;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            text-align: center;
         }
         button:active, label:active {
             background: #ff1493;
@@ -83,9 +86,10 @@
         <img id="avatar-talking" class="avatar-img" alt="Talking">
         <img id="avatar-extra" class="avatar-img" alt="Extra">
 
-        <!-- 操作パネル -->
+        <!-- 操作パネル（個別選択式） -->
         <div id="control-panel">
-            <label>画像設定 <input type="file" id="image-loader" accept="image/*" multiple></label>
+            <label>通常絵 <input type="file" id="loader-normal" accept="image/*"></label>
+            <label>喋り絵 <input type="file" id="loader-talking" accept="image/*"></label>
             <button id="mic-btn">マイク開始</button>
             <button id="reset-btn">リセット</button>
         </div>
@@ -95,64 +99,56 @@
         const avatarNormal = document.getElementById('avatar-normal');
         const avatarTalking = document.getElementById('avatar-talking');
         const avatarExtra = document.getElementById('avatar-extra');
-        const imageLoader = document.getElementById('image-loader');
+        
+        const loaderNormal = document.getElementById('loader-normal');
+        const loaderTalking = document.getElementById('loader-talking');
+        
         const micBtn = document.getElementById('mic-btn');
         const resetBtn = document.getElementById('reset-btn');
 
-        let images = [];
+        let imageNormalSrc = '';
+        let imageTalkingSrc = '';
+        
         let audioContext, analyser, microphone, dataArray;
         let isMicActive = false;
         let animationId;
 
-        // 画像読み込み処理
-        imageLoader.addEventListener('change', (e) => {
-            const files = e.target.files;
-            if (files.length === 0) return;
-
-            images = [];
-            let loadedCount = 0;
-            const maxFiles = Math.min(files.length, 3);
-
-            for (let i = 0; i < maxFiles; i++) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    images[i] = event.target.result;
-                    loadedCount++;
-                    if (loadedCount === maxFiles) {
-                        updateAvatarDisplay();
-                    }
-                };
-                reader.readAsDataURL(files[i]);
-            }
+        // 通常画像の読み込み
+        loaderNormal.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                imageNormalSrc = event.target.result;
+                avatarNormal.src = imageNormalSrc;
+                avatarNormal.classList.add('active');
+            };
+            reader.readAsDataURL(file);
         });
 
-        function updateAvatarDisplay() {
-            avatarNormal.classList.remove('active');
-            avatarTalking.classList.remove('active');
-            avatarExtra.classList.remove('active');
-
-            if (images.length > 0 && images[0]) {
-                avatarNormal.src = images[0];
-                avatarNormal.classList.add('active');
-            }
-            if (images.length > 1 && images[1]) {
-                avatarTalking.src = images[1];
-            }
-            if (images.length > 2 && images[2]) {
-                avatarExtra.src = images[2];
-            }
-        }
+        // お話し中画像の読み込み
+        loaderTalking.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                imageTalkingSrc = event.target.result;
+                avatarTalking.src = imageTalkingSrc;
+            };
+            reader.readAsDataURL(file);
+        });
 
         // リセットボタンの処理
         resetBtn.addEventListener('click', () => {
-            images = [];
-            imageLoader.value = '';
+            imageNormalSrc = '';
+            imageTalkingSrc = '';
+            loaderNormal.value = '';
+            loaderTalking.value = '';
+            
             avatarNormal.src = '';
             avatarTalking.src = '';
-            avatarExtra.src = '';
             avatarNormal.classList.remove('active');
             avatarTalking.classList.remove('active');
-            avatarExtra.classList.remove('active');
             
             if (isMicActive) {
                 if (audioContext) audioContext.close();
@@ -186,7 +182,10 @@
                 isMicActive = false;
                 micBtn.textContent = "マイク開始";
                 cancelAnimationFrame(animationId);
-                updateAvatarDisplay();
+                if (imageNormalSrc) {
+                    avatarTalking.classList.remove('active');
+                    avatarNormal.classList.add('active');
+                }
             }
         });
 
@@ -201,12 +200,12 @@
             let average = sum / dataArray.length;
 
             if (average > 15) {
-                if (images.length > 1 && images[1]) {
+                if (imageTalkingSrc) {
                     avatarNormal.classList.remove('active');
                     avatarTalking.classList.add('active');
                 }
             } else {
-                if (images.length > 0 && images[0]) {
+                if (imageNormalSrc) {
                     avatarTalking.classList.remove('active');
                     avatarNormal.classList.add('active');
                 }
