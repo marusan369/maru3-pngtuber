@@ -1,335 +1,385 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Mic → 透過画像切替・上下左右可動＆まばたきデモ (800x800 / A-Dパターン)</title>
-<style>
-  /* 0. CSS変数でサイズ管理 */
-  :root {
-    --stage-width: 800px;
-    --stage-height: 800px;
-    --meter-height: 8px;
-  }
-
-  /* 1. ウィンドウ全体のサイズとグリーンバックの設定 */
-  html,body{
-    width: var(--stage-width);
-    margin:0;
-    background: #00FF00; /* クロマキー用グリーンバック */
-    overflow:hidden;
-  }
-  
-  .stage{
-    position:relative;
-    width: var(--stage-width); 
-    height: var(--stage-height); 
-    margin:0 auto; 
-    background: rgba(0,0,0,0.0);
-  }
-  img.layer{
-    position:absolute;
-    left:0; top:0; width:100%; height:100%;
-    object-fit:contain; /* 比率を維持して800x800内に収める */
-    pointer-events:none;
-    /* 動きを滑らかにするための設定 */
-    transition: transform 0.05s ease-out;
-    /* 回転の中心をキャラクターの足元あたりにする */
-    transform-origin: center bottom;
-  }
-  
-  /* 2. コントロール類 */
-  .controls{
-    width: var(--stage-width); 
-    margin:5px auto 0;
-    font-family:system-ui; 
-    display:flex; 
-    gap: 10px;
-    align-items: center;
-    padding: 5px 0;
-    box-sizing: border-box;
-    background: white; /* 操作しやすくするためにコントロール背景を白に */
-    flex-wrap: wrap;
-  }
-  #meter{
-    width: var(--stage-width); 
-    height: var(--meter-height);
-    background:#222; 
-    margin:0 auto;
-    border-radius:4px; 
-    overflow:hidden;
-    position:relative;
-  }
-  #meter > div:last-child{
-    height:100%; width:0%; background:lime; transition: width 0.05s ease-out;
-  }
-  #threshold-line {
-    position: absolute;
-    top: 0;
-    height: 100%;
-    width: 2px;
-    background: red;
-    z-index: 10;
-    pointer-events: none;
-    transition: left 0.1s ease-out;
-  }
-
-  .info-text {
-    width: var(--stage-width);
-    margin:6px auto; 
-    font-size:12px;
-    color:#666;
-    background: rgba(255,255,255,0.8);
-    padding: 2px;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>PNGTuber Mobile</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #stage {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            background-color: #000;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .avatar-img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+        .avatar-img.active {
+            display: block;
+        }
+        #control-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 15px;
+            border-radius: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+        button, label {
+            color: #fff;
+            background: #444;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: sans-serif;
+        }
+        button:active, label:active {
+            background: #666;
+        }
+        input[type="file"] {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-  <div class="stage" id="stage">
-    <img id="img" class="layer" src="A-1.png" alt="avatar">
-  </div>
 
-  <div class="controls">
-    <button id="btnStart">マイクを開始</button>
-    <button id="btnStop" disabled>マイク停止</button>
-    <button id="btnReset">リセット</button>
-    <button id="btnPatternToggle">パターン: A (A-1/A-2/A-3)</button> 
-    <label>閾値: <input id="threshold" type="range" min="0.01" max="0.5" step="0.01" value="0.04"></label>
-    <label>保持(ms): <input id="hold" type="number" min="100" max="5000" step="100" value="500"></label>
-  </div>
-  <div id="meter">
-    <div id="threshold-line"></div>
-    <div></div> </div>
-  
-  <div class="info-text">
-    ※ 800x800サイズ設定。各パターンの -1.png(通常), -2.png(喋り), -3.png(まばたき) の画像を用意してください。
-  </div>
+    <div id="stage">
+        <!-- アバター用画像 (最大3枚) -->
+        <img id="avatar-normal" class="avatar-img active" alt="Normal">
+        <img id="avatar-talking" class="avatar-img" alt="Talking">
+        <img id="avatar-extra" class="avatar-img" alt="Extra">
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    
-    class MicMonitor {
-      // 各パターンの画像定義（-1:通常, -2:喋り, -3:まばたき）
-      IMG_PATTERNS = {
-        A: { IDLE: 'A-1.png', ACTIVE: 'A-2.png', BLINK: 'A-3.png', NAME: 'A (A-1/A-2/A-3)' },
-        B: { IDLE: 'B-1.png', ACTIVE: 'B-2.png', BLINK: 'B-3.png', NAME: 'B (B-1/B-2/B-3)' },
-        C: { IDLE: 'C-1.png', ACTIVE: 'C-2.png', BLINK: 'C-3.png', NAME: 'C (C-1/C-2/C-3)' },
-        D: { IDLE: 'D-1.png', ACTIVE: 'D-2.png', BLINK: 'D-3.png', NAME: 'D (D-1/D-2/D-3)' }
-      };
-      
-      PATTERN_ORDER = ['A', 'B', 'C', 'D'];
-      
-      btnStart = document.getElementById('btnStart');
-      btnStop = document.getElementById('btnStop');
-      btnReset = document.getElementById('btnReset');
-      btnPatternToggle = document.getElementById('btnPatternToggle'); 
-      img = document.getElementById('img');
-      meterFill = document.querySelector('#meter > div:last-child'); 
-      thresholdLine = document.getElementById('threshold-line');
-      thresholdInput = document.getElementById('threshold');
-      holdInput = document.getElementById('hold');
+        <!-- 操作パネル -->
+        <div id="control-panel">
+            <label>画像設定 <input type="file" id="image-loader" accept="image/*" multiple></label>
+            <button id="mic-btn">マイク開始</button>
+            <button id="reset-btn">リセット</button>
+        </div>
+    </div>
 
-      audioContext = null;
-      analyser = null;
-      sourceNode = null;
-      stream = null;
-      rafId = null;
-      lastTrigger = 0;
-      currentPattern = 'A';
-      
-      // 状態管理用
-      currentState = 'IDLE'; // 'IDLE', 'ACTIVE', 'BLINK'
-      nextBlinkTime = 0;     // 次にまばたきする時刻
-      isBlinking = false;    // 現在まばたき中か
+    <script>
+        const avatarNormal = document.getElementById('avatar-normal');
+        const avatarTalking = document.getElementById('avatar-talking');
+        const avatarExtra = document.getElementById('avatar-extra');
+        const imageLoader = document.getElementById('image-loader');
+        const micBtn = document.getElementById('mic-btn');
+        const resetBtn = document.getElementById('reset-btn');
 
-      bounceHeight = 20; // 上下の揺れ幅
-      maxTiltDegree = 3; // 左右に傾く最大角度（度）
+        let images = [];
+        let audioContext, analyser, microphone, javascriptNode;
+        let isMicActive = false;
 
-      constructor() {
-        this.btnStart.addEventListener('click', () => this.startMic());
-        this.btnStop.addEventListener('click', () => this.stopMic());
-        this.btnReset.addEventListener('click', () => this.resetState());
-        this.thresholdInput.addEventListener('input', () => this.updateThresholdLine());
-        this.btnPatternToggle.addEventListener('click', () => this.togglePattern());
-        
-        this.scheduleNextBlink();
-        this.img.src = this.IMG_PATTERNS[this.currentPattern].IDLE;
-        this.updateThresholdLine();
-      }
+        // 画像読み込み処理
+        imageLoader.addEventListener('change', (e) => {
+            const files = e.target.files;
+            if (files.length === 0) return;
 
-      rmsFromTimeDomain(buf) {
-        let sum = 0;
-        for (let i = 0; i < buf.length; i++) {
-          sum += buf[i] * buf[i];
-        }
-        return Math.sqrt(sum / buf.length);
-      }
-      
-      togglePattern() {
-        const currentIndex = this.PATTERN_ORDER.indexOf(this.currentPattern);
-        const nextIndex = (currentIndex + 1) % this.PATTERN_ORDER.length;
-        this.currentPattern = this.PATTERN_ORDER[nextIndex];
-        this.btnPatternToggle.textContent = 'パターン: ' + this.IMG_PATTERNS[this.currentPattern].NAME;
-        this.updateAvatarAppearance(false, performance.now());
-      }
+            images = [];
+            let loadedCount = 0;
+            const maxFiles = Math.min(files.length, 3);
 
-      // 次にまばたきするまでの時間をランダムに設定（2秒〜5秒後）
-      scheduleNextBlink() {
-        const randomSec = 2000 + Math.random() * 3000; // 2000ms〜5000ms
-        this.nextBlinkTime = performance.now() + randomSec;
-      }
-
-      updateAvatarAppearance(isSpeaking, now) {
-        const paths = this.IMG_PATTERNS[this.currentPattern];
-
-        if (isSpeaking) {
-          // 喋っている時はまばたきをリセットして、0.3秒おきの口パク（ACTIVE / IDLE）を繰り返す
-          this.isBlinking = false;
-          const toggleInterval = 300; 
-          const shouldBeActive = Math.floor(now / toggleInterval) % 2 === 0;
-          
-          const targetSrc = shouldBeActive ? paths.ACTIVE : paths.IDLE;
-          if (this.img.src !== targetSrc) {
-            this.img.src = targetSrc;
-          }
-        } else {
-          // 喋っていない（待機中）のときのまばたき処理
-          if (!this.isBlinking && now >= this.nextBlinkTime) {
-            // まばたき開始（-3.pngを表示）
-            this.isBlinking = true;
-            this.img.src = paths.BLINK;
-            // まばたきは一瞬（約120ms）で元に戻す
-            this.blinkEndTime = now + 120;
-          }
-
-          if (this.isBlinking && now >= this.blinkEndTime) {
-            // まばたき終了、通常顔に戻す
-            this.isBlinking = false;
-            this.img.src = paths.IDLE;
-            // 次のまばたきスケジュールを再設定
-            this.scheduleNextBlink();
-          }
-
-          // まばたき中でなければ基本はIDLE
-          if (!this.isBlinking && this.img.src !== paths.IDLE) {
-            this.img.src = paths.IDLE;
-          }
-        }
-      }
-      
-      updateThresholdLine() {
-        const thresholdValue = Number(this.thresholdInput.value);
-        const posPct = Math.min(1, thresholdValue * 3) * 100;
-        this.thresholdLine.style.left = posPct + '%';
-      }
-
-      monitorLoop = () => {
-        if (!this.analyser) return;
-        const buf = new Float32Array(this.analyser.fftSize);
-        this.analyser.getFloatTimeDomainData(buf);
-        
-        const level = this.rmsFromTimeDomain(buf);
-        const meterPct = Math.min(1, level * 3); 
-        
-        this.meterFill.style.width = (meterPct * 100) + '%';
-        
-        const holdMs = Number(this.holdInput.value);
-        const threshold = Number(this.thresholdInput.value);
-        const now = performance.now();
-
-        // 喋っている判定
-        let isSpeaking = false;
-        if (level > threshold) {
-          this.lastTrigger = now;
-          isSpeaking = true;
-        } else {
-          if (now - this.lastTrigger <= holdMs) {
-            isSpeaking = true; 
-          }
-        }
-
-        // 見た目（口パクやまばたき）の更新
-        this.updateAvatarAppearance(isSpeaking, now);
-
-        // 喋っている時だけ上下＆左右の揺れを反映、静かなときは0に戻す
-        if (isSpeaking) {
-          const translateY = meterPct * -this.bounceHeight;
-          const tilt = Math.sin(now / 80) * (meterPct * this.maxTiltDegree);
-          this.img.style.transform = `translateY(${translateY}px) rotate(${tilt}deg)`;
-        } else {
-          this.img.style.transform = `translateY(0px) rotate(0deg)`;
-        }
-
-        this.rafId = requestAnimationFrame(this.monitorLoop);
-      }
-
-      async startMic() {
-        if (this.audioContext && this.audioContext.state === 'running') return;
-        try {
-          this.stream = await navigator.mediaDevices.getUserMedia({ 
-            audio: {
-              automaticGainControl: false, 
-              noiseSuppression: false,    
-              echoCancellation: false     
+            for (let i = 0; i < maxFiles; i++) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    images[i] = event.target.result;
+                    loadedCount++;
+                    if (loadedCount === maxFiles) {
+                        updateAvatarDisplay();
+                    }
+                };
+                reader.readAsDataURL(files[i]);
             }
-          });
-          this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          if (this.audioContext.state === 'suspended') {
-            await this.audioContext.resume(); 
-          }
-          this.sourceNode = this.audioContext.createMediaStreamSource(this.stream);
-          this.analyser = this.audioContext.createAnalyser();
-          this.analyser.fftSize = 2048;
-          this.sourceNode.connect(this.analyser); 
-          this.monitorLoop();
-          
-          this.btnStart.disabled = true;
-          this.btnStop.disabled = false;
-          this.btnStart.textContent = 'マイク入力中...';
-        } catch (e) {
-          alert('エラー: ' + e);
-        }
-      }
+        });
 
-      stopMic() {
-        if (this.rafId) {
-          cancelAnimationFrame(this.rafId);
-          this.rafId = null;
-        }
-        if (this.stream) {
-          this.stream.getTracks().forEach(track => track.stop());
-          this.stream = null;
-        }
-        if (this.audioContext) {
-          this.audioContext.close();
-          this.audioContext = null;
-        }
-        this.analyser = null;
-        this.sourceNode = null;
+        function updateAvatarDisplay() {
+            avatarNormal.classList.remove('active');
+            avatarTalking.classList.remove('active');
+            avatarExtra.classList.remove('active');
 
-        this.meterFill.style.width = '0%';
-        this.img.style.transform = 'translateY(0px) rotate(0deg)';
-        this.updateAvatarAppearance(false, performance.now());
+            if (images.length > 0 && images[0]) {
+                avatarNormal.src = images[0];
+                avatarNormal.classList.add('active');
+            }
+            if (images.length > 1 && images[1]) {
+                avatarTalking.src = images[1];
+            }
+            if (images.length > 2 && images[2]) {
+                avatarExtra.src = images[2];
+            }
+        }
 
-        this.btnStart.disabled = false;
-        this.btnStop.disabled = true;
-        this.btnStart.textContent = 'マイクを開始';
-      }
+        // リセットボタンの処理
+        resetBtn.addEventListener('click', () => {
+            if (isMicActive && audioContext) {
+                audioContext.close();
+                isMicActive = false;
+                micBtn.textContent = 'マイク開始';
+                micBtn.style.background = '#444';
+            }
+            images = [];
+            imageLoader.value = '';
+            avatarNormal.src = '';
+            avatarTalking.src = '';
+            avatarExtra.src = '';
+            avatarNormal.classList.remove('active');
+            avatarTalking.classList.remove('active');
+            avatarExtra.classList.remove('active');
+        });
 
-      resetState() {
-        this.stopMic();
-        this.currentPattern = 'A';
-        this.btnPatternToggle.textContent = 'パターン: ' + this.IMG_PATTERNS[this.currentPattern].NAME;
-        this.thresholdInput.value = 0.04;
-        this.holdInput.value = 500;
-        this.updateThresholdLine();
-        this.img.src = this.IMG_PATTERNS[this.currentPattern].IDLE;
-        this.isBlinking = false;
-        this.scheduleNextBlink();
-      }
-    }
-    new MicMonitor();
-});
-</script>
+        // マイク音量解析と口パク切り替え
+        micBtn.addEventListener('click', async () => {
+            if (!isMicActive) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    analyser = audioContext.createAnalyser();
+                    microphone = audioContext.createMediaStreamSource(stream);
+                    javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
+
+                    analyser.smoothingTimeConstantお待たせしました！CSSの修正とリセット機能、そして画面いっぱいに綺麗に表示されるようにすべてをまとめた完全版のコードだよ！✨
+
+以下のコードを丸ごとコピーして、GitHubの `index.html` に上書き保存してね！
+
+```html
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>PNGTuber Mobile</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #stage {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            background-color: #000;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .avatar-img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+        .avatar-img.active {
+            display: block;
+        }
+        /* 操作パネルを画面下部に固定 */
+        #control-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 15px;
+            border-radius: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+        button, label {
+            color: #fff;
+            background: #444;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: sans-serif;
+        }
+        button:active, label:active {
+            background: #666;
+        }
+        input[type="file"] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="stage">
+        <!-- アバター用画像 (最大3枚) -->
+        <img id="avatar-normal" class="avatar-img" alt="Normal">
+        <img id="avatar-talking" class="avatar-img" alt="Talking">
+        <img id="avatar-extra" class="avatar-img" alt="Extra">
+
+        <!-- 操作パネル -->
+        <div id="control-panel">
+            <label>画像設定 <input type="file" id="image-loader" accept="image/*" multiple></label>
+            <button id="mic-btn">マイク開始</button>
+            <button id="reset-btn">リセット</button>
+        </div>
+    </div>
+
+    <script>
+        const avatarNormal = document.getElementById('avatar-normal');
+        const avatarTalking = document.getElementById('avatar-talking');
+        const avatarExtra = document.getElementById('avatar-extra');
+        const imageLoader = document.getElementById('image-loader');
+        const micBtn = document.getElementById('mic-btn');
+        const resetBtn = document.getElementById('reset-btn');
+
+        let images = [];
+        let audioContext, analyser, microphone, dataArray;
+        let isMicActive = false;
+        let animationId;
+
+        // 画像読み込み処理
+        imageLoader.addEventListener('change', (e) => {
+            const files = e.target.files;
+            if (files.length === 0) return;
+
+            images = [];
+            let loadedCount = 0;
+            const maxFiles = Math.min(files.length, 3);
+
+            for (let i = 0; i < maxFiles; i++) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    images[i] = event.target.result;
+                    loadedCount++;
+                    if (loadedCount === maxFiles) {
+                        updateAvatarDisplay();
+                    }
+                };
+                reader.readAsDataURL(files[i]);
+            }
+        });
+
+        function updateAvatarDisplay() {
+            avatarNormal.classList.remove('active');
+            avatarTalking.classList.remove('active');
+            avatarExtra.classList.remove('active');
+
+            if (images.length > 0 && images[0]) {
+                avatarNormal.src = images[0];
+                avatarNormal.classList.add('active');
+            }
+            if (images.length > 1 && images[1]) {
+                avatarTalking.src = images[1];
+            }
+            if (images.length > 2 && images[2]) {
+                avatarExtra.src = images[2];
+            }
+        }
+
+        // リセットボタンの処理
+        resetBtn.addEventListener('click', () => {
+            images = [];
+            imageLoader.value = '';
+            avatarNormal.src = '';
+            avatarTalking.src = '';
+            avatarExtra.src = '';
+            avatarNormal.classList.remove('active');
+            avatarTalking.classList.remove('active');
+            avatarExtra.classList.remove('active');
+            
+            if (isMicActive) {
+                if (audioContext) audioContext.close();
+                isMicActive = false;
+                micBtn.textContent = "マイク開始";
+                cancelAnimationFrame(animationId);
+            }
+        });
+
+        // マイク音量解析と口パク切り替え
+        micBtn.addEventListener('click', async () => {
+            if (!isMicActive) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    analyser = audioContext.createAnalyser();
+                    microphone = audioContext.createMediaStreamSource(stream);
+                    microphone.connect(analyser);
+                    analyser.fftSize = 256;
+                    const bufferLength = analyser.frequencyBinCount;
+                    dataArray = new Uint8Array(bufferLength);
+
+                    isMicActive = true;
+                    micBtn.textContent = "マイク停止";
+                    detectAudio();
+                } catch (err) {
+                    alert("マイクの許可が必要です。");
+                }
+            } else {
+                if (audioContext) audioContext.close();
+                isMicActive = false;
+                micBtn.textContent = "マイク開始";
+                cancelAnimationFrame(animationId);
+                updateAvatarDisplay();
+            }
+        });
+
+        function detectAudio() {
+            if (!isMicActive) return;
+            animationId = requestAnimationFrame(detectAudio);
+            analyser.getByteFrequencyData(dataArray);
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+                sum += dataArray[i];
+            }
+            let average = sum / dataArray.length;
+
+            if (average > 15) {
+                if (images.length > 1 && images[1]) {
+                    avatarNormal.classList.remove('active');
+                    avatarTalking.classList.add('active');
+                }
+            } else {
+                if (images.length > 0 && images[0]) {
+                    avatarTalking.classList.remove('active');
+                    avatarNormal.classList.add('active');
+                }
+            }
+        }
+    </script>
 </body>
 </html>
