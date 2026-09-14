@@ -217,10 +217,17 @@ document.addEventListener('DOMContentLoaded', () => {
             this.loaderBlink.addEventListener('change', (e) => this.loadImage(e, 'BLINK'));
             this.loaderBg.addEventListener('change', (e) => this.loadImage(e, 'BG'));
 
-            // 画面タップでUIの表示/非表示を切り替え（ボタン等のパーツ操作時は誤爆しないように除外）
+            // 画面タップでUIの表示/非表示を切り替え ＆ フルスクリーン化
             this.stage.addEventListener('click', (e) => {
                 if (e.target === this.stage || e.target.classList.contains('layer')) {
                     document.body.classList.toggle('ui-hidden');
+                    
+                    // Androidやスマホのブラウザでアドレスバーを隠すためのフルスクリーン要求
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen().catch(err => {
+                            // フルスクリーンに対応していない環境などのエラーは無視するニャ
+                        });
+                    }
                 }
             });
 
