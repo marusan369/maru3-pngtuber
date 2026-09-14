@@ -40,7 +40,6 @@
         .avatar-img.active {
             display: block;
         }
-        /* 操作パネルを画面下部にスッキリ配置 */
         #control-panel {
             position: absolute;
             bottom: 20px;
@@ -60,10 +59,10 @@
         button, label {
             color: #fff;
             background: #ff69b4;
-            padding: 8px 12px;
+            padding: 8px 10px;
             border: none;
             border-radius: 15px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             cursor: pointer;
             font-family: sans-serif;
@@ -81,15 +80,16 @@
 <body>
 
     <div id="stage">
-        <!-- アバター用画像 (最大3枚) -->
+        <!-- アバター用画像 (3枚: 通常、喋り、まばたき) -->
         <img id="avatar-normal" class="avatar-img" alt="Normal">
         <img id="avatar-talking" class="avatar-img" alt="Talking">
-        <img id="avatar-extra" class="avatar-img" alt="Extra">
+        <img id="avatar-blink" class="avatar-img" alt="Blink">
 
-        <!-- 操作パネル（個別選択式） -->
+        <!-- 操作パネル -->
         <div id="control-panel">
-            <label>通常絵 <input type="file" id="loader-normal" accept="image/*"></label>
-            <label>喋り絵 <input type="file" id="loader-talking" accept="image/*"></label>
+            <label>通常 <input type="file" id="loader-normal" accept="image/*"></label>
+            <label>喋り <input type="file" id="loader-talking" accept="image/*"></label>
+            <label>瞬き <input type="file" id="loader-blink" accept="image/*"></label>
             <button id="mic-btn">マイク開始</button>
             <button id="reset-btn">リセット</button>
         </div>
@@ -98,20 +98,24 @@
     <script>
         const avatarNormal = document.getElementById('avatar-normal');
         const avatarTalking = document.getElementById('avatar-talking');
-        const avatarExtra = document.getElementById('avatar-extra');
+        const avatarBlink = document.getElementById('avatar-blink');
         
         const loaderNormal = document.getElementById('loader-normal');
         const loaderTalking = document.getElementById('loader-talking');
+        const loaderBlink = document.getElementById('loader-blink');
         
         const micBtn = document.getElementById('mic-btn');
         const resetBtn = document.getElementById('reset-btn');
 
         let imageNormalSrc = '';
         let imageTalkingSrc = '';
+        let imageBlinkSrc = '';
         
         let audioContext, analyser, microphone, dataArray;
         let isMicActive = false;
         let animationId;
+        let blinkTimer = null;
+        let isBlinking = false;
 
         // 通常画像の読み込み
         loaderNormal.addEventListener('change', (e) => {
@@ -120,35 +124,62 @@
             const reader = new FileReader();
             reader.onload = (event) => {
                 imageNormalSrc = event.target.result;
-                avatarNormal.src = imageNormalSrc;
-                avatarNormal.classList.add('active');
+                updateDisplayState();
             };
             reader.readAsDataURL(file);
         });
 
-        // お話し中画像の読み込み
+        // 喋り画像の読み込み
         loaderTalking.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = (event) => {
                 imageTalkingSrc = event.target.result;
-                avatarTalking.src = imageTalkingSrc;
             };
             reader.readAsDataURL(file);
         });
 
-        // リセットボタンの処理
+        // 瞬き画像の読み込み
+        loaderBlink.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                imageBlinkSrc = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function updateDisplayState() {
+            avatarNormal.classList.remove('active');
+            avatarTalking.classList.remove('active');
+            avatarBlink.classList.remove('active');
+
+            if (imageNormalSrc) {
+                avatarNormal.src = imageNormalSrc;
+                avatarNormal.classList.add('active');
+            }
+            if (imageTalkingSrc) avatarTalking.src = imageTalkingSrc;
+            if (imageBlinkSrc) avatarBlink.src = imageBlinkSrc;
+        }
+
+        // リセット処理
         resetBtn.addEventListener('click', () => {
             imageNormalSrc = '';
             imageTalkingSrc = '';
+            imageBlinkSrc = '';
             loaderNormal.value = '';
             loaderTalking.value = '';
+            loaderBlink.value = '';
             
             avatarNormal.src = '';
             avatarTalking.src = '';
+            avatarBlink.src = '';
+            
             avatarNormal.classList.remove('active');
             avatarTalking.classList.remove('active');
+            avatarBlink.classList.remove('active');
             
             if (isMicActive) {
                 if (audioContext) audioContext.close();
@@ -156,7 +187,42 @@
                 micBtn.textContent = "マイク開始";
                 cancelAnimationFrame(animationId);
             }
+            stopBlinkLoop();
         });
+
+        // ランダムまばたき制御
+        function startBlinkLoop() {
+            if (blinkTimer) return;
+            const triggerBlink = () => {
+                // 喋っている最中は瞬きさせない
+                let isTalkingNow = avatarTalking.classList.contains('active');
+                if (imageBlinkSrc && !isTalkingNow && imageNormalSrc) {
+                    isBlinking = true;
+                    avatarNormal.classList.remove('active');
+                    avatarBlink.classList.add('active');
+                    
+                    setTimeout(() => {
+                        isBlinking = false;
+                        avatarBlink.classList.remove('active');
+                        if (!avatarTalking.classList.contains('active') && imageNormalSrc) {
+                            avatarNormal.classList.add('active');
+                        }
+                    }, 150); // 瞬きの持続時間 (0.15秒)
+                }
+                // 次の瞬きまでのランダムな時間 (2秒〜5秒おき)
+                const nextTime = Math.random() * 3000 + 2000;
+                blinkTimer = setTimeout(triggerBlink, nextTime);
+            };
+            blinkTimer = setTimeout(triggerBlink, 3000);
+        }
+
+        function stopBlinkLoop() {
+            if (blinkTimer) {
+                clearTimeout(blinkTimer);
+                blinkTimer = null;
+            }
+            isBlinking = false;
+        }
 
         // マイク音量解析と口パク切り替え
         micBtn.addEventListener('click', async () => {
@@ -173,6 +239,7 @@
 
                     isMicActive = true;
                     micBtn.textContent = "マイク停止";
+                    startBlinkLoop();
                     detectAudio();
                 } catch (err) {
                     alert("マイクの許可が必要です。");
@@ -182,10 +249,8 @@
                 isMicActive = false;
                 micBtn.textContent = "マイク開始";
                 cancelAnimationFrame(animationId);
-                if (imageNormalSrc) {
-                    avatarTalking.classList.remove('active');
-                    avatarNormal.classList.add('active');
-                }
+                stopBlinkLoop();
+                updateDisplayState();
             }
         });
 
@@ -199,13 +264,15 @@
             }
             let average = sum / dataArray.length;
 
-            if (average > 15) {
+            // 喋っている判定（閾値は必要に応じて調整してね）
+            if (average > 12) {
                 if (imageTalkingSrc) {
                     avatarNormal.classList.remove('active');
+                    avatarBlink.classList.remove('active');
                     avatarTalking.classList.add('active');
                 }
             } else {
-                if (imageNormalSrc) {
+                if (!isBlinking && imageNormalSrc) {
                     avatarTalking.classList.remove('active');
                     avatarNormal.classList.add('active');
                 }
