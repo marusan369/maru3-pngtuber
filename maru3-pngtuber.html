@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>スマホ用 透過PNGTuberデモ</title>
+<style>
+  :root {
+    --meter-height: 8px;
+  }
+
+  /* スマホの画面いっぱいにグリーンバックを表示してスクロールを禁止 */
+  html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: #00FF00; /* クロマキー用グリーンバック */
+    overflow: hidden;
+    font-family: system-ui, sans-serif;
+  }
+  
+  /* 画面中央に正方形のステージを配置（レスポンシブ対応） */
+  .stage {
+    position: relative;
+    width: 100vw;
+    height: 100vw;
+    max-width: 600px;
+    max-height: 600px;
+    margin: 0 auto;
+    background: rgba(0,0,0,0.0);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  img.layer {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    transition: transform 0.05s ease-out;
+    transform-origin: center bottom;
+  }
+  
+  /* 操作パネル（スマホでも押しやすいようにコンパクト＆整理） */
+  .controls {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 10px;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 14px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    flex: 1;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    background: #007AFF;
+    color: white;
+    cursor: pointer;
+  }
+
+  button:disabled {
+    background: #ccc;
+  }
+
+  button#btnStop {
+    background: #FF3B30;
+  }
+
+  button#btnReset {
+    background: #8E8E93;
+  }
+
+  .file-inputs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    font-size: 11px;
+  }
+
+  .file-inputs label {
+    background: #eee;
+    padding: 6px;
+    border-radius: 4px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .file-inputs input {
+    display: none;
+  }
+
+  .slider-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .slider-group label {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+  }
+
+  .slider-group input[type="range"] {
+    width: 100%;
+  }
+
+  #meter {
+    width: 100%;
+    height: var(--meter-height);
+    background: #222;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  #meter > div:last-child {
+    height: 100%;
+    width: 0%;
+    background: lime;
+    transition: width 0.05s ease-out;
+  }
+  #threshold-line {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background: red;
+    z-index: 10;
+    pointer-events: none;
+    transition: left 0.1s ease-out;
+  }
+</style>
+</head>
+<body>
+
+  <div class="stage" id="stage">
+    <img id="img" class="layer" alt="avatar">
+  </div>
+
+  <div class="controls">
+    <!-- 画像選択エリア -->
+    <div class="file-inputs">
+      <label>通常(-1)<input type="file" id="fileIdle" accept="image/*"></label>
+      <label>喋り(-2)<input type="file" id="fileActive" accept="image/*"></label>
+      <label>瞬き(-3)<input type="file" id="fileBlink" accept="image/*"></label>
+    </div>
+
+    <!-- 操作ボタン -->
+    <div class="button-group">
+      <button id="btnStart">マイク開始</button>
+      <button id="btnStop" disabled>停止</button>
+      <button id="btnReset">リセット</button>
+    </div>
+
+    <!-- 音量メーター -->
+    <div id="meter">
+      <div id="threshold-line"></div>
+      <div></div>
+    </div>
+
+    <!-- 調整スライダー -->
+    <div class="slider-group">
+      <label>閾値: <input id="threshold" type="range" min="0.01" max="0.5" step="0.01" value="0.04"></label>
+      <label>保持(ms): <input id="hold" type="number" min="100" max="2000" step="100" value="300"></label>
+    </div>
+  </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    class MobileMicMonitor {
+      img = document.getElementById('img');
+      btnStart = document.getElementById('btnStart');
+      btnStop = document.getElementById('btnStop');
+      btnReset = document.getElementById('btnReset');
+      
+      fileIdle = document.getElementById('fileIdle');
+      fileActive = document.getElementById('fileActive');
+      fileBlink = document.getElementById('fileBlink');
+
+      meterFill = document.querySelector('#meter > div:last-child');
+      thresholdLine = document.getElementById('threshold-line');
+      thresholdInput = document.getElementById('threshold');
+      holdInput = document.getElementById('hold');
+
+      audioContext = null;
+      analyser = null;
+      sourceNode = null;
+      stream = null;
+      rafId = null;
+      lastTrigger = 0;
+
+      // 画像のオブジェクトURLを保持
+      images = {
+        IDLE: null,
+        ACTIVE: null,
+        BLINK: null
+      };
+
+      currentState = 'IDLE';
+      isBlinking = false;
+      nextBlinkTime = 0;
+      blinkEndTime = 0;
+
+      bounceHeight = 15;
+      maxTiltDegree = 3;
+
+      constructor() {
+        this.btnStart.addEventListener('click', () => this.startMic());
+        this.btnStop.addEventListener('click', () => this.stopMic());
+        this.btnReset.addEventListener('click', () => this.resetState());
+        this.thresholdInput.addEventListener('input', () => this.updateThresholdLine());
+
+        // 画像選択イベントの設定
+        this.setupFileLoader(this.fileIdle, 'IDLE', '通常画像');
+        this.setupFileLoader(this.fileActive, 'ACTIVE', '喋り画像');
+        this.setupFileLoader(this.fileBlink, 'BLINK', '瞬き画像');
+
+        this.updateThresholdLine();
+        this.scheduleNextBlink();
+      }
+
+      setupFileLoader(inputElem, key, labelName) {
+        inputElem.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            if (this.images[key]) {
+              URL.revokeObjectURL(this.images[key]);
+            }
+            this.images[key] = URL.createObjectURL(file);
+            inputElem.parentElement.style.background = '#34C759'; // 選択完了で緑に
+            inputElem.parentElement.style.color = 'white';
+            inputElem.parentElement.textContent = labelName + 'OK';
+
+            // もし通常画像が選ばれたら即座に表示
+            if (key === 'IDLE' && !this.img.src) {
+              this.img.src = this.images.IDLE;
+            }
+          }
+        });
+      }
+
+      rmsFromTimeDomain(buf) {
+        let sum = 0;
+        for (let i = 0; i < buf.length; i++) {
+          sum += buf[i] * buf[i];
+        }
+        return Math.sqrt(sum / buf.length);
+      }
+
+      scheduleNextBlink() {
+        this.nextBlinkTime = performance.now() + (2000 + Math.random() * 3000);
+      }
+
+      updateAvatarAppearance(isSpeaking, now) {
+        // 画像が何もセットされていない場合は何もしない
+        if (!this.images.IDLE) return;
+
+        if (isSpeaking) {
+          this.isBlinking = false;
+          const toggleInterval = 300;
+          const shouldBeActive = Math.floor(now / toggleInterval) % 2 === 0;
+          
+          if (shouldBeActive && this.images.ACTIVE) {
+            if (this.img.src !== this.images.ACTIVE) this.img.src = this.images.ACTIVE;
+          } else {
+            if (this.img.src !== this.images.IDLE) this.img.src = this.images.IDLE;
+          }
+        } else {
+          // 待機中のまばたき
+          if (!this.isBlinking && now >= this.nextBlinkTime && this.images.BLINK) {
+            this.isBlinking = true;
+            this.img.src = this.images.BLINK;
+            this.blinkEndTime = now + 120;
+          }
+
+          if (this.isBlinking && now >= this.blinkEndTime) {
+            this.isBlinking = false;
+            this.img.src = this.images.IDLE;
+            this.scheduleNextBlink();
+          }
+
+          if (!this.isBlinking && this.img.src !== this.images.IDLE && this.images.IDLE) {
+            this.img.src = this.images.IDLE;
+          }
+        }
+      }
+
+      updateThresholdLine() {
+        const val = Number(this.thresholdInput.value);
+        const posPct = Math.min(1, val * 3) * 100;
+        this.thresholdLine.style.left = posPct + '%';
+      }
+
+      monitorLoop = () => {
+        if (!this.analyser) return;
+        const buf = new Float32Array(this.analyser.fftSize);
+        this.analyser.getFloatTimeDomainData(buf);
+        
+        const level = this.rmsFromTimeDomain(buf);
+        const meterPct = Math.min(1, level * 3); 
+        this.meterFill.style.width = (meterPct * 100) + '%';
+        
+        const holdMs = Number(this.holdInput.value);
+        const threshold = Number(this.thresholdInput.value);
+        const now = performance.now();
+
+        let isSpeaking = false;
+        if (level > threshold) {
+          this.lastTrigger = now;
+          isSpeaking = true;
+        } else {
+          if (now - this.lastTrigger <= holdMs) {
+            isSpeaking = true; 
+          }
+        }
+
+        this.updateAvatarAppearance(isSpeaking, now);
+
+        if (isSpeaking) {
+          const translateY = meterPct * -this.bounceHeight;
+          const tilt = Math.sin(now / 80) * (meterPct * this.maxTiltDegree);
+          this.img.style.transform = `translateY(${translateY}px) rotate(${tilt}deg)`;
+        } else {
+          this.img.style.transform = `translateY(0px) rotate(0deg)`;
+        }
+
+        this.rafId = requestAnimationFrame(this.monitorLoop);
+      }
+
+      async startMic() {
+        if (!this.images.IDLE) {
+          alert('先に「通常(-1)」の画像を選んでね！');
+          return;
+        }
+        if (this.audioContext && this.audioContext.state === 'running') return;
+        
+        try {
+          this.stream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+              automaticGainControl: false, 
+              noiseSuppression: false,    
+              echoCancellation: false     
+            }
+          });
+          this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          if (this.audioContext.state === 'suspended') {
+            await this.audioContext.resume(); 
+          }
+          this.sourceNode = this.audioContext.createMediaStreamSource(this.stream);
+          this.analyser = this.audioContext.createAnalyser();
+          this.analyser.fftSize = 2048;
+          this.sourceNode.connect(this.analyser); 
+          this.monitorLoop();
+          
+          this.btnStart.disabled = true;
+          this.btnStop.disabled = false;
+          this.btnStart.textContent = '実行中...';
+        } catch (e) {
+          alert('マイクの許可が必要です: ' + e);
+        }
+      }
+
+      stopMic() {
+        if (this.rafId) {
+          cancelAnimationFrame(this.rafId);
+          this.rafId = null;
+        }
+        if (this.stream) {
+          this.stream.getTracks().forEach(track => track.stop());
+          this.stream = null;
+        }
+        if (this.audioContext) {
+          this.audioContext.close();
+          this.audioContext = null;
+        }
+        this.analyser = null;
+        this.sourceNode = null;
+
+        this.meterFill.style.width = '0%';
+        this.img.style.transform = 'translateY(0px) rotate(0deg)';
+        if (this.images.IDLE) this.img.src = this.images.IDLE;
+
+        this.btnStart.disabled = false;
+        this.btnStop.disabled = true;
+        this.btnStart.textContent = 'マイク開始';
+      }
+
+      resetState() {
+        this.stopMic();
+        // 画像リセット
+        Object.keys(this.images).forEach(k => {
+          if (this.images[k]) URL.revokeObjectURL(this.images[k]);
+          this.images[k] = null;
+        });
+        this.img.src = '';
+        
+        // ボタン見た目戻し
+        [this.fileIdle, this.fileActive, this.fileBlink].forEach((el, idx) => {
+          const names = ['通常(-1)', '喋り(-2)', '瞬き(-3)'];
+          el.parentElement.style.background = '#eee';
+          el.parentElement.style.color = '#000';
+          el.parentElement.textContent = names[idx];
+          el.value = '';
+        });
+
+        this.thresholdInput.value = 0.04;
+        this.holdInput.value = 300;
+        this.updateThresholdLine();
+      }
+    }
+    new MobileMicMonitor();
+});
+</script>
+</body>
+</html>
