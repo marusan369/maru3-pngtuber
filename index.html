@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>PNGTuber ランチャー</title>
+<style>
+    body {
+        font-family: sans-serif;
+        background: #2b2b2b;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+    .container {
+        background: rgba(0, 0, 0, 0.6);
+        padding: 30px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    h1 {
+        font-size: 20px;
+        margin-bottom: 20px;
+    }
+    button {
+        background-color: #ff69b4;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        font-size: 16px;
+        font-weight: bold;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+    button:hover {
+        opacity: 0.9;
+    }
+    p {
+        font-size: 13px;
+        color: #bbb;
+        margin-top: 20px;
+        line-height: 1.5;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>PNGTuber コントロールパネル</h1>
+    <button id="launchButton">アバターウィンドウを開く</button>
+    <p>
+        ※ ボタンを押すと、マイク連動アバターが専用ウィンドウで開きます。<br>
+        開いたウィンドウで「マイク開始」を押してね！
+    </p>
+</div>
+
+<script>
+    // 本体のアバターファイルのファイル名（同じフォルダにあるファイル名に合わせる）
+    const targetFile = 'maru3-pngtuber.html'; 
+    const width = 800;
+    const height = 870;
+
+    document.getElementById('launchButton').onclick = () => {
+        // 画面中央にウィンドウを配置するための計算
+        const dualScreenLeft = window.screenLeft !== undefined ? window.screenLeft : window.screenX;
+        const dualScreenTop = window.screenTop !== undefined ? window.screenTop : window.screenY;
+
+        const screenWidth = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth ? document.documentElement.clientWidth : screen.width;
+        const screenHeight = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight ? document.documentElement.clientHeight : screen.height;
+
+        const left = ((screenWidth / 2) - (width / 2)) + dualScreenLeft;
+        const top = ((screenHeight / 2) - (height / 2)) + dualScreenTop;
+
+        const newWindow = window.open(
+            targetFile,
+            'AvatarDemo', 
+            `width=${width},height=${height},top=${top},left=${left},` +
+            `resizable=no,scrollbars=no,toolbar=no,location=no,status=no,menubar=no`
+        );
+
+        if (window.focus && newWindow) {
+            newWindow.focus();
+        }
+    };
+</script>
+</body>
+</html>
