@@ -25,7 +25,9 @@
             width: 100vw;
             height: 100vh;
             height: 100dvh;
-            background: rgba(0,0,0,0);
+            background-color: #000; /* デフォルトの背景色 */
+            background-size: cover;
+            background-position: center;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -35,7 +37,7 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            object-fit: contain; /* 比率を維持してスマホ画面いっぱいに収める */
+            object-fit: contain;
             pointer-events: none;
             transition: transform 0.05s ease-out;
             transform-origin: center bottom;
@@ -45,14 +47,14 @@
             display: block;
         }
         
-        /* コントロール類 (スマホで見やすいように配置) */
+        /* コントロール類 */
         .controls {
             position: absolute;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             width: 95vw;
-            max-width: 450px;
+            max-width: 480px;
             font-family: system-ui;
             display: flex;
             gap: 6px;
@@ -92,7 +94,7 @@
             font-size: 11px;
         }
         input[type="range"], input[type="number"] {
-            width: 60px;
+            width: 55px;
         }
         
         #meter {
@@ -129,7 +131,7 @@
 
   <div class="stage" id="stage">
     <!-- 3つの画像レイヤー (通常、喋り、まばたき) -->
-    <img id="img-idle" class="layer active" alt="idle">
+    <img id="img-idle" class="layer" alt="idle">
     <img id="img-active" class="layer" alt="active">
     <img id="img-blink" class="layer" alt="blink">
   </div>
@@ -146,6 +148,7 @@
     <label>通常絵 <input type="file" id="loader-idle" accept="image/*"></label>
     <label>喋り絵 <input type="file" id="loader-active" accept="image/*"></label>
     <label>瞬き絵 <input type="file" id="loader-blink" accept="image/*"></label>
+    <label style="background: #4169e1;">背景絵 <input type="file" id="loader-bg" accept="image/*"></label>
     <div class="setting-group">
       閾値:<input id="threshold" type="range" min="0.01" max="0.5" step="0.01" value="0.04">
     </div>
@@ -164,7 +167,9 @@ document.addEventListener('DOMContentLoaded', () => {
         loaderIdle = document.getElementById('loader-idle');
         loaderActive = document.getElementById('loader-active');
         loaderBlink = document.getElementById('loader-blink');
+        loaderBg = document.getElementById('loader-bg');
 
+        stage = document.getElementById('stage');
         imgIdle = document.getElementById('img-idle');
         imgActive = document.getElementById('img-active');
         imgBlink = document.getElementById('img-blink');
@@ -198,6 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.loaderIdle.addEventListener('change', (e) => this.loadImage(e, 'IDLE'));
             this.loaderActive.addEventListener('change', (e) => this.loadImage(e, 'ACTIVE'));
             this.loaderBlink.addEventListener('change', (e) => this.loadImage(e, 'BLINK'));
+            this.loaderBg.addEventListener('change', (e) => this.loadImage(e, 'BG'));
 
             this.scheduleNextBlink();
             this.updateThresholdLine();
@@ -216,6 +222,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.imgActive.src = event.target.result;
                 } else if (type === 'BLINK') {
                     this.imgBlink.src = event.target.result;
+                } else if (type === 'BG') {
+                    this.stage.style.backgroundImage = `url(${event.target.result})`;
                 }
             };
             reader.readAsDataURL(file);
@@ -235,7 +243,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         updateAvatarAppearance(isSpeaking, now) {
-            // すべてのレイヤーをいったん非表示
             this.imgIdle.classList.remove('active');
             this.imgActive.classList.remove('active');
             this.imgBlink.classList.remove('active');
@@ -379,10 +386,12 @@ document.addEventListener('DOMContentLoaded', () => {
             this.loaderIdle.value = '';
             this.loaderActive.value = '';
             this.loaderBlink.value = '';
+            this.loaderBg.value = '';
 
             this.imgIdle.src = '';
             this.imgActive.src = '';
             this.imgBlink.src = '';
+            this.stage.style.backgroundImage = 'none';
 
             this.imgIdle.classList.remove('active');
             this.imgActive.classList.remove('active');
