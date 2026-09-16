@@ -2,7 +2,6 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="google-site-verification" content="eH0GQfAezoWqj--ceBC_zAOXSwe_Avy1iWSs3AisALk" />
 <title>まるPNG | 無料WebアプリのPNGTuberランチャー</title>
 <style>
     body {
@@ -81,6 +80,7 @@
         background: rgba(255, 255, 255, 0.05);
         padding: 12px 15px;
         border-radius: 8px;
+        margin-bottom: 15px; /* 下の要素との余白を追加 */
     }
     .steps ol {
         margin: 0;
@@ -89,6 +89,38 @@
     .steps li {
         margin-bottom: 4px;
     }
+    
+    /* ★【追加】更新履歴エリアのスタイル */
+    .changelog-box {
+        font-size: 11px;
+        color: #ccc;
+        text-align: left;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid #444;
+        padding: 10px 12px;
+        border-radius: 6px;
+        height: 90px; /* 高さを揃えてスッキリ！ */
+        overflow-y: scroll;
+        margin-bottom: 15px;
+        line-height: 1.5;
+    }
+    .changelog-box h3 {
+        font-size: 11px;
+        color: #ff69b4;
+        margin: 0 0 6px 0;
+        position: sticky;
+        top: 0;
+        background: rgba(0, 0, 0, 0.85);
+        padding: 2px 0;
+    }
+    .changelog-box ul {
+        margin: 0;
+        padding-left: 15px;
+    }
+    .changelog-box li {
+        margin-bottom: 4px;
+    }
+
     /* サンプル画像プレビューのスタイル */
     .sample-preview {
         margin-top: 10px;
@@ -197,6 +229,16 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- ★【追加】更新履歴エリア（上が新しく、下が古くなる形式＆スクロール対応） -->
+    <div class="changelog-box">
+        <h3>📜 更新履歴</h3>
+        <ul>
+            <li><strong>2026.09.17</strong>: 無言の時にイラストを暗くする機能（オン/オフ）を追加しました！</li>
+            <li><strong>2026.06.16</strong>: アバターが揺れた際の画像の切れ目が見える対策として120%表示していたものを110%表示に下げました。</li>
+            <li><strong>2026.09.15</strong>: まるPNGを公開しました 🎉</li>
+        </ul>
     </div>
 
     <!-- 欲しいものリスト＆X（Twitter）連絡・フォローエリア -->
