@@ -13,7 +13,6 @@
         html, body {
             width: 100%;
             height: 100%;
-            /* デフォルトの背景色はグリーン（#00ff00）からスタート */
             background: #00ff00;
             overflow: hidden;
             display: flex;
@@ -26,7 +25,7 @@
             width: 100vw;
             height: 100vh;
             height: 100dvh;
-            background-color: #00ff00; /* ここもJSで連動して色が変わるよ */
+            background-color: #00ff00;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -34,22 +33,25 @@
             cursor: pointer;
         }
         
-        /* 110%オーバーシスケールで端の切れ・隙間を完全防止 */
         img.layer {
             position: absolute;
             width: 110%;
             height: 110%;
             object-fit: contain;
             pointer-events: none;
-            transition: transform 0.05s ease-out;
+            transition: transform 0.05s ease-out, filter 0.15s ease; /* ★filterの切り替えもなめらかに！ */
             transform-origin: center bottom;
             display: none;
         }
         img.layer.active {
             display: block;
         }
+
+        /* ★【追加1】無言の時にイラストを暗くするスタイル */
+        body.dim-on-silence img.layer.is-dimmed {
+            filter: brightness(0.5); /* 0.5で50%の暗さに。お好みで調整してね！ */
+        }
         
-        /* コントロール類 & メーターのラップ用クラス (非表示切り替え用) */
         .hideable {
             transition: opacity 0.3s ease;
         }
@@ -93,6 +95,12 @@
             color: #888;
             cursor: not-allowed;
         }
+        /* ★【追加】オンオフボタンが「オフ」のときの見た目（グレーっぽくする） */
+        button.toggle-off {
+            background: #555;
+            color: #aaa;
+        }
+
         input[type="file"] {
             display: none;
         }
@@ -140,7 +148,6 @@
 <body>
 
   <div class="stage" id="stage">
-    <!-- 3つの画像レイヤー (通常、喋り、まばたき) -->
     <img id="img-idle" class="layer" alt="idle">
     <img id="img-active" class="layer" alt="active">
     <img id="img-blink" class="layer" alt="blink">
@@ -158,8 +165,9 @@
     <label>通常絵 <input type="file" id="loader-idle" accept="image/*"></label>
     <label>喋り絵 <input type="file" id="loader-active" accept="image/*"></label>
     <label>瞬き絵 <input type="file" id="loader-blink" accept="image/*"></label>
-    <!-- 背景画像ボタンを「背景色切り替えボタン」に変更！ -->
     <button id="btnBgColor" style="background: #008000;">背景: グリーン</button>
+    <!-- ★【追加2】無言暗転モードのオンオフボタン -->
+    <button id="btnDimMode" class="toggle-off">無言暗転: OFF</button>
     <div class="setting-group">
       閾値:<input id="threshold" type="range" min="0.01" max="0.5" step="0.01" value="0.04">
     </div>
@@ -175,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnStop = document.getElementById('btnStop');
         btnReset = document.getElementById('btnReset');
         btnBgColor = document.getElementById('btnBgColor');
+        btnDimMode = document.getElementById('btnDimMode'); // ★【追加】ボタンの取得
         
         loaderIdle = document.getElementById('loader-idle');
         loaderActive = document.getElementById('loader-active');
@@ -204,7 +213,6 @@ document.addEventListener('DOMContentLoaded', () => {
         bounceHeight = 20;
         maxTiltDegree = 3;
 
-        // 背景色のリスト（カラーコードとボタンに表示するテキスト）
         bgColors = [
             { name: 'グリーン', color: '#00ff00', btnColor: '#008000' },
             { name: 'ブルー',   color: '#0000ff', btnColor: '#0000cc' },
@@ -212,19 +220,20 @@ document.addEventListener('DOMContentLoaded', () => {
         ];
         currentBgIndex = 0;
 
+        isDimModeEnabled = false; // ★【追加】無言暗転モードの状態（初期値OFF）
+
         constructor() {
             this.btnStart.addEventListener('click', () => this.startMic());
             this.btnStop.addEventListener('click', () => this.stopMic());
             this.btnReset.addEventListener('click', () => this.resetState());
             this.btnBgColor.addEventListener('click', () => this.cycleBgColor());
+            this.btnDimMode.addEventListener('click', () => this.toggleDimMode()); // ★【追加】ボタンのクリックイベント
             this.thresholdInput.addEventListener('input', () => this.updateThresholdLine());
 
-            // 画像読み込みイベント
             this.loaderIdle.addEventListener('change', (e) => this.loadImage(e, 'IDLE'));
             this.loaderActive.addEventListener('change', (e) => this.loadImage(e, 'ACTIVE'));
             this.loaderBlink.addEventListener('change', (e) => this.loadImage(e, 'BLINK'));
 
-            // 画面タップでUIの表示/非表示を切り替え
             this.stage.addEventListener('click', (e) => {
                 if (e.target === this.stage || e.target.classList.contains('layer')) {
                     document.body.classList.toggle('ui-hidden');
@@ -236,7 +245,24 @@ document.addEventListener('DOMContentLoaded', () => {
             this.updateAvatarAppearance(false, performance.now());
         }
 
-        // 背景色を切り替えるメソッド
+        // ★【追加3】無言暗転モードの切り替えメソッド
+        toggleDimMode() {
+            this.isDimModeEnabled = !this.isDimModeEnabled;
+            if (this.isDimModeEnabled) {
+                document.body.classList.add('dim-on-silence');
+                this.btnDimMode.classList.remove('toggle-off');
+                this.btnDimMode.style.background = '#ff69b4';
+                this.btnDimMode.textContent = '無言暗転: ON';
+            } else {
+                document.body.classList.remove('dim-on-silence');
+                this.btnDimMode.classList.add('toggle-off');
+                this.btnDimMode.style.background = '';
+                this.btnDimMode.textContent = '無言暗転: OFF';
+                // OFFにした時はすべての画像から暗転クラスを外す
+                document.querySelectorAll('img.layer').forEach(img => img.classList.remove('is-dimmed'));
+            }
+        }
+
         cycleBgColor() {
             this.currentBgIndex = (this.currentBgIndex + 1) % this.bgColors.length;
             const current = this.bgColors[this.currentBgIndex];
@@ -315,6 +341,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.imgIdle.classList.add('active');
                 }
             }
+
+            // ★【追加4】「喋っているかどうか」＆「モードONかどうか」に応じて、暗くするクラス（is-dimmed）を付け外しする
+            document.querySelectorAll('img.layer').forEach(img => {
+                if (!isSpeaking && this.isDimModeEnabled) {
+                    img.classList.add('is-dimmed');
+                } else {
+                    img.classList.remove('is-dimmed');
+                }
+            });
         }
 
         updateThresholdLine() {
@@ -349,7 +384,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             this.updateAvatarAppearance(isSpeaking, now);
 
-            // 横揺れ（rotate）と縦バウンド（translateY）をアクティブなレイヤーに適用！
             const currentActiveLayer = document.querySelector('img.layer.active');
             if (isSpeaking && currentActiveLayer) {
                 const translateY = meterPct * -this.bounceHeight;
@@ -409,6 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.meterFill.style.width = '0%';
             document.querySelectorAll('img.layer').forEach(img => {
                 img.style.transform = 'translateY(0px) rotate(0deg)';
+                img.classList.リムove ? '' : img.classList.remove('is-dimmed'); // 安全のため
             });
             this.updateAvatarAppearance(false, performance.now());
 
@@ -427,13 +462,17 @@ document.addEventListener('DOMContentLoaded', () => {
             this.imgActive.src = '';
             this.imgBlink.src = '';
 
-            // 背景色を初期のグリーンに戻す
             this.currentBgIndex = 0;
             const current = this.bgColors[0];
             document.body.style.background = current.color;
             this.stage.style.backgroundColor = current.color;
             this.btnBgColor.style.background = current.btnColor;
             this.btnBgColor.textContent = `背景: ${current.name}`;
+
+            // リセット時は暗転モードもOFFに戻す
+            if (this.isDimModeEnabled) {
+                this.toggleDimMode();
+            }
 
             this.imgIdle.classList.remove('active');
             this.imgActive.classList.remove('active');
