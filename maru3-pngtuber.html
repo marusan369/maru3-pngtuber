@@ -39,7 +39,7 @@
             height: 110%;
             object-fit: contain;
             pointer-events: none;
-            transition: transform 0.05s ease-out, filter 0.15s ease; /* ★filterの切り替えもなめらかに！ */
+            transition: transform 0.05s ease-out, filter 0.15s ease;
             transform-origin: center bottom;
             display: none;
         }
@@ -47,9 +47,9 @@
             display: block;
         }
 
-        /* ★【追加1】無言の時にイラストを暗くするスタイル */
+        /* 無言の時にイラストを暗くするスタイル */
         body.dim-on-silence img.layer.is-dimmed {
-            filter: brightness(0.5); /* 0.5で50%の暗さに。お好みで調整してね！ */
+            filter: brightness(0.5);
         }
         
         .hideable {
@@ -95,7 +95,6 @@
             color: #888;
             cursor: not-allowed;
         }
-        /* ★【追加】オンオフボタンが「オフ」のときの見た目（グレーっぽくする） */
         button.toggle-off {
             background: #555;
             color: #aaa;
@@ -166,8 +165,9 @@
     <label>喋り絵 <input type="file" id="loader-active" accept="image/*"></label>
     <label>瞬き絵 <input type="file" id="loader-blink" accept="image/*"></label>
     <button id="btnBgColor" style="background: #008000;">背景: グリーン</button>
-    <!-- ★【追加2】無言暗転モードのオンオフボタン -->
     <button id="btnDimMode" class="toggle-off">無言暗転: OFF</button>
+    <!-- ★ふわふわボタンをここに復活 -->
+    <button id="btnFuwafuwa" class="toggle-off">ふわふわ: OFF</button>
     <div class="setting-group">
       閾値:<input id="threshold" type="range" min="0.01" max="0.5" step="0.01" value="0.04">
     </div>
@@ -183,7 +183,8 @@ document.addEventListener('DOMContentLoaded', () => {
         btnStop = document.getElementById('btnStop');
         btnReset = document.getElementById('btnReset');
         btnBgColor = document.getElementById('btnBgColor');
-        btnDimMode = document.getElementById('btnDimMode'); // ★【追加】ボタンの取得
+        btnDimMode = document.getElementById('btnDimMode');
+        btnFuwafuwa = document.getElementById('btnFuwafuwa'); // ★ふわふわボタンの取得を復活
         
         loaderIdle = document.getElementById('loader-idle');
         loaderActive = document.getElementById('loader-active');
@@ -220,14 +221,16 @@ document.addEventListener('DOMContentLoaded', () => {
         ];
         currentBgIndex = 0;
 
-        isDimModeEnabled = false; // ★【追加】無言暗転モードの状態（初期値OFF）
+        isDimModeEnabled = false;
+        isFuwafuwaEnabled = false; // ★ふわふわの状態管理を復活
 
         constructor() {
             this.btnStart.addEventListener('click', () => this.startMic());
             this.btnStop.addEventListener('click', () => this.stopMic());
             this.btnReset.addEventListener('click', () => this.resetState());
             this.btnBgColor.addEventListener('click', () => this.cycleBgColor());
-            this.btnDimMode.addEventListener('click', () => this.toggleDimMode()); // ★【追加】ボタンのクリックイベント
+            this.btnDimMode.addEventListener('click', () => this.toggleDimMode());
+            this.btnFuwafuwa.addEventListener('click', () => this.toggleFuwafuwa()); // ★クリックイベント登録を復活
             this.thresholdInput.addEventListener('input', () => this.updateThresholdLine());
 
             this.loaderIdle.addEventListener('change', (e) => this.loadImage(e, 'IDLE'));
@@ -245,7 +248,6 @@ document.addEventListener('DOMContentLoaded', () => {
             this.updateAvatarAppearance(false, performance.now());
         }
 
-        // ★【追加3】無言暗転モードの切り替えメソッド
         toggleDimMode() {
             this.isDimModeEnabled = !this.isDimModeEnabled;
             if (this.isDimModeEnabled) {
@@ -258,8 +260,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.btnDimMode.classList.add('toggle-off');
                 this.btnDimMode.style.background = '';
                 this.btnDimMode.textContent = '無言暗転: OFF';
-                // OFFにした時はすべての画像から暗転クラスを外す
                 document.querySelectorAll('img.layer').forEach(img => img.classList.remove('is-dimmed'));
+            }
+        }
+
+        // ★ふわふわ切り替えメソッドを復活
+        toggleFuwafuwa() {
+            this.isFuwafuwaEnabled = !this.isFuwafuwaEnabled;
+            if (this.isFuwafuwaEnabled) {
+                this.btnFuwafuwa.classList.remove('toggle-off');
+                this.btnFuwafuwa.style.background = '#ff69b4';
+                this.btnFuwafuwa.textContent = 'ふわふわ: ON';
+            } else {
+                this.btnFuwafuwa.classList.add('toggle-off');
+                this.btnFuwafuwa.style.background = '';
+                this.btnFuwafuwa.textContent = 'ふわふわ: OFF';
+                document.querySelectorAll('img.layer').forEach(img => {
+                    if (!img.classList.contains('active') || !this.isSpeakingState) {
+                        img.style.transform = 'translateY(0px) rotate(0deg)';
+                    }
+                });
             }
         }
 
@@ -342,7 +362,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // ★【追加4】「喋っているかどうか」＆「モードONかどうか」に応じて、暗くするクラス（is-dimmed）を付け外しする
             document.querySelectorAll('img.layer').forEach(img => {
                 if (!isSpeaking && this.isDimModeEnabled) {
                     img.classList.add('is-dimmed');
@@ -382,15 +401,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
+            this.isSpeakingState = isSpeaking;
             this.updateAvatarAppearance(isSpeaking, now);
 
             const currentActiveLayer = document.querySelector('img.layer.active');
-            if (isSpeaking && currentActiveLayer) {
-                const translateY = meterPct * -this.bounceHeight;
-                const tilt = Math.sin(now / 80) * (meterPct * this.maxTiltDegree);
-                currentActiveLayer.style.transform = `translateY(${translateY}px) rotate(${tilt}deg)`;
-            } else if (currentActiveLayer) {
-                currentActiveLayer.style.transform = `translateY(0px) rotate(0deg)`;
+            
+            // ★ふわふわの上下動計算を復活
+            let fuwaY = 0;
+            if (this.isFuwafuwaEnabled) {
+                fuwaY = Math.sin(now / 400) * 6;
+            }
+
+            if (currentActiveLayer) {
+                if (isSpeaking) {
+                    const translateY = (meterPct * -this.bounceHeight) + fuwaY;
+                    const tilt = Math.sin(now / 80) * (meterPct * this.maxTiltDegree);
+                    currentActiveLayer.style.transform = `translateY(${translateY}px) rotate(${tilt}deg)`;
+                } else {
+                    currentActiveLayer.style.transform = `translateY(${fuwaY}px) rotate(0deg)`;
+                }
             }
 
             this.rafId = requestAnimationFrame(this.monitorLoop);
@@ -443,7 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.meterFill.style.width = '0%';
             document.querySelectorAll('img.layer').forEach(img => {
                 img.style.transform = 'translateY(0px) rotate(0deg)';
-                img.classList.リムove ? '' : img.classList.remove('is-dimmed'); // 安全のため
+                img.classList.remove('is-dimmed');
             });
             this.updateAvatarAppearance(false, performance.now());
 
@@ -469,9 +498,11 @@ document.addEventListener('DOMContentLoaded', () => {
             this.btnBgColor.style.background = current.btnColor;
             this.btnBgColor.textContent = `背景: ${current.name}`;
 
-            // リセット時は暗転モードもOFFに戻す
             if (this.isDimModeEnabled) {
                 this.toggleDimMode();
+            }
+            if (this.isFuwafuwaEnabled) {
+                this.toggleFuwafuwa();
             }
 
             this.imgIdle.classList.remove('active');
