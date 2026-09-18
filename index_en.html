@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>maruPNG - Free PNGTuber Tool / Mic-Linked Avatar Creator</title>
+<!-- SEO / Social Sharing Meta Tags -->
+<meta name="description" content="“maruPNG” is a free browser-based PNGTuber tool where avatars move, lip-sync, blink, and float in response to your microphone audio. Perfect for live streaming and video creation!">
+<meta property="og:title" content="maruPNG - Free PNGTuber Tool / Mic-Linked Avatar Creator">
+<meta property="og:description" content="Lip-sync, blink, and float in response to your voice! A free browser-based PNGTuber tool convenient for streaming.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://marusan369.github.io/maru3-pngtuber/">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+    body {
+        font-family: sans-serif;
+        background: #2b2b2b;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+    .container {
+        background: rgba(0, 0, 0, 0.6);
+        padding: 25px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        max-width: 480px;
+        width: 100%;
+    }
+    h1 {
+        font-size: 20px;
+        margin-bottom: 15px;
+    }
+    button {
+        background-color: #ff69b4;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        font-size: 16px;
+        font-weight: bold;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: opacity 0.2s;
+        margin-bottom: 15px;
+    }
+    button:hover {
+        opacity: 0.9;
+    }
+    /* Scrollable Terms Box */
+    .terms-box {
+        font-size: 11px;
+        color: #ccc;
+        text-align: left;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid #444;
+        padding: 10px 12px;
+        border-radius: 6px;
+        height: 110px;
+        overflow-y: scroll;
+        margin-bottom: 15px;
+        line-height: 1.5;
+    }
+    .terms-box h3 {
+        font-size: 11px;
+        color: #ff69b4;
+        margin: 0 0 6px 0;
+        position: sticky;
+        top: 0;
+        background: rgba(0, 0, 0, 0.85);
+        padding: 2px 0;
+    }
+    .terms-box p {
+        margin: 0;
+        white-space: pre-wrap;
+    }
+    .steps {
+        font-size: 12px;
+        color: #ddd;
+        text-align: left;
+        line-height: 1.5;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 12px 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+    .steps ol {
+        margin: 0;
+        padding-left: 20px;
+    }
+    .steps li {
+        margin-bottom: 4px;
+    }
+    
+    /* Changelog Box Style */
+    .changelog-box {
+        font-size: 11px;
+        color: #ccc;
+        text-align: left;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid #444;
+        padding: 10px 12px;
+        border-radius: 6px;
+        height: 90px;
+        overflow-y: scroll;
+        margin-bottom: 15px;
+        line-height: 1.5;
+    }
+    .changelog-box h3 {
+        font-size: 11px;
+        color: #ff69b4;
+        margin: 0 0 6px 0;
+        position: sticky;
+        top: 0;
+        background: rgba(0, 0, 0, 0.85);
+        padding: 2px 0;
+    }
+    .changelog-box ul {
+        margin: 0;
+        padding-left: 15px;
+    }
+    .changelog-box li {
+        margin-bottom: 4px;
+    }
+
+    /* Sample Image Preview Style */
+    .sample-preview {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed rgba(255, 255, 255, 0.2);
+        text-align: center;
+    }
+    .sample-preview p {
+        margin: 0 0 6px 0;
+        font-size: 11px;
+        color: #ff69b4;
+    }
+    .sample-images {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+    }
+    .sample-item {
+        font-size: 10px;
+        color: #aaa;
+        text-align: center;
+    }
+    .sample-item img {
+        width: 120px;
+        height: 120px;
+        object-fit: contain;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        border: 1px solid #555;
+        display: block;
+        margin-bottom: 2px;
+    }
+    /* Support Section Style */
+    .support-section {
+        margin-top: 15px;
+        font-size: 11px;
+        color: #aaa;
+        text-align: center;
+    }
+    .support-section a {
+        color: #ff69b4;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    .support-section a:hover {
+        text-decoration: underline;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Free PNGTuber App [maruPNG]</h1>
+    <p>A browser tool where your avatar moves in response to your mic audio</p>
+    <button id="launchButton">Open Avatar Window</button>
+
+    <!-- Terms of Use Box -->
+    <div class="terms-box">
+        <h3>[ Terms of Use ]</h3>
+        <p><strong>Article 1 (Introduction)</strong>
+"maruPNG" (hereinafter "this tool") is a browser-based PNGTuber tool independently created by Maru. Users of this tool are deemed to have agreed to these Terms.
+
+<strong>Article 2 (License & Usage Scope)</strong>
+1. Use of this tool is free. You are free to use it for live streaming and video creation, regardless of whether it is personal or corporate, commercial or non-commercial.
+2. There are no restrictions on the monetization (Super Chats, Memberships, ad revenue, etc.) of videos or streams created using this tool.
+
+<strong>Article 3 (Prohibited Matters)</strong>
+Users shall not engage in the following acts:
+1. Misappropriating the source code of this tool to claim authorship or distribute it under false pretenses.
+2. Interfering with the operation of this tool or the hosting of GitHub Pages.
+3. Using the tool in streams or videos containing content that violates public order, morals, or laws.
+
+<strong>Article 4 (Disclaimer)</strong>
+1. The author does not guarantee that this tool is free of bugs, defects, or suitable for any specific purpose.
+2. The author assumes no responsibility for any damages arising from the use of or inability to use this tool.
+
+<strong>Article 5 (Revision of Terms)</strong>
+These terms are subject to change without prior notice.</p>
+    </div>
+
+    <!-- How to Use + Sample Images Area -->
+    <div class="steps">
+        <strong>[ How to Use ]</strong>
+        <ol>
+            <li>Prepare 3 images (16:9 recommended): Normal, Talking, and Blinking</li>
+            <li>You can even use a single image for all three slots!</li>
+            <li>Click the button to open the window and set each image</li>
+            <li>Select the transparency color using the background button (Green, Blue, Magenta)</li>
+            <li>Click "Start Mic" to sync your voice</li>
+            <li>Click anywhere on the screen to hide the menu UI</li>
+        </ol>
+
+        <!-- Sample Image Preview -->
+        <div class="sample-preview">
+            <p><strong>💡 Trial Sample Images (Right-click to save and use)</strong></p>
+            <div class="sample-images">
+                <div class="sample-item">
+                    <img src="sample_normal.png" alt="Normal">
+                    <span>Normal</span>
+                </div>
+                <div class="sample-item">
+                    <img src="sample_talk.png" alt="Talking">
+                    <span>Talking</span>
+                </div>
+                <div class="sample-item">
+                    <img src="sample_blink.png" alt="Blinking">
+                    <span>Blinking</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Changelog Area -->
+    <div class="changelog-box">
+        <h3>📜 Changelog</h3>
+        <ul>
+            <li><strong>2026.09.17</strong>: Added the "Fuwafuwa" (floating) button feature to make the avatar bob up and down!</li>
+            <li><strong>2026.09.17</strong>: Added the "Dim on Silence" feature (ON/OFF toggle) to darken the illustration when silent!</li>
+            <li><strong>2026.09.16</strong>: Reduced the default display zoom from 120% to 110% to prevent image edges from showing when bouncing.</li>
+            <li><strong>2026.09.15</strong>: Released maruPNG 🎉</li>
+        </ul>
+    </div>
+
+    <!-- Support & Contact Area -->
+    <div class="support-section">
+        <span>If you like it... 👉 </span>
+        <a href="https://www.amazon.jp/hz/wishlist/ls/1QBBDR3F83E00?ref_=wl_share" target="_blank">🎁 Author's Wishlist Support</a><br>
+        <span style="display: inline-block; margin-top: 6px;">💬 Bug Reports & Contact 👉 </span>
+        <a href="https://x.com/marusan_369xii" target="_blank">🕊️ Author's X (@marusan_369xii)</a>
+    </div>
+</div>
+
+<script>
+    // Target avatar file name (Make sure it matches your English avatar file name, e.g., 'maru3-pngtuber_en.html')
+    const targetFile = 'maru3-pngtuber_en.html'; 
+    const width = 1280;
+    const height = 720; // 16:9 stream size
+
+    document.getElementById('launchButton').onclick = () => {
+        const dualScreenLeft = window.screenLeft !== undefined ? window.screenLeft : window.screenX;
+        const dualScreenTop = window.screenTop !== undefined ? window.screenTop : window.screenY;
+
+        const screenWidth = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth ? document.documentElement.clientWidth : screen.width;
+        const screenHeight = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight ? document.documentElement.clientHeight : screen.height;
+
+        const left = ((screenWidth / 2) - (width / 2)) + dualScreenLeft;
+        const top = ((screenHeight / 2) - (height / 2)) + dualScreenTop;
+
+        const newWindow = window.open(
+            targetFile,
+            'AvatarDemo', 
+            `width=${width},height=${height},top=${top},left=${left},` +
+            `resizable=no,scrollbars=no,toolbar=no,location=no,status=no,menubar=no`
+        );
+
+        if (window.focus && newWindow) {
+            newWindow.focus();
+        }
+    };
+</script>
+</body>
+</html>
