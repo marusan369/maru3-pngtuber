@@ -33,6 +33,28 @@
         max-width: 480px;
         width: 100%;
     }
+    /* ★【追加】日本語ページへの切り替えボタン用スタイル */
+    .lang-switch {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 10px;
+    }
+    .lang-btn {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ff69b4;
+        border: 1px solid #ff69b4;
+        padding: 4px 10px;
+        font-size: 11px;
+        font-weight: bold;
+        border-radius: 6px;
+        text-decoration: none;
+        transition: background 0.2s, color 0.2s;
+    }
+    .lang-btn:hover {
+        background: #ff69b4;
+        color: #fff;
+    }
+
     h1 {
         font-size: 20px;
         margin-bottom: 15px;
@@ -180,6 +202,11 @@
 <body>
 
 <div class="container">
+    <!-- ★【追加】英語ページから日本語ページに戻るためのボタン -->
+    <div class="lang-switch">
+        <a href="index.html" class="lang-btn">🇯🇵 日本語</a>
+    </div>
+
     <h1>Free PNGTuber App [maruPNG]</h1>
     <p>A browser tool where your avatar moves in response to your mic audio</p>
     <button id="launchButton">Open Avatar Window</button>
@@ -283,9 +310,7 @@ These terms are subject to change without prior notice.</p>
             `resizable=no,scrollbars=no,toolbar=no,location=no,status=no,menubar=no`
         );
 
-        if (window.focus && newWindow) {
-            newWindow.focus();
-        }
+        (window.focus && newWindow) && newWindow.focus();
     };
 </script>
 </body>
