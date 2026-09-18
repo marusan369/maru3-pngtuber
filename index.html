@@ -33,6 +33,28 @@
         max-width: 480px;
         width: 100%;
     }
+    /* ★【追加】言語切り替えボタンの配置エリア用スタイル */
+    .lang-switch {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 10px;
+    }
+    .lang-btn {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ff69b4;
+        border: 1px solid #ff69b4;
+        padding: 4px 10px;
+        font-size: 11px;
+        font-weight: bold;
+        border-radius: 6px;
+        text-decoration: none;
+        transition: background 0.2s, color 0.2s;
+    }
+    .lang-btn:hover {
+        background: #ff69b4;
+        color: #fff;
+    }
+
     h1 {
         font-size: 20px;
         margin-bottom: 15px;
@@ -87,7 +109,7 @@
         background: rgba(255, 255, 255, 0.05);
         padding: 12px 15px;
         border-radius: 8px;
-        margin-bottom: 15px; /* 下の要素との余白を追加 */
+        margin-bottom: 15px;
     }
     .steps ol {
         margin: 0;
@@ -97,7 +119,7 @@
         margin-bottom: 4px;
     }
     
-    /* ★【追加】更新履歴エリアのスタイル */
+    /* 更新履歴エリアのスタイル */
     .changelog-box {
         font-size: 11px;
         color: #ccc;
@@ -106,7 +128,7 @@
         border: 1px solid #444;
         padding: 10px 12px;
         border-radius: 6px;
-        height: 90px; /* 高さを揃えてスッキリ！ */
+        height: 90px;
         overflow-y: scroll;
         margin-bottom: 15px;
         line-height: 1.5;
@@ -180,6 +202,11 @@
 <body>
 
 <div class="container">
+    <!-- ★【追加】一番上の右側に配置した英語ページへの切り替えボタン -->
+    <div class="lang-switch">
+        <a href="index_en.html" class="lang-btn">🌐 English</a>
+    </div>
+
     <h1>無料PNGTuberアプリ 【まるPNG】</h1>
     <p>マイクの音声に反応してアバターが動くブラウザツールです</p>
     <button id="launchButton">アバターウィンドウを開く</button>
@@ -240,7 +267,7 @@
         </div>
     </div>
 
-    <!-- ★【追加】更新履歴エリア（上が新しく、下が古くなる形式＆スクロール対応） -->
+    <!-- 更新履歴エリア -->
     <div class="changelog-box">
         <h3>📜 更新履歴</h3>
         <ul>
