@@ -427,10 +427,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const currentActiveLayer = document.querySelector('img.layer.active');
             
-            // ふわふわの上下動計算（少しゆったり）
+            // ふわふわの上下動計算（400 * 12に変更）
             let fuwaY = 0;
             if (this.isFuwafuwaEnabled) {
-                fuwaY = Math.sin(now / 600) * 6;
+                fuwaY = Math.sin(now / 400) * 12;
             }
 
             // ★ゆれゆれの左右スイング計算（さらにゆっくり優雅に: 800に変更）
