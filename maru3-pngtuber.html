@@ -66,7 +66,7 @@
         .controls {
             position: relative;
             width: 98vw;
-            max-width: 900px;
+            max-width: 980px; /* ボタンが増えたので少し幅を調整した */
             display: flex;
             flex-direction: row;
             flex-wrap: nowrap; /* 改行させずに1段に収める */
@@ -177,6 +177,8 @@
     <button id="btnDimMode" class="toggle-off">暗転:OFF</button>
     <button id="btnFuwafuwa" class="toggle-off">ふわ:OFF</button>
     <button id="btnYureyure" class="toggle-off">ゆれ:OFF</button>
+    <!-- ★喋りバウンド（はね）のオンオフボタンを追加！ -->
+    <button id="btnBounce" class="toggle-off">はね:OFF</button>
     <div class="setting-group">
       閾:<input id="threshold" type="range" min="0.01" max="0.5" step="0.01" value="0.04">
     </div>
@@ -195,6 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnDimMode = document.getElementById('btnDimMode');
         btnFuwafuwa = document.getElementById('btnFuwafuwa');
         btnYureyure = document.getElementById('btnYureyure');
+        btnBounce = document.getElementById('btnBounce'); // ★ボタン要素の取得
         
         loaderIdle = document.getElementById('loader-idle');
         loaderActive = document.getElementById('loader-active');
@@ -234,6 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isDimModeEnabled = false;
         isFuwafuwaEnabled = false;
         isYureyureEnabled = false;
+        isBounceEnabled = false; // ★喋りバウンドの状態管理（初期値OFF）
 
         constructor() {
             this.btnStart.addEventListener('click', () => this.startMic());
@@ -243,6 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.btnDimMode.addEventListener('click', () => this.toggleDimMode());
             this.btnFuwafuwa.addEventListener('click', () => this.toggleFuwafuwa());
             this.btnYureyure.addEventListener('click', () => this.toggleYureyure());
+            this.btnBounce.addEventListener('click', () => this.toggleBounce()); // ★イベント登録
             this.thresholdInput.addEventListener('input', () => this.updateThresholdLine());
 
             this.loaderIdle.addEventListener('change', (e) => this.loadImage(e, 'IDLE'));
@@ -309,6 +314,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         img.style.transform = 'translateY(0px) rotate(0deg)';
                     }
                 });
+            }
+        }
+
+        // ★喋りバウンド（はね）の切り替えメソッド
+        toggleBounce() {
+            this.isBounceEnabled = !this.isBounceEnabled;
+            if (this.isBounceEnabled) {
+                this.btnBounce.classList.remove('toggle-off');
+                this.btnBounce.style.background = '#ff69b4';
+                this.btnBounce.textContent = 'はね:ON';
+            } else {
+                this.btnBounce.classList.add('toggle-off');
+                this.btnBounce.style.background = '';
+                this.btnBounce.textContent = 'はね:OFF';
             }
         }
 
@@ -446,7 +465,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (currentActiveLayer) {
-                if (isSpeaking) {
+                if (isSpeaking && this.isBounceEnabled) {
+                    // ★Bounce（はね）がONのときだけ喋り揺れを反映する
                     const translateY = (meterPct * -this.bounceHeight) + fuwaY;
                     const tilt = Math.sin(now / 80) * (meterPct * this.maxTiltDegree) + yureRot;
                     currentActiveLayer.style.transform = `translateY(${translateY}px) rotate(${tilt}deg)`;
@@ -531,15 +551,10 @@ document.addEventListener('DOMContentLoaded', () => {
             this.btnBgColor.style.background = current.btnColor;
             this.btnBgColor.textContent = `背景:${current.name}`;
 
-            if (this.isDimModeEnabled) {
-                this.toggleDimMode();
-            }
-            if (this.isFuwafuwaEnabled) {
-                this.toggleFuwafuwa();
-            }
-            if (this.isYureyureEnabled) {
-                this.toggleYureyure();
-            }
+            if (this.isDimModeEnabled) this.toggleDimMode();
+            if (this.isFuwafuwaEnabled) this.toggleFuwafuwa();
+            if (this.isYureyureEnabled) this.toggleYureyure();
+            if (this.isBounceEnabled) this.toggleBounce(); // ★リセット時にBounceもOFFにするニャ
 
             this.imgIdle.classList.remove('active');
             this.imgActive.classList.remove('active');
