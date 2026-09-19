@@ -13,18 +13,20 @@
         html, body {
             width: 100%;
             height: 100%;
+            max-height: 720px; /* 720px固定でスクロールバーを出さない */
             background: #00ff00;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
+            font-family: system-ui;
         }
+        
         .stage {
             position: relative;
-            width: 100vw;
-            height: 100vh;
-            height: 100dvh;
+            width: 100%;
+            flex-grow: 1; /* 残りのスペースを全部ステージにしてアバターを大きく見せる */
             background-color: #00ff00;
             display: flex;
             justify-content: center;
@@ -39,7 +41,6 @@
             height: 110%;
             object-fit: contain;
             pointer-events: none;
-            /* ★ transformのtransitionを外し、filterの切り替えだけにすることでカクつきを防止 */
             transition: filter 0.15s ease;
             transform-origin: center bottom;
             display: none;
@@ -61,35 +62,38 @@
             pointer-events: none;
         }
 
+        /* メニューを横長1段にしてコンパクトに配置 */
         .controls {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 95vw;
-            max-width: 480px;
-            font-family: system-ui;
+            position: relative;
+            width: 98vw;
+            max-width: 900px;
             display: flex;
-            gap: 6px;
+            flex-direction: row;
+            flex-wrap: nowrap; /* 改行させずに1段に収める */
+            gap: 4px;
             align-items: center;
-            padding: 10px;
-            box-sizing: border-box;
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 15px;
-            flex-wrap: wrap;
+            padding: 4px 8px;
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 8px 8px 0 0;
             justify-content: center;
             z-index: 10;
+            flex-shrink: 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+            overflow-x: auto; /* 万が一画面が狭いときはスクロールできるようにする */
+            white-space: nowrap;
         }
+        
         button, label {
             color: #fff;
             background: #ff69b4;
-            padding: 8px 10px;
+            padding: 4px 6px;
             border: none;
-            border-radius: 8px;
-            font-size: 11px;
+            border-radius: 4px;
+            font-size: 10px;
             font-weight: bold;
             cursor: pointer;
             text-align: center;
+            flex-shrink: 0;
         }
         button:disabled {
             background: #555;
@@ -104,29 +108,33 @@
         input[type="file"] {
             display: none;
         }
+        
         .setting-group {
             display: flex;
-            gap: 4px;
+            gap: 3px;
             align-items: center;
             color: white;
-            font-size: 11px;
+            font-size: 10px;
+            background: rgba(255,255,255,0.1);
+            padding: 2px 4px;
+            border-radius: 4px;
+            flex-shrink: 0;
         }
         input[type="range"], input[type="number"] {
-            width: 55px;
+            width: 40px;
         }
         
         #meter {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80vw;
-            max-width: 300px;
-            height: 8px;
+            position: relative;
+            width: 95vw;
+            max-width: 500px;
+            height: 4px;
             background: #222;
-            border-radius: 4px;
+            margin: 2px auto;
+            border-radius: 2px;
             overflow: hidden;
             z-index: 10;
+            flex-shrink: 0;
         }
         #meter > div:last-child {
             height: 100%;
@@ -159,21 +167,21 @@
   </div>
 
   <div class="controls hideable">
-    <button id="btnStart">マイク開始</button>
+    <button id="btnStart">開始</button>
     <button id="btnStop" disabled>停止</button>
     <button id="btnReset">リセット</button>
     <label>通常絵 <input type="file" id="loader-idle" accept="image/*"></label>
     <label>喋り絵 <input type="file" id="loader-active" accept="image/*"></label>
     <label>瞬き絵 <input type="file" id="loader-blink" accept="image/*"></label>
-    <button id="btnBgColor" style="background: #008000;">背景: グリーン</button>
-    <button id="btnDimMode" class="toggle-off">無言暗転: OFF</button>
-    <button id="btnFuwafuwa" class="toggle-off">ふわふわ: OFF</button>
-    <button id="btnYureyure" class="toggle-off">ゆれゆれ: OFF</button>
+    <button id="btnBgColor" style="background: #008000;">背景:緑</button>
+    <button id="btnDimMode" class="toggle-off">暗転:OFF</button>
+    <button id="btnFuwafuwa" class="toggle-off">ふわ:OFF</button>
+    <button id="btnYureyure" class="toggle-off">ゆれ:OFF</button>
     <div class="setting-group">
-      閾値:<input id="threshold" type="range" min="0.01" max="0.5" step="0.01" value="0.04">
+      閾:<input id="threshold" type="range" min="0.01" max="0.5" step="0.01" value="0.04">
     </div>
     <div class="setting-group">
-      保持:<input id="hold" type="number" min="100" max="5000" step="100" value="500">
+      持:<input id="hold" type="number" min="100" max="5000" step="100" value="500">
     </div>
   </div>
 
@@ -217,9 +225,9 @@ document.addEventListener('DOMContentLoaded', () => {
         maxTiltDegree = 3;
 
         bgColors = [
-            { name: 'グリーン', color: '#00ff00', btnColor: '#008000' },
-            { name: 'ブルー',   color: '#0000ff', btnColor: '#0000cc' },
-            { name: 'マゼンダ', color: '#ff00ff', btnColor: '#cc00cc' }
+            { name: '緑', color: '#00ff00', btnColor: '#008000' },
+            { name: '青', color: '#0000ff', btnColor: '#0000cc' },
+            { name: '紫', color: '#ff00ff', btnColor: '#cc00cc' }
         ];
         currentBgIndex = 0;
 
@@ -258,12 +266,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.body.classList.add('dim-on-silence');
                 this.btnDimMode.classList.remove('toggle-off');
                 this.btnDimMode.style.background = '#ff69b4';
-                this.btnDimMode.textContent = '無言暗転: ON';
+                this.btnDimMode.textContent = '暗転:ON';
             } else {
                 document.body.classList.remove('dim-on-silence');
                 this.btnDimMode.classList.add('toggle-off');
                 this.btnDimMode.style.background = '';
-                this.btnDimMode.textContent = '無言暗転: OFF';
+                this.btnDimMode.textContent = '暗転:OFF';
                 document.querySelectorAll('img.layer').forEach(img => img.classList.remove('is-dimmed'));
             }
         }
@@ -273,11 +281,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (this.isFuwafuwaEnabled) {
                 this.btnFuwafuwa.classList.remove('toggle-off');
                 this.btnFuwafuwa.style.background = '#ff69b4';
-                this.btnFuwafuwa.textContent = 'ふわふわ: ON';
+                this.btnFuwafuwa.textContent = 'ふわ:ON';
             } else {
                 this.btnFuwafuwa.classList.add('toggle-off');
                 this.btnFuwafuwa.style.background = '';
-                this.btnFuwafuwa.textContent = 'ふわふわ: OFF';
+                this.btnFuwafuwa.textContent = 'ふわ:OFF';
                 document.querySelectorAll('img.layer').forEach(img => {
                     if (!img.classList.contains('active') || !this.isSpeakingState) {
                         img.style.transform = 'translateY(0px) rotate(0deg)';
@@ -291,11 +299,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (this.isYureyureEnabled) {
                 this.btnYureyure.classList.remove('toggle-off');
                 this.btnYureyure.style.background = '#ff69b4';
-                this.btnYureyure.textContent = 'ゆれゆれ: ON';
+                this.btnYureyure.textContent = 'ゆれ:ON';
             } else {
                 this.btnYureyure.classList.add('toggle-off');
                 this.btnYureyure.style.background = '';
-                this.btnYureyure.textContent = 'ゆれゆれ: OFF';
+                this.btnYureyure.textContent = 'ゆれ:OFF';
                 document.querySelectorAll('img.layer').forEach(img => {
                     if (!img.classList.contains('active') || !this.isSpeakingState) {
                         img.style.transform = 'translateY(0px) rotate(0deg)';
@@ -311,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.style.background = current.color;
             this.stage.style.backgroundColor = current.color;
             this.btnBgColor.style.background = current.btnColor;
-            this.btnBgColor.textContent = `背景: ${current.name}`;
+            this.btnBgColor.textContent = `背景:${current.name}`;
         }
 
         loadImage(e, type) {
@@ -427,13 +435,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const currentActiveLayer = document.querySelector('img.layer.active');
             
-            // ふわふわの上下動計算（400 * 12に変更）
             let fuwaY = 0;
             if (this.isFuwafuwaEnabled) {
                 fuwaY = Math.sin(now / 400) * 12;
             }
 
-            // ★ゆれゆれの左右スイング計算（さらにゆっくり優雅に: 800に変更）
             let yureRot = 0;
             if (this.isYureyureEnabled) {
                 yureRot = Math.sin(now / 800) * 3.5;
@@ -474,7 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 this.btnStart.disabled = true;
                 this.btnStop.disabled = false;
-                this.btnStart.textContent = 'マイク入力中...';
+                this.btnStart.textContent = '中...';
             } catch (e) {
                 alert('エラー: ' + e);
             }
@@ -505,7 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             this.btnStart.disabled = false;
             this.btnStop.disabled = true;
-            this.btnStart.textContent = 'マイク開始';
+            this.btnStart.textContent = '開始';
         }
 
         resetState() {
@@ -523,7 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.style.background = current.color;
             this.stage.style.backgroundColor = current.color;
             this.btnBgColor.style.background = current.btnColor;
-            this.btnBgColor.textContent = `背景: ${current.name}`;
+            this.btnBgColor.textContent = `背景:${current.name}`;
 
             if (this.isDimModeEnabled) {
                 this.toggleDimMode();
