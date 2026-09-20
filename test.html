@@ -53,7 +53,7 @@
       font-weight: bold;
     }
 
-    /* 利用規約エリア（上部配置用） */
+    /* 利用規約エリア */
     .terms-box {
       width: 100%;
       margin-bottom: 16px;
@@ -200,8 +200,40 @@
       min-height: 18px;
     }
 
+    /* 作者リンクエリア（控えめなデザイン） */
+    .support-box {
+      margin-top: 28px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      text-align: center;
+      font-size: 11px;
+      color: #aaa;
+      width: 100%;
+    }
+
+    .support-box p {
+      margin: 0 0 8px 0;
+    }
+
+    .support-links {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .support-links a {
+      color: #00b0ff;
+      text-decoration: none;
+      font-size: 11px;
+    }
+
+    .support-links a:hover {
+      text-decoration: underline;
+    }
+
     footer {
-      margin-top: 24px;
+      margin-top: 16px;
       font-size: 10px;
       color: #666;
       text-align: center;
@@ -216,53 +248,45 @@
   <div class="container">
     <h1>ツイキャス-スタジオ配信用<br>アニメPNGメーカー</h1>
 
-    <!-- 1. 最優先の注意書き -->
+    <!-- 注意書き -->
     <div class="description-box">
       ⚠️ <strong>【準備するもの】背景が透過されたPNG画像</strong><br>
       ※背景がある画像はくり抜かれませんのでご注意ください。<br>
       画像を読み込んで好きな動きを選ぶだけで、ツイキャスの配信画面で使えるアニメーションPNG（APNG）素材が作成できます。
     </div>
 
-    <!-- 2. 利用規約（注意書きの直後に配置） -->
+    <!-- 利用規約 -->
     <div class="terms-box">
       <details>
         <summary>📜 利用規約・免責事項（ご利用前にご確認ください）</summary>
-
         <div class="terms-content">
           <p>※本サービスを利用することにより、以下の利用規約に同意したものとみなします。</p>
-
           <h2>1. 権利の帰属</h2>
           <p>本サービスのプログラム、システム、デザインに関する著作権および知的財産権は、すべて本サービスの運営者に帰属します。</p>
-
           <h2>2. 生成物の権利と利用範囲</h2>
           <p>本サービスを利用して生成されたアニメーション画像データの権利は、元画像の権利者に帰属します。生成物は商用・非商用を問わず自由にご利用いただけます。</p>
-
           <h2>3. 免責事項（責任の制限）</h2>
           <p>本サービスは現状有姿で提供されるものであり、動作の完全性や特定目的への適合性を保証するものではありません。本サービスの利用、または利用不能によって生じた一切の損害（データの消失、配信上のトラブル、第三者との権利侵害等）について、運営者は一切の責任を負いません。</p>
-
           <h2>4. 禁止事項</h2>
           <p>第三者の著作権や肖像権を侵害する画像の利用、および本サービスのシステムに対する過度な負荷をかける行為、リバースエンジニアリング等を禁止します。</p>
-
           <h2>5. サービスの変更・終了</h2>
           <p>運営者は、利用者への事前の通知なく、本サービスの内容変更または提供を終了することができるものとします。</p>
         </div>
       </details>
     </div>
 
-    <!-- 3. プレビュー画面 -->
+    <!-- プレビュー -->
     <div class="preview-box" id="previewContainer">
       <canvas id="cv" width="400" height="400"></canvas>
     </div>
 
-    <!-- 4. 操作ボタン類 -->
+    <!-- 操作領域 -->
     <div class="controls">
-      <!-- 1. 画像選択 -->
       <label class="btn file-label">
         📁 1. 透過PNG画像を選ぶ
         <input type="file" id="fileInput" accept="image/png">
       </label>
 
-      <!-- 2. 動きの選択 -->
       <div class="pattern-label">2. 動きの種類を選ぶ</div>
       <div class="pattern-grid">
         <button class="pattern-btn active" onclick="selectPattern('updown', this)">🎈 ぷかぷか</button>
@@ -271,12 +295,21 @@
         <button class="pattern-btn" onclick="selectPattern('swing', this)">⏰ メトロノーム</button>
       </div>
 
-      <!-- 3. 作成ボタン -->
       <button class="btn generate-btn" id="generateBtn" onclick="generateAPNG()">
         💾 3. アニメPNGを出力する
       </button>
 
       <div id="status"></div>
+    </div>
+
+    <!-- 💡 さりげない支援＆作者リンク -->
+    <div class="support-box">
+      <p>もしこのツールを気に入っていただけましたら…</p>
+      <div class="support-links">
+        <!-- ※ご自身のURLに書き換えてください -->
+        <a href="https://www.amazon.jp/hz/wishlist/ls/1QBBDR3F83E00?ref_=wl_share" target="_blank" rel="noopener">🎁 欲しいものリスト</a>
+        <a href="https://x.com/marusan_369xii" target="_blank" rel="noopener">🐦 作者のX（Twitter）</a>
+      </div>
     </div>
 
     <footer>
