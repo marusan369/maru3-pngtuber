@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>ツイキャス用 アニメPNGメーカー</title>
+  <title>ツイキャス-スタジオ配信用 アニメPNGメーカー</title>
   <style>
     * {
       box-sizing: border-box;
@@ -11,24 +11,53 @@
     }
     body {
       margin: 0;
-      padding: 20px;
+      padding: 20px 16px;
       background-color: #121216;
       color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 400px;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
 
     h1 {
-      font-size: 16px;
-      margin: 0 0 16px 0;
+      font-size: 18px;
+      margin: 0 0 8px 0;
+      color: #00b0ff;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .description-box {
+      width: 100%;
+      background: rgba(0, 176, 255, 0.08);
+      border: 1px solid rgba(0, 176, 255, 0.3);
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #e0e0e0;
+      margin-bottom: 16px;
+    }
+
+    .description-box strong {
       color: #ff4081;
+      font-weight: bold;
     }
 
     .preview-box {
-      width: 300px;
-      height: 300px;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      max-width: 320px;
+      max-height: 320px;
       border-radius: 12px;
       border: 2px dashed rgba(255, 255, 255, 0.2);
       background-color: #1a1a20;
@@ -54,7 +83,6 @@
 
     .controls {
       width: 100%;
-      max-width: 320px;
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -69,15 +97,27 @@
       border: none;
       cursor: pointer;
       text-align: center;
+      transition: opacity 0.2s;
+    }
+
+    .btn:active {
+      opacity: 0.8;
     }
 
     .file-label {
       background: #3f51b5;
       color: #fff;
+      display: block;
     }
 
     input[type="file"] {
       display: none;
+    }
+
+    .pattern-label {
+      font-size: 12px;
+      color: #aaa;
+      margin-bottom: -4px;
     }
 
     .pattern-grid {
@@ -87,12 +127,12 @@
     }
 
     .pattern-btn {
-      padding: 10px 4px;
+      padding: 12px 4px;
       background: #222;
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 8px;
       color: #ccc;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: bold;
       cursor: pointer;
       text-align: center;
@@ -107,6 +147,7 @@
     .generate-btn {
       background: #00e676;
       color: #000;
+      margin-top: 4px;
     }
 
     .generate-btn:disabled {
@@ -128,33 +169,42 @@
 </head>
 <body>
 
-  <h1>🎬 アニメPNGメーカー</h1>
+  <div class="container">
+    <h1>ツイキャス-スタジオ配信用<br>アニメPNGメーカー</h1>
 
-  <div class="preview-box" id="previewContainer">
-    <canvas id="cv" width="400" height="400"></canvas>
-  </div>
-
-  <div class="controls">
-    <!-- 1. 画像選択 -->
-    <label class="btn file-label">
-      📁 1. 画像をえらぶ
-      <input type="file" id="fileInput" accept="image/*">
-    </label>
-
-    <!-- 2. 動きの選択 -->
-    <div class="pattern-grid">
-      <button class="pattern-btn active" onclick="selectPattern('updown', this)">🎈 ぷかぷか</button>
-      <button class="pattern-btn" onclick="selectPattern('side', this)">↔️ ゆらゆら</button>
-      <button class="pattern-btn" onclick="selectPattern('scale', this)">🔍 ぽわん</button>
-      <button class="pattern-btn" onclick="selectPattern('swing', this)">⏰ メトロノーム</button>
+    <div class="description-box">
+      ⚠️ <strong>【準備するもの】背景が透過されたPNG画像</strong><br>
+      ※背景がある画像はくり抜かれませんのでご注意ください。<br>
+      画像を読み込んで好きな動きを選ぶだけで、ツイキャスの配信画面で使えるアニメーションPNG（APNG）素材が作成できます。
     </div>
 
-    <!-- 3. 作成ボタン -->
-    <button class="btn generate-btn" id="generateBtn" onclick="generateAPNG()">
-      💾 2. 動くPNGを作る
-    </button>
+    <div class="preview-box" id="previewContainer">
+      <canvas id="cv" width="400" height="400"></canvas>
+    </div>
 
-    <div id="status"></div>
+    <div class="controls">
+      <!-- 1. 画像選択 -->
+      <label class="btn file-label">
+        📁 1. 透過PNG画像を選ぶ
+        <input type="file" id="fileInput" accept="image/png">
+      </label>
+
+      <!-- 2. 動きの選択 -->
+      <div class="pattern-label">2. 動きの種類を選ぶ</div>
+      <div class="pattern-grid">
+        <button class="pattern-btn active" onclick="selectPattern('updown', this)">🎈 ぷかぷか</button>
+        <button class="pattern-btn" onclick="selectPattern('side', this)">↔️ ゆらゆら</button>
+        <button class="pattern-btn" onclick="selectPattern('scale', this)">🔍 ぽわん</button>
+        <button class="pattern-btn" onclick="selectPattern('swing', this)">⏰ メトロノーム</button>
+      </div>
+
+      <!-- 3. 作成ボタン -->
+      <button class="btn generate-btn" id="generateBtn" onclick="generateAPNG()">
+        💾 3. アニメPNGを出力する
+      </button>
+
+      <div id="status"></div>
+    </div>
   </div>
 
   <script>
@@ -174,9 +224,9 @@
     function drawPlaceholder() {
       ctx.clearRect(0, 0, cv.width, cv.height);
       ctx.fillStyle = '#888';
-      ctx.font = '16px sans-serif';
+      ctx.font = '14px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('画像を選択してニャ', cv.width / 2, cv.height / 2);
+      ctx.fillText('ここに画像が表示されます', cv.width / 2, cv.height / 2);
     }
 
     fileInput.addEventListener('change', (e) => {
@@ -190,7 +240,7 @@
           img = newImg;
           previewContainer.innerHTML = '';
           previewContainer.appendChild(cv);
-          status.textContent = '準備OK！動きをえらんでボタンを押してニャ！';
+          status.textContent = '準備完了です！動きを選んで出力ボタンを押してください。';
         };
         newImg.src = evt.target.result;
       };
@@ -215,7 +265,6 @@
       const h = img.height * baseScale;
 
       if (currentPattern === 'swing') {
-        // ⏰ メトロノーム（下端固定で振り子回転）
         const rotateAngle = Math.sin(currentAngle) * (Math.PI / 90); 
         const pivotX = cv.width / 2;
         const pivotY = (cv.height + h) / 2;
@@ -224,17 +273,16 @@
         targetCtx.rotate(rotateAngle);
         targetCtx.drawImage(img, -w / 2, -h, w, h);
       } else {
-        // 🎈 ぷかぷか / ↔️ ゆらゆら / 🔍 ぽわん（回転なしの純粋な平行移動・伸縮）
         let offsetX = 0;
         let offsetY = 0;
         let scaleFactor = 1.0;
 
         if (currentPattern === 'updown') {
-          offsetY = Math.sin(currentAngle) * 4; // 上下4px
+          offsetY = Math.sin(currentAngle) * 4;
         } else if (currentPattern === 'side') {
-          offsetX = Math.sin(currentAngle) * 10; // 💡 左右10pxの純粋な水平スライド
+          offsetX = Math.sin(currentAngle) * 10;
         } else if (currentPattern === 'scale') {
-          scaleFactor = 1.0 + Math.sin(currentAngle) * 0.03; // 伸縮
+          scaleFactor = 1.0 + Math.sin(currentAngle) * 0.03;
         }
 
         const finalW = w * scaleFactor;
@@ -259,17 +307,17 @@
 
     function generateAPNG() {
       if (!img) {
-        alert('先に画像をえらんでニャ！');
+        alert('先に透過PNG画像を選択してください。');
         return;
       }
 
       generateBtn.disabled = true;
-      status.textContent = '動くPNGを変換中ニャ…';
+      status.textContent = 'アニメPNGを作成中…';
 
       setTimeout(() => {
         const frames = [];
         const delays = [];
-        const totalFrames = 30; // スマホでの高速再生防止（100ms×30コマ＝3秒周期）
+        const totalFrames = 30; 
 
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = cv.width;
@@ -289,9 +337,11 @@
         const blob = new Blob([apngBuffer], { type: 'image/png' });
         const url = URL.createObjectURL(blob);
 
+        const fileName = `cas_${currentPattern}.png`;
+
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'studio_overlay.png';
+        a.download = fileName;
         a.click();
 
         const resultImg = document.createElement('img');
@@ -300,7 +350,7 @@
         previewContainer.innerHTML = '';
         previewContainer.appendChild(resultImg);
 
-        status.textContent = '完成！DLされない場合は上の画像を「長押し保存」してニャ！';
+        status.textContent = '完成！保存されない場合は上の画像を長押しして保存してください。';
         generateBtn.disabled = false;
       }, 50);
     }
