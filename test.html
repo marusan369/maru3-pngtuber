@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>リアルタイム美容＆爆速レインボー v12</title>
+  <title>リアルタイム美白＆演出フィルター v13</title>
   <style>
     * {
       box-sizing: border-box;
@@ -42,13 +42,13 @@
       transform: scaleX(-1);
     }
 
-    /* ★超高速レインボー（パーティーモード：0.8秒で1周）★ */
+    /* 超高速レインボー（パーティーモード） */
     @keyframes partyRainbow {
       0% { filter: hue-rotate(0deg) saturate(1.4); }
       100% { filter: hue-rotate(360deg) saturate(1.4); }
     }
     video.party-rainbow {
-      animation: partyRainbow 0.8s linear infinite; /* 爆速アニメーション */
+      animation: partyRainbow 0.8s linear infinite;
     }
 
     .light-overlay {
@@ -159,13 +159,6 @@
       box-shadow: 0 0 12px rgba(255, 64, 129, 0.4);
     }
 
-    button.actress-btn.active {
-      background: linear-gradient(135deg, #ff4081, #ffb300);
-      color: #fff;
-      border-color: #ffb300;
-      box-shadow: 0 0 14px rgba(255, 179, 0, 0.6);
-    }
-
     button.fun-btn.active {
       background: #7c4dff;
       color: #fff;
@@ -212,12 +205,12 @@
   <div class="controls" id="controlsUI">
     
     <div class="section">
-      <div class="label">✨ 高画質ライティング</div>
+      <div class="label">✨ 無劣化トーンアップ</div>
       <div class="button-group">
         <button onclick="setFilter('off', this)" class="active">OFF</button>
-        <button onclick="setFilter('ring', this)">💡 リングライト</button>
-        <button onclick="setFilter('studiolight', this)">スタジオ美白</button>
-        <button onclick="setFilter('actress', this)" class="actress-btn">👑 女優ライト</button>
+        <button onclick="setFilter('lvl1', this)">美白 Lv.1</button>
+        <button onclick="setFilter('lvl2', this)">美白 Lv.2</button>
+        <button onclick="setFilter('lvl3', this)">美白 Lv.3</button>
       </div>
     </div>
 
@@ -315,7 +308,7 @@
         btnElement.classList.add('active');
       }
 
-      // 初期化（ミラー状態を維持）
+      // 初期化
       video.className = mirrorBtn.textContent.includes('ON') ? 'mirror' : '';
       video.style.filter = 'none';
       overlay.style.background = 'transparent';
@@ -324,15 +317,18 @@
         case 'off':
           break;
 
-        case 'ring':
+        case 'lvl1':
+          // 美白 Lv.1（薄めの白でほんのりトーンアップ）
           overlay.style.background = 'rgba(255, 250, 240, 0.12)';
           break;
 
-        case 'studiolight':
+        case 'lvl2':
+          // 美白 Lv.2（中くらいの白で自然に明るく）
           overlay.style.background = 'rgba(255, 255, 255, 0.2)';
           break;
 
-        case 'actress':
+        case 'lvl3':
+          // 美白 Lv.3（しっかりめのグラデーション白でトーンアップ）
           overlay.style.background = 'radial-gradient(circle, rgba(255,255,255,0.28) 30%, rgba(255,240,245,0.15) 100%)';
           break;
 
@@ -345,7 +341,6 @@
           break;
 
         case 'party':
-          // ★パリピレインボー（爆速アニメーション）★
           video.classList.add('party-rainbow');
           break;
       }
