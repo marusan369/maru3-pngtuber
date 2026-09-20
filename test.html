@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>リアルタイム美白＆演出フィルター v14</title>
+  <title>リアルタイム美白＆演出フィルター v15（美白レベル修正版）</title>
   <style>
     * {
       box-sizing: border-box;
@@ -318,15 +318,18 @@
           break;
 
         case 'lvl1':
-          overlay.style.background = 'rgba(255, 250, 240, 0.12)';
+          // 美白 Lv.1：うっすら白（10%）
+          overlay.style.background = 'rgba(255, 255, 255, 0.10)';
           break;
 
         case 'lvl2':
-          overlay.style.background = 'rgba(255, 255, 255, 0.2)';
+          // 美白 Lv.2：しっかり白（20%）
+          overlay.style.background = 'rgba(255, 255, 255, 0.20)';
           break;
 
         case 'lvl3':
-          overlay.style.background = 'radial-gradient(circle, rgba(255,255,255,0.28) 30%, rgba(255,240,245,0.15) 100%)';
+          // 美白 Lv.3：かなり白（35%）
+          overlay.style.background = 'rgba(255, 255, 255, 0.35)';
           break;
 
         case 'rosy':
