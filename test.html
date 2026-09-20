@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>リアルタイム美白＆スポットライティング v19</title>
+  <title>リアルタイム美白＆本格女優ライト v20</title>
   <style>
     * {
       box-sizing: border-box;
@@ -31,14 +31,12 @@
       overflow: hidden;
     }
 
-    /* 映像本体ではなくCanvasで描画 */
     canvas {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
 
-    /* バックグラウンド処理用の非表示video */
     video {
       display: none;
     }
@@ -179,9 +177,7 @@
   <div class="ui-hint" id="uiHint">💡 画面タップでメニュー開閉</div>
 
   <div class="video-container">
-    <!-- 内部ビデオ処理用（非表示） -->
     <video id="webcam" autoplay playsinline muted></video>
-    <!-- メイン描画用Canvas -->
     <canvas id="outputCanvas"></canvas>
   </div>
 
@@ -255,10 +251,8 @@
       }
     }
 
-    // Canvasへのリアルタイム描画ループ
     function renderFrame() {
       if (video.readyState === video.HAVE_ENOUGH_DATA) {
-        // 解像度の同期
         if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
@@ -273,17 +267,12 @@
           ctx.scale(-1, 1);
         }
 
-        // ベースのCSSフィルター設定
+        // 1. 基本の肌色トーン整え（背景を飛ばさず髪や目の黒を引き締める）
         applyBaseFilter();
-
-        // ビデオを描画
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        // フィルターのリセット（オーバーレイ用）
-        ctx.filter = 'none';
-
-        // スポットライティング（中央を明るく照らす擬似スポット）
-        applySpotlightOverlay();
+        // 2. 「影を持ち上げる」ライティング（描画合成モードを使用）
+        applyShadowLiftingLight();
 
         ctx.restore();
       }
@@ -291,27 +280,26 @@
       requestAnimationFrame(renderFrame);
     }
 
-    // モードに応じた画像調整（CSS filter風の描画演算）
     function applyBaseFilter() {
       switch (currentMode) {
         case 'natural':
-          ctx.filter = 'brightness(1.08) contrast(1.02) saturate(1.04)';
+          ctx.filter = 'brightness(1.05) contrast(1.02) saturate(1.03)';
           break;
         case 'ring':
-          ctx.filter = 'brightness(1.15) contrast(1.06) saturate(1.06)';
+          ctx.filter = 'brightness(1.08) contrast(1.05) saturate(1.05)';
           break;
         case 'actress':
-          ctx.filter = 'brightness(1.22) contrast(1.10) saturate(1.08)';
+          ctx.filter = 'brightness(1.10) contrast(1.08) saturate(1.06)';
           break;
         case 'actressMax':
-          ctx.filter = 'brightness(1.32) contrast(1.14) saturate(1.10)';
+          ctx.filter = 'brightness(1.12) contrast(1.10) saturate(1.08)';
           break;
         case 'rosy':
-          ctx.filter = 'brightness(1.12) contrast(1.03) saturate(1.30)';
+          ctx.filter = 'brightness(1.06) contrast(1.03) saturate(1.25)';
           break;
         case 'party':
           rainbowHue = (rainbowHue + 4) % 360;
-          ctx.filter = `hue-rotate(${rainbowHue}deg) saturate(1.5) brightness(1.1)`;
+          ctx.filter = `hue-rotate(${rainbowHue}deg) saturate(1.5)`;
           break;
         default:
           ctx.filter = 'none';
@@ -319,44 +307,70 @@
       }
     }
 
-    // スポットライティング（顔周辺を中心に柔らかく照らす）
-    function applySpotlightOverlay() {
+    /*
+      ★ここが最大の進化！「影を持ち上げる」合成ライティング★
+      暗い部分（影）にだけ光を回すため Canvas の globalCompositeOperation を使用。
+      - screen: 暗部（顔の陰影・影）を明るく持ち上げる（明るい場所は白飛びしにくい）
+      - soft-light: 柔らかい光を拡散させて肌色ムラを馴染ませる
+    */
+    function applyShadowLiftingLight() {
       const w = canvas.width;
       const h = canvas.height;
       const centerX = w / 2;
-      const centerY = h * 0.42; // 顔が来やすい少し高めの位置
+      const centerY = h * 0.45; // 顔が収まる中央よりやや高めの位置
 
-      if (currentMode === 'ring' || currentMode === 'actress' || currentMode === 'actressMax') {
-        const radius = Math.max(w, h) * 0.6;
-        const gradient = ctx.createRadialGradient(centerX, centerY, 50, centerX, centerY, radius);
+      ctx.filter = 'none';
 
-        if (currentMode === 'ring') {
-          // リングライト：顔の周りを中心にほんのり暖色ライト
-          gradient.addColorStop(0, 'rgba(255, 252, 245, 0.18)');
-          gradient.addColorStop(0.6, 'rgba(255, 245, 235, 0.08)');
-          gradient.addColorStop(1, 'rgba(0, 0, 0, 0.15)');
-        } else if (currentMode === 'actress') {
-          // 女優ライト：透明感のある明るいスポット
-          gradient.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
-          gradient.addColorStop(0.5, 'rgba(255, 248, 240, 0.12)');
-          gradient.addColorStop(1, 'rgba(0, 0, 0, 0.22)');
-        } else if (currentMode === 'actressMax') {
-          // 女優ライトMAX：強力な中央集中スポット＆外側シャドウ
-          gradient.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
-          gradient.addColorStop(0.4, 'rgba(255, 245, 245, 0.18)');
-          gradient.addColorStop(1, 'rgba(0, 0, 0, 0.30)');
-        }
-
-        ctx.fillStyle = gradient;
+      if (currentMode === 'ring') {
+        // リングライト：顔全体へ均一に柔らかい拡散光（ソフトライト合成）
+        ctx.globalCompositeOperation = 'soft-light';
+        const grad = ctx.createRadialGradient(centerX, centerY, 80, centerX, centerY, w * 0.7);
+        grad.addColorStop(0, 'rgba(255, 250, 240, 0.40)');
+        grad.addColorStop(1, 'rgba(255, 245, 235, 0.10)');
+        ctx.fillStyle = grad;
         ctx.fillRect(0, 0, w, h);
+
+      } else if (currentMode === 'actress') {
+        // 女優ライト：暗部を持ち上げる「スクリーン合成」＋血色ソフトライト
+        ctx.globalCompositeOperation = 'screen';
+        const grad1 = ctx.createRadialGradient(centerX, centerY, 50, centerX, centerY, w * 0.6);
+        // ほんのり肌を明るく補正するウォームホワイト
+        grad1.addColorStop(0, 'rgba(255, 240, 230, 0.35)');
+        grad1.addColorStop(1, 'rgba(200, 200, 200, 0)');
+        ctx.fillStyle = grad1;
+        ctx.fillRect(0, 0, w, h);
+
+        // 輪郭や肌ムラを滑らかにするレイヤー
+        ctx.globalCompositeOperation = 'soft-light';
+        ctx.fillStyle = 'rgba(255, 235, 225, 0.25)';
+        ctx.fillRect(0, 0, w, h);
+
+      } else if (currentMode === 'actressMax') {
+        // 女優ライトMAX：強力な影持ち上げ（Wスクリーン合成）
+        ctx.globalCompositeOperation = 'screen';
+        const gradMax = ctx.createRadialGradient(centerX, centerY, 30, centerX, centerY, w * 0.65);
+        gradMax.addColorStop(0, 'rgba(255, 245, 240, 0.50)');
+        gradMax.addColorStop(0.7, 'rgba(255, 235, 225, 0.20)');
+        gradMax.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = gradMax;
+        ctx.fillRect(0, 0, w, h);
+
+        // さらに肌のくすみ（暗部）だけをガツンと持ち上げる
+        ctx.globalCompositeOperation = 'soft-light';
+        ctx.fillStyle = 'rgba(255, 240, 235, 0.35)';
+        ctx.fillRect(0, 0, w, h);
+
       } else if (currentMode === 'rosy') {
-        const radius = Math.max(w, h) * 0.6;
-        const gradient = ctx.createRadialGradient(centerX, centerY, 50, centerX, centerY, radius);
-        gradient.addColorStop(0, 'rgba(255, 210, 220, 0.20)');
-        gradient.addColorStop(1, 'rgba(255, 180, 200, 0.05)');
-        ctx.fillStyle = gradient;
+        ctx.globalCompositeOperation = 'screen';
+        const gradRosy = ctx.createRadialGradient(centerX, centerY, 50, centerX, centerY, w * 0.5);
+        gradRosy.addColorStop(0, 'rgba(255, 200, 215, 0.30)');
+        gradRosy.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = gradRosy;
         ctx.fillRect(0, 0, w, h);
       }
+
+      // 描画モードを通常に戻す
+      ctx.globalCompositeOperation = 'source-over';
     }
 
     function toggleUI(e) {
