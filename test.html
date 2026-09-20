@@ -162,6 +162,52 @@
       text-align: center;
       min-height: 18px;
     }
+
+    /* 利用規約エリアのデザイン */
+    .terms-box {
+      width: 100%;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    details {
+      background: #1a1a20;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 11px;
+      color: #aaa;
+    }
+
+    summary {
+      font-weight: bold;
+      color: #ccc;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .terms-content {
+      margin-top: 10px;
+      line-height: 1.6;
+    }
+
+    .terms-content h2 {
+      font-size: 11px;
+      color: #fff;
+      margin: 8px 0 2px 0;
+    }
+
+    .terms-content p {
+      margin: 0 0 6px 0;
+    }
+
+    footer {
+      margin-top: 16px;
+      font-size: 10px;
+      color: #666;
+      text-align: center;
+    }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
@@ -205,6 +251,34 @@
 
       <div id="status"></div>
     </div>
+
+    <!-- 📜 利用規約（開閉式） -->
+    <div class="terms-box">
+      <details>
+        <summary>📜 利用規約・免責事項</summary>
+        <div class="terms-content">
+          <h2>1. 権利の帰属</h2>
+          <p>本サービスのプログラム、システム、デザインに関する著作権および知的財産権は、すべて本サービスの運営者に帰属します。</p>
+
+          <h2>2. 生成物の権利と利用範囲</h2>
+          <p>本サービスを利用して生成されたアニメーション画像データの権利は、元画像の権利者に帰属します。生成物は商用・非商用を問わず自由にご利用いただけます。</p>
+
+          <h2>3. 免責事項（責任の制限）</h2>
+          <p>本サービスは現状有姿で提供されるものであり、動作の完全性や特定目的への適合性を保証するものではありません。本サービスの利用、または利用不能によって生じた一切の損害（データの消失、配信上のトラブル、第三者との権利侵害等）について、運営者は一切の責任を負いません。</p>
+
+          <h2>4. 禁止事項</h2>
+          <p>第三者の著作権や肖像権を侵害する画像の利用、および本サービスのシステムに対する過度な負荷をかける行為、リバースエンジニアリング等を禁止します。</p>
+
+          <h2>5. サービスの変更・終了</h2>
+          <p>運営者は、利用者への事前の通知なく、本サービスの内容変更または提供を終了することができるものとします。</p>
+        </div>
+      </details>
+    </div>
+
+    <footer>
+      © ツイキャス-スタジオ配信用 アニメPNGメーカー All Rights Reserved.
+    </footer>
+
   </div>
 
   <script>
