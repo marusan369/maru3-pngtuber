@@ -3,78 +3,143 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>カメラ動作検証テスト</title>
+  <title>リアルタイム美容フィルター＆ミラー検証</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       margin: 0;
       padding: 0;
       background-color: #000;
       color: #fff;
       font-family: sans-serif;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      overflow: hidden;
-    }
-
-    /* 配信時に邪魔な文字を消すためのスタイル */
-    .controls {
-      position: absolute;
-      top: 10px;
-      z-index: 10;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 10px 15px;
-      border-radius: 8px;
-      text-align: center;
-    }
-
-    button {
-      padding: 8px 16px;
-      font-size: 14px;
-      cursor: pointer;
-      border: none;
-      border-radius: 4px;
-      background: #ff4081;
-      color: white;
-      font-weight: bold;
-      margin: 4px;
     }
 
     /* カメラ映像を画面いっぱいに表示 */
     video {
       width: 100vw;
       height: 100vh;
-      object-fit: cover; /* 画面に隙間なくフィットさせる */
+      object-fit: cover;
+      transition: filter 0.3s ease, transform 0.2s ease;
+    }
+
+    /* ミラー（左右反転）用のクラス */
+    video.mirror {
+      transform: scaleX(-1);
+    }
+
+    /* 配信画面の上に重ねる操作パネル */
+    .controls {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 12px 16px;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+      max-width: 90vw;
+      backdrop-filter: blur(5px);
+    }
+
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    button {
+      padding: 8px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background: #333;
+      color: white;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    button:active {
+      transform: scale(0.95);
+    }
+
+    /* 選択中のプリセットボタンを強調 */
+    button.active {
+      background: #ff4081;
+      color: white;
+    }
+
+    /* ミラーボタンのON状態 */
+    button.mirror-on {
+      background: #00e676;
+      color: #000;
+    }
+
+    .label {
+      font-size: 11px;
+      color: #aaa;
+      margin-bottom: 2px;
     }
   </style>
 </head>
 <body>
 
-  <div class="controls" id="ui">
-    <p style="margin:0 0 8px 0; font-size:12px;">カメラ切り替え・表示確認用</p>
-    <button onclick="startCamera('user')">インカメラ</button>
-    <button onclick="startCamera('environment')">アウトカメラ</button>
-  </div>
+  <!-- カメラ映像本体 -->
+  <video id="webcam" autoplay playsinline muted class="mirror"></video>
 
-  <video id="webcam" autoplay playsinline muted></video>
+  <!-- 操作用UI -->
+  <div class="controls">
+    
+    <!-- 美容フィルター切り替え -->
+    <div style="text-align: center;">
+      <div class="label">美容フィルター（ワンクリック切り替え）</div>
+      <div class="button-group">
+        <button onclick="setFilter('off', this)" class="active">OFF</button>
+        <button onclick="setFilter('natural', this)">ナチュラル</button>
+        <button onclick="setFilter('soft', this)">やわらか美白</button>
+        <button onclick="setFilter('mori', this)">しっかり盛り</button>
+        <button onclick="setFilter('rosy', this)">血色感UP</button>
+        <button onclick="setFilter('retro', this)">エモレトロ</button>
+      </div>
+    </div>
+
+    <!-- 機能切り替え -->
+    <div class="button-group" style="margin-top: 4px;">
+      <button id="mirrorBtn" onclick="toggleMirror()" class="mirror-on">ミラー：ON</button>
+      <button onclick="toggleCamera()">カメラ切替</button>
+    </div>
+
+  </div>
 
   <script>
     const video = document.getElementById('webcam');
+    const mirrorBtn = document.getElementById('mirrorBtn');
+    let currentFacingMode = 'user'; // 'user' (イン) または 'environment' (アウト)
     let currentStream = null;
 
-    async function startCamera(facingMode) {
-      // 既存のストリームがあれば停止
+    // --- カメラ起動処理 ---
+    async function startCamera() {
       if (currentStream) {
         currentStream.getTracks().forEach(track => track.stop());
       }
 
       try {
-        // カメラ映像の取得要求
         const constraints = {
           video: {
-            facingMode: facingMode, // 'user' (自撮り) または 'environment' (外カメラ)
+            facingMode: currentFacingMode,
             width: { ideal: 1280 },
             height: { ideal: 720 }
           },
@@ -84,12 +149,76 @@
         currentStream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = currentStream;
       } catch (err) {
-        alert('カメラの起動に失敗しましたニャ: ' + err.message);
+        alert('カメラ起動エラー: ' + err.message);
       }
     }
 
-    // 最初は自撮り（インカメラ）で起動
-    startCamera('user');
+    // --- ミラー（左右反転）切り替え ---
+    function toggleMirror() {
+      video.classList.toggle('mirror');
+      const isMirror = video.classList.contains('mirror');
+      
+      if (isMirror) {
+        mirrorBtn.textContent = 'ミラー：ON';
+        mirrorBtn.classList.add('mirror-on');
+      } else {
+        mirrorBtn.textContent = 'ミラー：OFF';
+        mirrorBtn.classList.remove('mirror-on');
+      }
+    }
+
+    // --- イン/アウトカメラ切り替え ---
+    function toggleCamera() {
+      currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+      startCamera();
+    }
+
+    // --- 美容フィルター（CSS Filterの組み合わせ） ---
+    function setFilter(type, btnElement) {
+      // ボタンの見た目を更新
+      const buttons = btnElement.parentElement.querySelectorAll('button');
+      buttons.forEach(b => b.classList.remove('active'));
+      btnElement.classList.add('active');
+
+      // フィルター適用
+      switch (type) {
+        case 'off':
+          // 加工なし
+          video.style.filter = 'none';
+          break;
+
+        case 'natural':
+          // ナチュラル：ほんのり明るく＆肌の凹凸感をやわらげる
+          video.style.filter = 'brightness(1.08) contrast(0.95) saturate(1.05) blur(0.4px)';
+          break;
+
+        case 'soft':
+          // やわらか美白：しっかり明るく＆ふんわりボカシ
+          video.style.filter = 'brightness(1.18) contrast(0.92) saturate(0.95) blur(0.8px)';
+          break;
+
+        case 'mori':
+          // しっかり盛り：トーンを上げつつコントラストと彩度でくっきり可愛く
+          video.style.filter = 'brightness(1.15) contrast(1.02) saturate(1.15) blur(0.5px)';
+          break;
+
+        case 'rosy':
+          // 血色感UP：ほんのりピンク・赤みを乗せて健康的な肌色に
+          video.style.filter = 'brightness(1.05) contrast(0.98) saturate(1.3) hue-rotate(-5deg) blur(0.4px)';
+          break;
+
+        case 'retro':
+          // エモレトロ：雰囲気の出るレトロ調
+          video.style.filter = 'brightness(1.05) contrast(1.1) sepia(0.25) saturate(1.1)';
+          break;
+
+        default:
+          video.style.filter = 'none';
+      }
+    }
+
+    // 初期起動（最初はインカメラ・ミラーONで起動）
+    startCamera();
   </script>
 </body>
 </html>
