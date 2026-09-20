@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>簡易アニメーションWebPメーカー</title>
+  <title>ツイキャス用 簡易アニメPNGメーカー</title>
   <style>
     * {
       box-sizing: border-box;
@@ -26,7 +26,6 @@
       color: #ff4081;
     }
 
-    /* プレビュー表示エリア（背景格子模様） */
     .preview-box {
       width: 260px;
       height: 260px;
@@ -60,7 +59,6 @@
       gap: 12px;
     }
 
-    /* ボタンデザイン */
     .btn {
       width: 100%;
       padding: 14px;
@@ -99,25 +97,27 @@
       min-height: 18px;
     }
   </style>
+
+  <!-- 正しいAPNG構造を生成する軽量ライブラリ UPNG.js -->
+  <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/upng-js@2.1.0/UPNG.js"></script>
 </head>
 <body>
 
-  <h1>🎬 簡易アニメーションWebPメーカー</h1>
+  <h1>🎬 ツイキャス用 簡易アニメPNGメーカー</h1>
 
   <div class="preview-box">
     <canvas id="cv" width="300" height="300"></canvas>
   </div>
 
   <div class="controls">
-    <!-- 1. 画像選択 -->
     <label class="btn file-label">
       📁 1. 画像をえらぶ
       <input type="file" id="fileInput" accept="image/*">
     </label>
 
-    <!-- 2. 出力ボタン -->
-    <button class="btn generate-btn" id="generateBtn" onclick="generateWebP()">
-      💾 2. アニメWebPを作る
+    <button class="btn generate-btn" id="generateBtn" onclick="generateAPNG()">
+      💾 2. 動くPNGを作る
     </button>
 
     <div id="status"></div>
@@ -133,7 +133,6 @@
     let img = null;
     let angle = 0;
 
-    // 初期状態の表示
     drawPlaceholder();
 
     function drawPlaceholder() {
@@ -144,7 +143,6 @@
       ctx.fillText('画像を選択してニャ', cv.width / 2, cv.height / 2);
     }
 
-    // 画像の読み込み処理
     fileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -161,87 +159,79 @@
       reader.readAsDataURL(file);
     });
 
-    // 動きを描画する関数（パターン1種類：ぷかぷか上下揺れ）
-    function drawFrame(currentAngle) {
-      ctx.clearRect(0, 0, cv.width, cv.height);
+    function drawFrameOnContext(targetCtx, currentAngle) {
+      targetCtx.clearRect(0, 0, cv.width, cv.height);
 
-      if (!img) {
-        drawPlaceholder();
-        return;
-      }
+      if (!img) return;
 
-      ctx.save();
-      // 上下に12px揺れる計算
-      const offsetY = Math.sin(currentAngle) * 12;
+      targetCtx.save();
+      const offsetY = Math.sin(currentAngle) * 12; // ぷかぷか上下揺れ
 
-      // 画像を中央に配置
       const scale = Math.min((cv.width - 40) / img.width, (cv.height - 40) / img.height);
       const w = img.width * scale;
       const h = img.height * scale;
       const x = (cv.width - w) / 2;
       const y = (cv.height - h) / 2 + offsetY;
 
-      ctx.drawImage(img, x, y, w, h);
-      ctx.restore();
+      targetCtx.drawImage(img, x, y, w, h);
+      targetCtx.restore();
     }
 
-    // 画面プレビュー用の無限ループ
     function previewLoop() {
       angle = (angle + 0.06) % (Math.PI * 2);
-      drawFrame(angle);
+      if (img) {
+        drawFrameOnContext(ctx, angle);
+      } else {
+        drawPlaceholder();
+      }
       requestAnimationFrame(previewLoop);
     }
     requestAnimationFrame(previewLoop);
 
-    // アニメーションWebP生成＆ダウンロード処理
-    function generateWebP() {
+    // 本物の APNG (.png) 画像ファイルを生成する処理
+    function generateAPNG() {
       if (!img) {
         alert('先に画像をえらんでニャ！');
         return;
       }
 
       generateBtn.disabled = true;
-      status.textContent = 'WebPアニメを生成中ニャ…';
+      status.textContent = 'コマ画像を変換中ニャ…';
 
-      // Canvasからストリーム（映像線）を取得
-      const stream = cv.captureStream(30); // 30fps
-      
-      // WebP（またはWebM）でエンコード準備
-      let options = { mimeType: 'image/webp' };
-      if (!MediaRecorder.isTypeSupported('image/webp')) {
-        options = { mimeType: 'video/webm' }; // 非対応ブラウザ用フォールバック
-      }
+      setTimeout(() => {
+        const frames = [];
+        const delays = [];
+        const totalFrames = 15; // 15コマでループ
 
-      let recorder;
-      try {
-        recorder = new MediaRecorder(stream, options);
-      } catch (e) {
-        // さらに互換性のためのフォールバック
-        recorder = new MediaRecorder(stream);
-      }
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = cv.width;
+        tempCanvas.height = cv.height;
+        const tempCtx = tempCanvas.getContext('2d');
 
-      const chunks = [];
-      recorder.ondataavailable = e => chunks.push(e.data);
+        for (let i = 0; i < totalFrames; i++) {
+          const frameAngle = (i / totalFrames) * Math.PI * 2;
+          drawFrameOnContext(tempCtx, frameAngle);
 
-      recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'image/webp' });
+          // RGBAのピクセル配列を取得
+          const imgData = tempCtx.getImageData(0, 0, cv.width, cv.height);
+          frames.push(imgData.data.buffer);
+          delays.push(66); // 各コマ約66ms（約15fps）
+        }
+
+        // UPNGライブラリでAPNGバイナリを生成
+        const apngBuffer = UPNG.encode(frames, cv.width, cv.height, 0, delays);
+        const blob = new Blob([apngBuffer], { type: 'image/png' });
         const url = URL.createObjectURL(blob);
 
-        // 自動ダウンロード
+        // 最初から .png の名前で出力（ツイキャス対応）
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'animated_overlay.webp';
+        a.download = 'animated_overlay.png';
         a.click();
 
-        status.textContent = '完成！ダウンロードされたニャ！';
+        status.textContent = '完成！動くPNG (.png) が保存されたニャ！';
         generateBtn.disabled = false;
-      };
-
-      // 1サイクル（約2秒間）分を録画して保存
-      recorder.start();
-      setTimeout(() => {
-        recorder.stop();
-      }, 2000);
+      }, 50);
     }
   </script>
 </body>
