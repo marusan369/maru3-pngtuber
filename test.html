@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>リアルタイム美容＆演出フィルター v9（高画質オーバーレイ版）</title>
+  <title>リアルタイム美容＆演出フィルター v10（無劣化ライティング＋新演出）</title>
   <style>
     * {
       box-sizing: border-box;
@@ -35,8 +35,8 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: transform 0.2s ease;
-      /* CSSフィルターは一切かけず、無加工の最高画質をそのまま表示 */
+      transition: transform 0.2s ease, filter 0.25s ease;
+      /* CSSフィルターは初期状態では無し */
     }
 
     video.mirror {
@@ -213,8 +213,8 @@
     <div class="section">
       <div class="label">🎨 演出・ネタ</div>
       <div class="button-group">
-        <button onclick="setFilter('mono', this)" class="fun-btn">🎬 モノクロ</button>
-        <button onclick="setFilter('retro', this)" class="fun-btn">🎞️ レトロ</button>
+        <button onclick="setFilter('rosy', this)" class="fun-btn">🌸 血色ピンク</button>
+        <button onclick="setFilter('soft', this)" class="fun-btn">☁ ふんわり美肌</button>
       </div>
     </div>
 
@@ -293,7 +293,7 @@
       startCamera();
     }
 
-    /* 映像本体には一切フィルタ処理をかけず、オーバーレイ（膜）の透明度と色で調整 */
+    /* フィルター設定。無劣化ライティングはoverlay、演出系はvideoのfilterまたはoverlayで調整 */
     function setFilter(type, btnElement) {
       const allButtons = document.querySelectorAll('.button-group button');
       allButtons.forEach(b => b.classList.remove('active'));
@@ -326,13 +326,18 @@
           overlay.style.background = 'radial-gradient(circle, rgba(255,255,255,0.28) 30%, rgba(255,240,245,0.15) 100%)';
           break;
 
-        case 'mono':
-          // モノクロなどの特殊演出のみCSSフィルターを使用
-          video.style.filter = 'grayscale(100%)';
+        case 'rosy':
+          // ★血色ピンク★
+          // 薄いピンク色の膜を重ねる
+          overlay.style.background = 'rgba(255, 182, 193, 0.15)'; // 薄いピンク
           break;
 
-        case 'retro':
-          video.style.filter = 'sepia(50%)';
+        case 'soft':
+          // ★ふんわり美肌★
+          // videoに軽いボカシをかける。ザラザラ感も軽減。
+          video.style.filter = 'blur(2.5px)'; // 軽いボカシ
+          // さらに薄い白を重ねて柔らかさを出す
+          overlay.style.background = 'rgba(255, 255, 255, 0.08)';
           break;
       }
     }
