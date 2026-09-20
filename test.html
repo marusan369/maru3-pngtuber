@@ -80,14 +80,14 @@
       display: none;
     }
 
-    /* パターン選択ボタン */
-    .pattern-group {
-      display: flex;
-      gap: 6px;
+    /* 2列×2行のグリッドで配置 */
+    .pattern-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
     }
 
     .pattern-btn {
-      flex: 1;
       padding: 10px 4px;
       background: #222;
       border: 1px solid rgba(255, 255, 255, 0.2);
@@ -96,6 +96,7 @@
       font-size: 12px;
       font-weight: bold;
       cursor: pointer;
+      text-align: center;
     }
 
     .pattern-btn.active {
@@ -141,11 +142,12 @@
       <input type="file" id="fileInput" accept="image/*">
     </label>
 
-    <!-- 2. 動きの選択 -->
-    <div class="pattern-group">
+    <!-- 2. 動きの選択（全4種） -->
+    <div class="pattern-grid">
       <button class="pattern-btn active" onclick="selectPattern('updown', this)">🎈 ぷかぷか</button>
       <button class="pattern-btn" onclick="selectPattern('side', this)">↔️ ゆらゆら</button>
       <button class="pattern-btn" onclick="selectPattern('scale', this)">🔍 ぽわん</button>
+      <button class="pattern-btn" onclick="selectPattern('swing', this)">⏰ メトロノーム</button>
     </div>
 
     <!-- 3. 作成ボタン -->
@@ -210,27 +212,41 @@
 
       targetCtx.save();
 
-      let offsetX = 0;
-      let offsetY = 0;
-      let scaleFactor = 1.0;
+      const baseScale = Math.min(cv.width / img.width, (cv.height - 8) / img.height);
+      const w = img.width * baseScale;
+      const h = img.height * baseScale;
 
-      // 3つのパターン計算
-      if (currentPattern === 'updown') {
-        offsetY = Math.sin(currentAngle) * 4; // 控えめな上下揺れ
-      } else if (currentPattern === 'side') {
-        offsetX = Math.sin(currentAngle) * 4; // 控えめな左右揺れ
-      } else if (currentPattern === 'scale') {
-        scaleFactor = 1.0 + Math.sin(currentAngle) * 0.03; // 3%程度のほんのり伸縮
+      if (currentPattern === 'swing') {
+        // ⏰ メトロノーム（画像の「下中央」を軸にして左右に傾ける）
+        const rotateAngle = Math.sin(currentAngle) * (Math.PI / 36); // 最大約5度傾く（控えめ設定）
+        const pivotX = cv.width / 2;
+        const pivotY = (cv.height + h) / 2; // 下端の位置
+
+        targetCtx.translate(pivotX, pivotY);
+        targetCtx.rotate(rotateAngle);
+        targetCtx.drawImage(img, -w / 2, -h, w, h);
+      } else {
+        // 通常の計算（中央基準）
+        let offsetX = 0;
+        let offsetY = 0;
+        let scaleFactor = 1.0;
+
+        if (currentPattern === 'updown') {
+          offsetY = Math.sin(currentAngle) * 4; // 上下
+        } else if (currentPattern === 'side') {
+          offsetX = Math.sin(currentAngle) * 4; // 左右
+        } else if (currentPattern === 'scale') {
+          scaleFactor = 1.0 + Math.sin(currentAngle) * 0.03; // 伸縮
+        }
+
+        const finalW = w * scaleFactor;
+        const finalH = h * scaleFactor;
+        const x = (cv.width - finalW) / 2 + offsetX;
+        const y = (cv.height - finalH) / 2 + offsetY;
+
+        targetCtx.drawImage(img, x, y, finalW, finalH);
       }
 
-      const baseScale = Math.min(cv.width / img.width, (cv.height - 8) / img.height);
-      const w = img.width * baseScale * scaleFactor;
-      const h = img.height * baseScale * scaleFactor;
-
-      const x = (cv.width - w) / 2 + offsetX;
-      const y = (cv.height - h) / 2 + offsetY;
-
-      targetCtx.drawImage(img, x, y, w, h);
       targetCtx.restore();
     }
 
