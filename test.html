@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>ツイキャス用 簡易アニメPNGメーカー v2</title>
+  <title>ツイキャス用 アニメPNGメーカー</title>
   <style>
     * {
       box-sizing: border-box;
@@ -42,7 +42,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
       overflow: hidden;
     }
 
@@ -58,27 +58,6 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
-    }
-
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    label.field-label {
-      font-size: 12px;
-      color: #aaa;
-    }
-
-    input[type="text"] {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      background: #222;
-      color: #fff;
-      font-size: 14px;
     }
 
     .btn {
@@ -99,6 +78,30 @@
 
     input[type="file"] {
       display: none;
+    }
+
+    /* パターン選択ボタン */
+    .pattern-group {
+      display: flex;
+      gap: 6px;
+    }
+
+    .pattern-btn {
+      flex: 1;
+      padding: 10px 4px;
+      background: #222;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: #ccc;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .pattern-btn.active {
+      background: #ff4081;
+      border-color: #ff4081;
+      color: #fff;
     }
 
     .generate-btn {
@@ -125,7 +128,7 @@
 </head>
 <body>
 
-  <h1>🎬 アニメPNGメーカー v2</h1>
+  <h1>🎬 アニメPNGメーカー</h1>
 
   <div class="preview-box" id="previewContainer">
     <canvas id="cv" width="400" height="400"></canvas>
@@ -138,15 +141,16 @@
       <input type="file" id="fileInput" accept="image/*">
     </label>
 
-    <!-- 2. ファイル名指定 -->
-    <div class="input-group">
-      <label class="field-label">保存ファイル名（.pngは自動で付きます）</label>
-      <input type="text" id="fileNameInput" value="studio_overlay">
+    <!-- 2. 動きの選択 -->
+    <div class="pattern-group">
+      <button class="pattern-btn active" onclick="selectPattern('updown', this)">🎈 ぷかぷか</button>
+      <button class="pattern-btn" onclick="selectPattern('side', this)">↔️ ゆらゆら</button>
+      <button class="pattern-btn" onclick="selectPattern('scale', this)">🔍 ぽわん</button>
     </div>
 
     <!-- 3. 作成ボタン -->
     <button class="btn generate-btn" id="generateBtn" onclick="generateAPNG()">
-      💾 3. 動くPNGを作る
+      💾 2. 動くPNGを作る
     </button>
 
     <div id="status"></div>
@@ -156,13 +160,13 @@
     const cv = document.getElementById('cv');
     const ctx = cv.getContext('2d');
     const fileInput = document.getElementById('fileInput');
-    const fileNameInput = document.getElementById('fileNameInput');
     const generateBtn = document.getElementById('generateBtn');
     const status = document.getElementById('status');
     const previewContainer = document.getElementById('previewContainer');
 
     let img = null;
     let angle = 0;
+    let currentPattern = 'updown';
 
     drawPlaceholder();
 
@@ -183,30 +187,47 @@
         const newImg = new Image();
         newImg.onload = () => {
           img = newImg;
-          // Canvas表示を復元
           previewContainer.innerHTML = '';
           previewContainer.appendChild(cv);
-          status.textContent = '準備OK！ファイル名をきめてボタンを押してニャ！';
+          status.textContent = '準備OK！動きをえらんでボタンを押してニャ！';
         };
         newImg.src = evt.target.result;
       };
       reader.readAsDataURL(file);
     });
 
+    function selectPattern(pattern, btn) {
+      document.querySelectorAll('.pattern-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentPattern = pattern;
+    }
+
+    // 動きの計算処理
     function drawFrameOnContext(targetCtx, currentAngle) {
       targetCtx.clearRect(0, 0, cv.width, cv.height);
 
       if (!img) return;
 
       targetCtx.save();
-      // 💡【修正点1】揺れ幅を小刻み＆控えめに（12px → 4pxへ変更）
-      const offsetY = Math.sin(currentAngle) * 4;
 
-      // 💡【修正点2】余白を小さくして、画像の描画サイズを大きく（余白ほぼ無し）
-      const scale = Math.min(cv.width / img.width, (cv.height - 8) / img.height);
-      const w = img.width * scale;
-      const h = img.height * scale;
-      const x = (cv.width - w) / 2;
+      let offsetX = 0;
+      let offsetY = 0;
+      let scaleFactor = 1.0;
+
+      // 3つのパターン計算
+      if (currentPattern === 'updown') {
+        offsetY = Math.sin(currentAngle) * 4; // 控えめな上下揺れ
+      } else if (currentPattern === 'side') {
+        offsetX = Math.sin(currentAngle) * 4; // 控えめな左右揺れ
+      } else if (currentPattern === 'scale') {
+        scaleFactor = 1.0 + Math.sin(currentAngle) * 0.03; // 3%程度のほんのり伸縮
+      }
+
+      const baseScale = Math.min(cv.width / img.width, (cv.height - 8) / img.height);
+      const w = img.width * baseScale * scaleFactor;
+      const h = img.height * baseScale * scaleFactor;
+
+      const x = (cv.width - w) / 2 + offsetX;
       const y = (cv.height - h) / 2 + offsetY;
 
       targetCtx.drawImage(img, x, y, w, h);
@@ -254,16 +275,11 @@
         const blob = new Blob([apngBuffer], { type: 'image/png' });
         const url = URL.createObjectURL(blob);
 
-        // 💡【修正点3】ファイル名指定＋スマホで長押し保存もできるようにプレビュー差し替え
-        let name = fileNameInput.value.trim() || 'studio_overlay';
-        if (!name.endsWith('.png')) name += '.png';
-
         const a = document.createElement('a');
         a.href = url;
-        a.download = name;
+        a.download = 'studio_overlay.png';
         a.click();
 
-        // スマホで「画像を長押しして保存」もできるように、プレビュー枠に生成画像を置く
         const resultImg = document.createElement('img');
         resultImg.src = url;
         resultImg.className = 'result-img';
