@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>配信用簡易ライティングスタジオ v22</title>
+  <title>簡易アニメーションWebPメーカー</title>
   <style>
     * {
       box-sizing: border-box;
@@ -13,443 +11,238 @@
     }
     body {
       margin: 0;
-      padding: 0;
-      background-color: #000;
+      padding: 20px;
+      background-color: #121216;
       color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      user-select: none;
     }
 
-    .video-container {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
+    h1 {
+      font-size: 16px;
+      margin: 0 0 16px 0;
+      color: #ff4081;
+    }
+
+    /* プレビュー表示エリア（背景格子模様） */
+    .preview-box {
+      width: 260px;
+      height: 260px;
+      border-radius: 12px;
+      border: 2px dashed rgba(255, 255, 255, 0.2);
+      background-color: #1a1a20;
+      background-image: 
+        linear-gradient(45deg, #222 25%, transparent 25%), 
+        linear-gradient(-45deg, #222 25%, transparent 25%), 
+        linear-gradient(45deg, transparent 75%, #222 75%), 
+        linear-gradient(-45deg, transparent 75%, #222 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
       overflow: hidden;
     }
 
     canvas {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    video {
-      display: none;
-    }
-
-    .ui-hint {
-      position: absolute;
-      top: 16px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 20;
-      background: rgba(0, 0, 0, 0.55);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      padding: 6px 16px;
-      border-radius: 20px;
-      font-size: 11px;
-      color: #eee;
-      letter-spacing: 0.5px;
-      pointer-events: none;
-      transition: opacity 0.3s ease, transform 0.3s ease;
-      backdrop-filter: blur(4px);
-    }
-
-    .ui-hint.hidden {
-      opacity: 0;
-      transform: translate(-50%, -10px);
+      max-width: 100%;
+      max-height: 100%;
     }
 
     .controls {
-      position: absolute;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 20;
-      background: rgba(18, 18, 24, 0.82);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      padding: 16px 20px;
-      border-radius: 24px;
+      width: 100%;
+      max-width: 320px;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      align-items: center;
-      width: 90vw;
-      max-width: 440px;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-      transition: opacity 0.3s ease, transform 0.3s ease;
     }
 
-    .controls.hidden {
-      opacity: 0;
-      transform: translate(-50%, 20px);
-      pointer-events: none;
-    }
-
-    .section {
+    /* ボタンデザイン */
+    .btn {
       width: 100%;
-    }
-
-    .label {
-      font-size: 11px;
-      font-weight: 600;
-      color: #aaa;
-      margin-bottom: 6px;
-      text-align: center;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-
-    .button-group {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 6px;
-    }
-
-    button {
-      padding: 8px 10px;
-      font-size: 11px;
-      font-weight: 600;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: bold;
+      border: none;
       cursor: pointer;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.08);
-      color: #ddd;
-      transition: all 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
+      text-align: center;
     }
 
-    button:active {
-      transform: scale(0.94);
-    }
-
-    button.active {
-      background: #ff4081;
+    .file-label {
+      background: #3f51b5;
       color: #fff;
-      border-color: #ff4081;
-      box-shadow: 0 0 12px rgba(255, 64, 129, 0.4);
     }
 
-    button.fun-btn.active {
-      background: #7c4dff;
-      color: #fff;
-      border-color: #7c4dff;
-      box-shadow: 0 0 12px rgba(124, 77, 255, 0.4);
+    input[type="file"] {
+      display: none;
     }
 
-    button.party-btn.active {
-      background: linear-gradient(135deg, #ff007f, #7c4dff, #00e676);
-      color: #fff;
-      border-color: #ff007f;
-      box-shadow: 0 0 16px rgba(255, 0, 127, 0.7);
+    .generate-btn {
+      background: #00e676;
+      color: #000;
     }
 
-    button.mirror-on {
-      background: rgba(0, 230, 118, 0.15);
-      color: #00e676;
-      border-color: rgba(0, 230, 118, 0.4);
+    .generate-btn:disabled {
+      background: #444;
+      color: #888;
+      cursor: not-allowed;
     }
 
-    button.fullscreen-btn {
-      background: rgba(33, 150, 243, 0.15);
-      color: #2196f3;
-      border-color: rgba(33, 150, 243, 0.4);
-    }
-
-    button.close-btn {
-      background: rgba(255, 255, 255, 0.05);
-      color: #aaa;
-    }
-
-    .divider {
-      width: 100%;
-      height: 1px;
-      background: rgba(255, 255, 255, 0.08);
-      margin: 2px 0;
+    #status {
+      font-size: 12px;
+      color: #ffb74d;
+      text-align: center;
+      min-height: 18px;
     }
   </style>
 </head>
+<body>
 
-<body onclick="toggleUI(event)">
+  <h1>🎬 簡易アニメーションWebPメーカー</h1>
 
-  <div class="ui-hint" id="uiHint">💡 タップでUI非表示 / 📺 ボタンで全画面表示</div>
-
-  <div class="video-container">
-    <video id="webcam" autoplay playsinline muted></video>
-    <canvas id="outputCanvas"></canvas>
+  <div class="preview-box">
+    <canvas id="cv" width="300" height="300"></canvas>
   </div>
 
-  <div class="controls" id="controlsUI">
-    
-    <div class="section">
-      <div class="label">💡 ライティングプリセット</div>
-      <div class="button-group">
-        <button onclick="setLighting('off', this)" class="active">OFF</button>
-        <button onclick="setLighting('natural', this)">🌿 自然光</button>
-        <button onclick="setLighting('ring', this)">⭕ リングライト</button>
-        <button onclick="setLighting('actress', this)">✨ 女優ライト</button>
-        <button onclick="setLighting('actressMax', this)">👑 女優ライトMAX</button>
-      </div>
-    </div>
+  <div class="controls">
+    <!-- 1. 画像選択 -->
+    <label class="btn file-label">
+      📁 1. 画像をえらぶ
+      <input type="file" id="fileInput" accept="image/*">
+    </label>
 
-    <div class="divider"></div>
+    <!-- 2. 出力ボタン -->
+    <button class="btn generate-btn" id="generateBtn" onclick="generateWebP()">
+      💾 2. アニメWebPを作る
+    </button>
 
-    <div class="section">
-      <div class="label">🎨 演出フィルター</div>
-      <div class="button-group">
-        <button onclick="setLighting('rosy', this)" class="fun-btn">🌸 血色ピンク</button>
-        <button onclick="setLighting('party', this)" class="party-btn">🎉 パリピレインボー</button>
-      </div>
-    </div>
-
-    <div class="divider"></div>
-
-    <div class="button-group">
-      <button id="fullscreenBtn" onclick="toggleFullscreen(event)" class="fullscreen-btn">📺 全画面：OFF</button>
-      <button id="mirrorBtn" onclick="toggleMirror(event)" class="mirror-on">🪞 ミラー：ON</button>
-      <button onclick="toggleCamera(event)">📷 切替</button>
-      <button onclick="hideUIExplicit(event)" class="close-btn">🙈 隠す</button>
-    </div>
-
+    <div id="status"></div>
   </div>
 
   <script>
-    const video = document.getElementById('webcam');
-    const canvas = document.getElementById('outputCanvas');
-    const ctx = canvas.getContext('2d');
-    const mirrorBtn = document.getElementById('mirrorBtn');
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
-    const controlsUI = document.getElementById('controlsUI');
-    const uiHint = document.getElementById('uiHint');
+    const cv = document.getElementById('cv');
+    const ctx = cv.getContext('2d');
+    const fileInput = document.getElementById('fileInput');
+    const generateBtn = document.getElementById('generateBtn');
+    const status = document.getElementById('status');
 
-    let currentFacingMode = 'user';
-    let currentStream = null;
-    let isMirror = true;
-    let currentMode = 'off';
-    let rainbowHue = 0;
+    let img = null;
+    let angle = 0;
 
-    async function startCamera() {
-      if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
-      }
+    // 初期状態の表示
+    drawPlaceholder();
 
-      try {
-        const constraints = {
-          video: {
-            facingMode: currentFacingMode,
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          },
-          audio: false
+    function drawPlaceholder() {
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      ctx.fillStyle = '#888';
+      ctx.font = '14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('画像を選択してニャ', cv.width / 2, cv.height / 2);
+    }
+
+    // 画像の読み込み処理
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const newImg = new Image();
+        newImg.onload = () => {
+          img = newImg;
+          status.textContent = '準備OK！作成ボタンを押してニャ！';
         };
+        newImg.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
 
-        currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-        video.srcObject = currentStream;
-        video.play();
-      } catch (err) {
-        alert('カメラ起動エラー: ' + err.message);
-      }
-    }
+    // 動きを描画する関数（パターン1種類：ぷかぷか上下揺れ）
+    function drawFrame(currentAngle) {
+      ctx.clearRect(0, 0, cv.width, cv.height);
 
-    function renderFrame() {
-      if (video.readyState === video.HAVE_ENOUGH_DATA) {
-        if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-        }
-
-        ctx.save();
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        if (isMirror) {
-          ctx.translate(canvas.width, 0);
-          ctx.scale(-1, 1);
-        }
-
-        applyBaseFilter();
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        applySyntheticLighting();
-
-        ctx.restore();
-      }
-
-      requestAnimationFrame(renderFrame);
-    }
-
-    function applyBaseFilter() {
-      switch (currentMode) {
-        case 'natural':
-          ctx.filter = 'brightness(1.05) contrast(1.02) saturate(1.03)';
-          break;
-        case 'ring':
-          ctx.filter = 'brightness(1.08) contrast(1.05) saturate(1.05)';
-          break;
-        case 'actress':
-          ctx.filter = 'brightness(1.10) contrast(1.08) saturate(1.06)';
-          break;
-        case 'actressMax':
-          ctx.filter = 'brightness(1.12) contrast(1.10) saturate(1.08)';
-          break;
-        case 'rosy':
-          ctx.filter = 'brightness(1.06) contrast(1.03) saturate(1.25)';
-          break;
-        case 'party':
-          rainbowHue = (rainbowHue + 4) % 360;
-          ctx.filter = `hue-rotate(${rainbowHue}deg) saturate(1.5)`;
-          break;
-        default:
-          ctx.filter = 'none';
-          break;
-      }
-    }
-
-    function applySyntheticLighting() {
-      const w = canvas.width;
-      const h = canvas.height;
-      const centerX = w / 2;
-      const centerY = h * 0.45;
-
-      ctx.filter = 'none';
-
-      if (currentMode === 'ring') {
-        ctx.globalCompositeOperation = 'soft-light';
-        const grad = ctx.createRadialGradient(centerX, centerY, 80, centerX, centerY, w * 0.7);
-        grad.addColorStop(0, 'rgba(255, 250, 240, 0.40)');
-        grad.addColorStop(1, 'rgba(255, 245, 235, 0.10)');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, w, h);
-
-      } else if (currentMode === 'actress') {
-        ctx.globalCompositeOperation = 'screen';
-        const grad1 = ctx.createRadialGradient(centerX, centerY, 50, centerX, centerY, w * 0.6);
-        grad1.addColorStop(0, 'rgba(255, 240, 230, 0.35)');
-        grad1.addColorStop(1, 'rgba(200, 200, 200, 0)');
-        ctx.fillStyle = grad1;
-        ctx.fillRect(0, 0, w, h);
-
-        ctx.globalCompositeOperation = 'soft-light';
-        ctx.fillStyle = 'rgba(255, 235, 225, 0.25)';
-        ctx.fillRect(0, 0, w, h);
-
-      } else if (currentMode === 'actressMax') {
-        ctx.globalCompositeOperation = 'screen';
-        const gradMax = ctx.createRadialGradient(centerX, centerY, 30, centerX, centerY, w * 0.65);
-        gradMax.addColorStop(0, 'rgba(255, 245, 240, 0.50)');
-        gradMax.addColorStop(0.7, 'rgba(255, 235, 225, 0.20)');
-        gradMax.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = gradMax;
-        ctx.fillRect(0, 0, w, h);
-
-        ctx.globalCompositeOperation = 'soft-light';
-        ctx.fillStyle = 'rgba(255, 240, 235, 0.35)';
-        ctx.fillRect(0, 0, w, h);
-
-      } else if (currentMode === 'rosy') {
-        ctx.globalCompositeOperation = 'screen';
-        const gradRosy = ctx.createRadialGradient(centerX, centerY, 50, centerX, centerY, w * 0.5);
-        gradRosy.addColorStop(0, 'rgba(255, 200, 215, 0.30)');
-        gradRosy.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = gradRosy;
-        ctx.fillRect(0, 0, w, h);
-      }
-
-      ctx.globalCompositeOperation = 'source-over';
-    }
-
-    // 全画面表示の切り替え処理
-    function toggleFullscreen(e) {
-      if (e) e.stopPropagation();
-
-      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-        const docElm = document.documentElement;
-        if (docElm.requestFullscreen) {
-          docElm.requestFullscreen();
-        } else if (docElm.webkitRequestFullscreen) { // Safari用
-          docElm.webkitRequestFullscreen();
-        }
-      } else {
-        if (document.exitFullscreen) {
-          document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) { // Safari用
-          document.webkitExitFullscreen();
-        }
-      }
-    }
-
-    // 全画面状態の変化を検知してボタン表示を更新
-    function updateFullscreenButton() {
-      const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
-      if (isFS) {
-        fullscreenBtn.textContent = '📺 全画面：ON';
-        fullscreenBtn.style.background = 'rgba(0, 230, 118, 0.15)';
-        fullscreenBtn.style.color = '#00e676';
-        fullscreenBtn.style.borderColor = 'rgba(0, 230, 118, 0.4)';
-      } else {
-        fullscreenBtn.textContent = '📺 全画面：OFF';
-        fullscreenBtn.style.background = 'rgba(33, 150, 243, 0.15)';
-        fullscreenBtn.style.color = '#2196f3';
-        fullscreenBtn.style.borderColor = 'rgba(33, 150, 243, 0.4)';
-      }
-    }
-
-    document.addEventListener('fullscreenchange', updateFullscreenButton);
-    document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
-
-    function toggleUI(e) {
-      if (e.target.tagName === 'BUTTON' || e.target.closest('.controls')) {
+      if (!img) {
+        drawPlaceholder();
         return;
       }
-      controlsUI.classList.toggle('hidden');
-      uiHint.classList.toggle('hidden');
+
+      ctx.save();
+      // 上下に12px揺れる計算
+      const offsetY = Math.sin(currentAngle) * 12;
+
+      // 画像を中央に配置
+      const scale = Math.min((cv.width - 40) / img.width, (cv.height - 40) / img.height);
+      const w = img.width * scale;
+      const h = img.height * scale;
+      const x = (cv.width - w) / 2;
+      const y = (cv.height - h) / 2 + offsetY;
+
+      ctx.drawImage(img, x, y, w, h);
+      ctx.restore();
     }
 
-    function hideUIExplicit(e) {
-      e.stopPropagation();
-      controlsUI.classList.add('hidden');
-      uiHint.classList.add('hidden');
+    // 画面プレビュー用の無限ループ
+    function previewLoop() {
+      angle = (angle + 0.06) % (Math.PI * 2);
+      drawFrame(angle);
+      requestAnimationFrame(previewLoop);
     }
+    requestAnimationFrame(previewLoop);
 
-    function toggleMirror(e) {
-      e.stopPropagation();
-      isMirror = !isMirror;
-      if (isMirror) {
-        mirrorBtn.textContent = '🪞 ミラー：ON';
-        mirrorBtn.classList.add('mirror-on');
-      } else {
-        mirrorBtn.textContent = '🪞 ミラー：OFF';
-        mirrorBtn.classList.remove('mirror-on');
-      }
-    }
-
-    function toggleCamera(e) {
-      e.stopPropagation();
-      currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
-      startCamera();
-    }
-
-    function setLighting(mode, btnElement) {
-      const allButtons = document.querySelectorAll('.button-group button');
-      allButtons.forEach(b => b.classList.remove('active'));
-
-      if (btnElement) {
-        btnElement.classList.add('active');
+    // アニメーションWebP生成＆ダウンロード処理
+    function generateWebP() {
+      if (!img) {
+        alert('先に画像をえらんでニャ！');
+        return;
       }
 
-      currentMode = mode;
-    }
+      generateBtn.disabled = true;
+      status.textContent = 'WebPアニメを生成中ニャ…';
 
-    startCamera();
-    requestAnimationFrame(renderFrame);
+      // Canvasからストリーム（映像線）を取得
+      const stream = cv.captureStream(30); // 30fps
+      
+      // WebP（またはWebM）でエンコード準備
+      let options = { mimeType: 'image/webp' };
+      if (!MediaRecorder.isTypeSupported('image/webp')) {
+        options = { mimeType: 'video/webm' }; // 非対応ブラウザ用フォールバック
+      }
+
+      let recorder;
+      try {
+        recorder = new MediaRecorder(stream, options);
+      } catch (e) {
+        // さらに互換性のためのフォールバック
+        recorder = new MediaRecorder(stream);
+      }
+
+      const chunks = [];
+      recorder.ondataavailable = e => chunks.push(e.data);
+
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'image/webp' });
+        const url = URL.createObjectURL(blob);
+
+        // 自動ダウンロード
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'animated_overlay.webp';
+        a.click();
+
+        status.textContent = '完成！ダウンロードされたニャ！';
+        generateBtn.disabled = false;
+      };
+
+      // 1サイクル（約2秒間）分を録画して保存
+      recorder.start();
+      setTimeout(() => {
+        recorder.stop();
+      }, 2000);
+    }
   </script>
 </body>
 </html>
