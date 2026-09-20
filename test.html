@@ -215,7 +215,7 @@
       const h = img.height * baseScale;
 
       if (currentPattern === 'swing') {
-        // ⏰ メトロノーム（約2度の超控えめな傾きに調整）
+        // ⏰ メトロノーム（下端を固定して約2度傾く）
         const rotateAngle = Math.sin(currentAngle) * (Math.PI / 90); 
         const pivotX = cv.width / 2;
         const pivotY = (cv.height + h) / 2;
@@ -223,15 +223,22 @@
         targetCtx.translate(pivotX, pivotY);
         targetCtx.rotate(rotateAngle);
         targetCtx.drawImage(img, -w / 2, -h, w, h);
+      } else if (currentPattern === 'side') {
+        // ↔️ ゆらゆら（中心基準で左右6px移動 ＋ わずかに1.5度傾けて存在感をアップ！）
+        const offsetX = Math.sin(currentAngle) * 6;
+        const rotateAngle = Math.sin(currentAngle) * (Math.PI / 120);
+
+        targetCtx.translate(cv.width / 2 + offsetX, cv.height / 2);
+        targetCtx.rotate(rotateAngle);
+        targetCtx.drawImage(img, -w / 2, -h / 2, w, h);
       } else {
+        // 🎈 ぷかぷか / 🔍 ぽわん
         let offsetX = 0;
         let offsetY = 0;
         let scaleFactor = 1.0;
 
         if (currentPattern === 'updown') {
           offsetY = Math.sin(currentAngle) * 4;
-        } else if (currentPattern === 'side') {
-          offsetX = Math.sin(currentAngle) * 4;
         } else if (currentPattern === 'scale') {
           scaleFactor = 1.0 + Math.sin(currentAngle) * 0.03;
         }
@@ -268,7 +275,8 @@
       setTimeout(() => {
         const frames = [];
         const delays = [];
-        const totalFrames = 20;
+        // スマホ（120Hz画面）での倍速再生を防ぐため「30コマ / 1コマ100ms」で固定ニャ！
+        const totalFrames = 30;
 
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = cv.width;
@@ -281,7 +289,7 @@
 
           const imgData = tempCtx.getImageData(0, 0, cv.width, cv.height);
           frames.push(imgData.data.buffer);
-          delays.push(60);
+          delays.push(100);
         }
 
         const apngBuffer = UPNG.encode(frames, cv.width, cv.height, 0, delays);
