@@ -61,7 +61,6 @@
       font-weight: bold;
     }
 
-    /* 利用規約エリア */
     .terms-box {
       width: 100%;
       margin-bottom: 16px;
@@ -201,7 +200,6 @@
       cursor: not-allowed;
     }
 
-    /* 共有・保存ボタン */
     .share-btn {
       background: #00e676;
       color: #000;
@@ -241,10 +239,6 @@
       color: #00b0ff;
       text-decoration: none;
       font-size: 11px;
-    }
-
-    .support-links a:hover {
-      text-decoration: underline;
     }
 
     footer {
@@ -311,7 +305,6 @@
         ⚙️ 3. アニメPNGを作成する
       </button>
 
-      <!-- Web Share API（スマホ標準の保存シート）を呼び出すボタン -->
       <button id="shareBtn" class="btn share-btn" onclick="shareOrSave()">
         📲 画像を写真アプリ / 端末に保存する
       </button>
@@ -388,7 +381,12 @@
       if (!img) return;
 
       targetCtx.save();
-      const baseScale = Math.min(cv.width / img.width, (cv.height - 8) / img.height);
+      
+      // 動くための「安全領域（マージン）」として画面の90%（0.9）のサイズに収めるニャ！
+      const maxAllowedWidth = cv.width * 0.9;
+      const maxAllowedHeight = cv.height * 0.9;
+      const baseScale = Math.min(maxAllowedWidth / img.width, maxAllowedHeight / img.height);
+      
       const w = img.width * baseScale;
       const h = img.height * baseScale;
 
@@ -407,9 +405,10 @@
         if (currentPattern === 'updown') {
           offsetY = Math.sin(currentAngle) * 4;
         } else if (currentPattern === 'side') {
-          offsetX = Math.sin(currentAngle) * 10;
+          offsetX = Math.sin(currentAngle) * 8;
         } else if (currentPattern === 'scale') {
-          scaleFactor = 1.0 + Math.sin(currentAngle) * 0.03;
+          // 拡大率を1.015（+1.5%）と控えめに設定して見切れを絶対に防ぐニャ！
+          scaleFactor = 1.0 + Math.sin(currentAngle) * 0.015;
         }
 
         const finalW = w * scaleFactor;
@@ -463,11 +462,9 @@
         const apngBuffer = UPNG.encode(frames, cv.width, cv.height, 0, delays);
         const fileName = `cas_${currentPattern}.png`;
         
-        // ファイルオブジェクトを保持
         currentFile = new File([apngBuffer], fileName, { type: 'image/png' });
         const url = URL.createObjectURL(currentFile);
 
-        // プレビュー部分に完成画像を挿入（長押し保存可能にする）
         const resultImg = document.createElement('img');
         resultImg.src = url;
         resultImg.className = 'result-img';
@@ -476,17 +473,14 @@
 
         status.innerHTML = '✨ 完成しました！<br><b>上の画像を長押し</b>して保存するか、<br>下のボタンから端末に保存してください。';
         
-        // 共有・保存ボタンを表示
         shareBtn.style.display = 'block';
         generateBtn.disabled = false;
       }, 50);
     }
 
-    // スマホ標準の共有/保存画面を呼び出す関数
     async function shareOrSave() {
       if (!currentFile) return;
 
-      // Web Share API（スマホの共有シート）が使える場合
       if (navigator.canShare && navigator.canShare({ files: [currentFile] })) {
         try {
           await navigator.share({
@@ -494,10 +488,8 @@
             title: 'アニメPNG',
           });
         } catch (err) {
-          // ユーザーがキャンセルした場合は何もしない
         }
       } else {
-        // 万が一共有機能非対応のPCブラウザなどの場合
         alert('上のプレビュー画像を「右クリック」または「長押し」して保存してください。');
       }
     }
