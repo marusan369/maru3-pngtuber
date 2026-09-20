@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>カメラ動作検証テスト</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #000;
+      color: #fff;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* 配信時に邪魔な文字を消すためのスタイル */
+    .controls {
+      position: absolute;
+      top: 10px;
+      z-index: 10;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 10px 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    button {
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      background: #ff4081;
+      color: white;
+      font-weight: bold;
+      margin: 4px;
+    }
+
+    /* カメラ映像を画面いっぱいに表示 */
+    video {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover; /* 画面に隙間なくフィットさせる */
+    }
+  </style>
+</head>
+<body>
+
+  <div class="controls" id="ui">
+    <p style="margin:0 0 8px 0; font-size:12px;">カメラ切り替え・表示確認用</p>
+    <button onclick="startCamera('user')">インカメラ</button>
+    <button onclick="startCamera('environment')">アウトカメラ</button>
+  </div>
+
+  <video id="webcam" autoplay playsinline muted></video>
+
+  <script>
+    const video = document.getElementById('webcam');
+    let currentStream = null;
+
+    async function startCamera(facingMode) {
+      // 既存のストリームがあれば停止
+      if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+      }
+
+      try {
+        // カメラ映像の取得要求
+        const constraints = {
+          video: {
+            facingMode: facingMode, // 'user' (自撮り) または 'environment' (外カメラ)
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        };
+
+        currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = currentStream;
+      } catch (err) {
+        alert('カメラの起動に失敗しましたニャ: ' + err.message);
+      }
+    }
+
+    // 最初は自撮り（インカメラ）で起動
+    startCamera('user');
+  </script>
+</body>
+</html>
