@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>リアルタイム美容＆演出フィルター v6</title>
+  <title>リアルタイム美容＆演出フィルター</title>
   <style>
     * {
       box-sizing: border-box;
@@ -14,7 +14,7 @@
       padding: 0;
       background-color: #000;
       color: #fff;
-      font-family: sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -35,21 +35,47 @@
       transform: scaleX(-1);
     }
 
+    /* 画面上部のヒント案内 */
+    .ui-hint {
+      position: absolute;
+      top: 16px;
+      z-index: 5;
+      background: rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 11px;
+      color: #eee;
+      letter-spacing: 0.5px;
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      backdrop-filter: blur(4px);
+    }
+
+    .ui-hint.hidden {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    /* メイン操作パネル（ガラスモーフィズムデザイン） */
     .controls {
       position: absolute;
-      bottom: 20px;
+      bottom: 24px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 10;
-      background: rgba(0, 0, 0, 0.8);
-      padding: 14px 18px;
-      border-radius: 20px;
+      background: rgba(18, 18, 24, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 16px 20px;
+      border-radius: 24px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
       align-items: center;
-      max-width: 95vw;
-      backdrop-filter: blur(8px);
+      width: 90vw;
+      max-width: 420px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
       transition: opacity 0.3s ease, transform 0.3s ease;
     }
 
@@ -59,21 +85,18 @@
       pointer-events: none;
     }
 
-    .ui-hint {
-      position: absolute;
-      top: 15px;
-      z-index: 5;
-      background: rgba(0, 0, 0, 0.5);
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 11px;
-      color: #ddd;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
+    .section {
+      width: 100%;
     }
 
-    .ui-hint.hidden {
-      opacity: 0;
+    .label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #aaa;
+      margin-bottom: 6px;
+      text-align: center;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
 
     .button-group {
@@ -86,48 +109,64 @@
     button {
       padding: 8px 12px;
       font-size: 12px;
+      font-weight: 600;
       cursor: pointer;
-      border: none;
-      border-radius: 10px;
-      background: #333;
-      color: white;
-      font-weight: bold;
-      transition: background 0.2s, transform 0.1s;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #ddd;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
 
     button:active {
-      transform: scale(0.92);
+      transform: scale(0.94);
     }
 
+    /* 通常アクティブ（ピンク） */
     button.active {
       background: #ff4081;
-      color: white;
-      box-shadow: 0 0 10px rgba(255, 64, 129, 0.5);
-    }
-
-    /* 女優ライトボタン用の特別グラデーション */
-    button.actress-btn.active {
-      background: linear-gradient(135deg, #ff4081, #ffd700);
       color: #fff;
-      box-shadow: 0 0 12px rgba(255, 215, 0, 0.8);
+      border-color: #ff4081;
+      box-shadow: 0 0 12px rgba(255, 64, 129, 0.4);
     }
 
-    /* 演出用ボタン */
+    /* 女優ライト専用ボタン */
+    button.actress-btn.active {
+      background: linear-gradient(135deg, #ff4081, #ffb300);
+      color: #fff;
+      border-color: #ffb300;
+      box-shadow: 0 0 14px rgba(255, 179, 0, 0.6);
+    }
+
+    /* 演出用アクティブ（パープル） */
     button.fun-btn.active {
       background: #7c4dff;
-      box-shadow: 0 0 10px rgba(124, 77, 255, 0.6);
+      color: #fff;
+      border-color: #7c4dff;
+      box-shadow: 0 0 12px rgba(124, 77, 255, 0.4);
     }
 
+    /* ミラーボタン */
     button.mirror-on {
-      background: #00e676;
-      color: #000;
+      background: rgba(0, 230, 118, 0.15);
+      color: #00e676;
+      border-color: rgba(0, 230, 118, 0.4);
     }
 
-    .label {
-      font-size: 11px;
-      color: #ccc;
-      margin-bottom: 4px;
-      text-align: center;
+    /* 非表示ボタン */
+    button.close-btn {
+      background: rgba(255, 255, 255, 0.05);
+      color: #aaa;
+    }
+
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+      margin: 2px 0;
     }
   </style>
 </head>
@@ -140,31 +179,35 @@
 
   <div class="controls" id="controlsUI">
     
-    <!-- 美肌系 -->
-    <div>
+    <!-- 美肌・ライティング -->
+    <div class="section">
       <div class="label">✨ 美肌・ライティング</div>
       <div class="button-group">
         <button onclick="setFilter('off', this)" class="active">OFF</button>
-        <button onclick="setFilter('ring', this)">リングライト</button>
-        <button onclick="setFilter('studiolight', this)">美白スタジオ</button>
-        <button onclick="setFilter('actress', this)" class="actress-btn">女優ライト (極)</button>
+        <button onclick="setFilter('ring', this)">💡 リングライト</button>
+        <button onclick="setFilter('studiolight', this)">スタジオ美白</button>
+        <button onclick="setFilter('actress', this)" class="actress-btn">👑 女優ライト</button>
       </div>
     </div>
 
-    <!-- 演出系 -->
-    <div>
+    <div class="divider"></div>
+
+    <!-- 演出・ネタ -->
+    <div class="section">
       <div class="label">🎨 演出・ネタ</div>
       <div class="button-group">
-        <button onclick="setFilter('mono', this)" class="fun-btn">モノクロ</button>
-        <button onclick="setFilter('retro', this)" class="fun-btn">エモレトロ</button>
+        <button onclick="setFilter('mono', this)" class="fun-btn">🎬 モノクロ</button>
+        <button onclick="setFilter('retro', this)" class="fun-btn">🎞️ レトロ</button>
       </div>
     </div>
 
-    <!-- 機能切り替え -->
-    <div class="button-group" style="margin-top: 4px;">
-      <button id="mirrorBtn" onclick="toggleMirror(event)" class="mirror-on">ミラー：ON</button>
-      <button onclick="toggleCamera(event)">カメラ切替</button>
-      <button onclick="hideUIExplicit(event)" style="background: #555;">画面を隠す ✕</button>
+    <div class="divider"></div>
+
+    <!-- システム操作 -->
+    <div class="button-group">
+      <button id="mirrorBtn" onclick="toggleMirror(event)" class="mirror-on">🪞 ミラー：ON</button>
+      <button onclick="toggleCamera(event)">📷 カメラ切替</button>
+      <button onclick="hideUIExplicit(event)" class="close-btn">🙈 メニューを隠す</button>
     </div>
 
   </div>
@@ -219,10 +262,10 @@
       const isMirror = video.classList.contains('mirror');
       
       if (isMirror) {
-        mirrorBtn.textContent = 'ミラー：ON';
+        mirrorBtn.textContent = '🪞 ミラー：ON';
         mirrorBtn.classList.add('mirror-on');
       } else {
-        mirrorBtn.textContent = 'ミラー：OFF';
+        mirrorBtn.textContent = '🪞 ミラー：OFF';
         mirrorBtn.classList.remove('mirror-on');
       }
     }
@@ -233,7 +276,6 @@
       startCamera();
     }
 
-    // --- フィルター設定 ---
     function setFilter(type, btnElement) {
       const allButtons = document.querySelectorAll('.button-group button');
       allButtons.forEach(b => b.classList.remove('active'));
@@ -248,28 +290,22 @@
           break;
 
         case 'ring':
-          // リングライト：自然に明るく・影を抑える
           video.style.filter = 'brightness(1.15) contrast(0.92) saturate(1.05)';
           break;
 
         case 'studiolight':
-          // 美白スタジオ：しっかり美白＆トーンアップ
           video.style.filter = 'brightness(1.28) contrast(0.88) saturate(0.98) blur(0.3px)';
           break;
 
         case 'actress':
-          // ★新設：女優ライト（極）★
-          // 限界レベルの爆光＋コントラスト低下で、影やくすみを全部強烈に飛ばす！
           video.style.filter = 'brightness(1.5) contrast(0.78) saturate(1.05) blur(0.4px)';
           break;
 
         case 'mono':
-          // モノクロ
           video.style.filter = 'grayscale(100%) brightness(1.1) contrast(1.35)';
           break;
 
         case 'retro':
-          // エモレトロ
           video.style.filter = 'sepia(0.65) brightness(1.08) contrast(1.15) saturate(1.3)';
           break;
 
