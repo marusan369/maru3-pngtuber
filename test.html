@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>リアルタイム美白＆演出フィルター v17（コントラスト調整版）</title>
+  <title>リアルタイム美白＆演出フィルター v18（インパクト重視版）</title>
   <style>
     * {
       box-sizing: border-box;
@@ -44,8 +44,8 @@
 
     /* パリピレインボー */
     @keyframes partyRainbow {
-      0% { filter: hue-rotate(0deg) saturate(1.4); }
-      100% { filter: hue-rotate(360deg) saturate(1.4); }
+      0% { filter: hue-rotate(0deg) saturate(1.6); }
+      100% { filter: hue-rotate(360deg) saturate(1.6); }
     }
     video.party-rainbow {
       animation: partyRainbow 0.8s linear infinite;
@@ -299,10 +299,10 @@
       video.className = mirrorBtn.textContent.includes('ON') ? 'mirror' : '';
 
       /* 
-        ★白を重ねず、CSSフィルタで映像のコントラスト・明るさ・彩度を計算調整★
-        - brightness: 明るさ（1.0が標準）
-        - contrast: コントラスト（影を引き締める）
-        - saturate: 彩度（血色感を保つ）
+        ★メリハリとインパクトを重視した値に再設定★
+        - Lv.1: 自然にくすみを消す
+        - Lv.2: はっきり明るく・白く見せる
+        - Lv.3: ドカンとトーンアップ（強力なインパクト）
       */
       switch (type) {
         case 'off':
@@ -310,22 +310,22 @@
           break;
 
         case 'lvl1':
-          // ナチュラル美白：ほんのり明るく、くすみオフ
-          video.style.filter = 'brightness(1.08) contrast(1.03) saturate(1.05)';
+          // Lv.1：ほんのり明度UP（+12%）
+          video.style.filter = 'brightness(1.12) contrast(1.04) saturate(1.05)';
           break;
 
         case 'lvl2':
-          // くっきり美肌：明るさを上げつつコントラストを高めて黒目を引き締める
-          video.style.filter = 'brightness(1.15) contrast(1.06) saturate(1.08)';
+          // Lv.2：はっきり美白（+28%）。明るさとコントラストを同時に伸ばす
+          video.style.filter = 'brightness(1.28) contrast(1.12) saturate(1.10)';
           break;
 
         case 'lvl3':
-          // 高発色美肌：しっかり明るく、彩度とコントラストで白飛びを抑える
-          video.style.filter = 'brightness(1.22) contrast(1.08) saturate(1.10)';
+          // Lv.3：強烈な透明感（+45%）。一目で「白っ！」とわかるインパクト
+          video.style.filter = 'brightness(1.45) contrast(1.18) saturate(1.12)';
           break;
 
         case 'rosy':
-          video.style.filter = 'brightness(1.10) contrast(1.02) saturate(1.30) sepia(10%)';
+          video.style.filter = 'brightness(1.18) contrast(1.05) saturate(1.35) sepia(12%)';
           break;
 
         case 'retro':
