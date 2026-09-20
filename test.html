@@ -2,8 +2,10 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>配信用簡易ライティングスタジオ v21</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>配信用簡易ライティングスタジオ v22</title>
   <style>
     * {
       box-sizing: border-box;
@@ -41,7 +43,6 @@
       display: none;
     }
 
-    /* 配信画面に乗っても邪魔にならないシンプルなガイド */
     .ui-hint {
       position: absolute;
       top: 16px;
@@ -159,6 +160,12 @@
       border-color: rgba(0, 230, 118, 0.4);
     }
 
+    button.fullscreen-btn {
+      background: rgba(33, 150, 243, 0.15);
+      color: #2196f3;
+      border-color: rgba(33, 150, 243, 0.4);
+    }
+
     button.close-btn {
       background: rgba(255, 255, 255, 0.05);
       color: #aaa;
@@ -175,7 +182,7 @@
 
 <body onclick="toggleUI(event)">
 
-  <div class="ui-hint" id="uiHint">💡 タップでUIを隠して配信画面へ</div>
+  <div class="ui-hint" id="uiHint">💡 タップでUI非表示 / 📺 ボタンで全画面表示</div>
 
   <div class="video-container">
     <video id="webcam" autoplay playsinline muted></video>
@@ -208,9 +215,10 @@
     <div class="divider"></div>
 
     <div class="button-group">
+      <button id="fullscreenBtn" onclick="toggleFullscreen(event)" class="fullscreen-btn">📺 全画面：OFF</button>
       <button id="mirrorBtn" onclick="toggleMirror(event)" class="mirror-on">🪞 ミラー：ON</button>
-      <button onclick="toggleCamera(event)">📷 カメラ切替</button>
-      <button onclick="hideUIExplicit(event)" class="close-btn">🙈 メニューを隠す</button>
+      <button onclick="toggleCamera(event)">📷 切替</button>
+      <button onclick="hideUIExplicit(event)" class="close-btn">🙈 隠す</button>
     </div>
 
   </div>
@@ -220,6 +228,7 @@
     const canvas = document.getElementById('outputCanvas');
     const ctx = canvas.getContext('2d');
     const mirrorBtn = document.getElementById('mirrorBtn');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
     const controlsUI = document.getElementById('controlsUI');
     const uiHint = document.getElementById('uiHint');
 
@@ -267,11 +276,8 @@
           ctx.scale(-1, 1);
         }
 
-        // 1. ベースのトーン調整
         applyBaseFilter();
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        // 2. 合成モードによる擬似ライティング重ね合わせ
         applySyntheticLighting();
 
         ctx.restore();
@@ -307,7 +313,6 @@
       }
     }
 
-    // Canvasの合成モード（screen / soft-light）を活用した軽量ライティング
     function applySyntheticLighting() {
       const w = canvas.width;
       const h = canvas.height;
@@ -325,7 +330,6 @@
         ctx.fillRect(0, 0, w, h);
 
       } else if (currentMode === 'actress') {
-        // 暗部への変化量が大きくなるスクリーン合成で持ち上げる
         ctx.globalCompositeOperation = 'screen';
         const grad1 = ctx.createRadialGradient(centerX, centerY, 50, centerX, centerY, w * 0.6);
         grad1.addColorStop(0, 'rgba(255, 240, 230, 0.35)');
@@ -361,6 +365,45 @@
 
       ctx.globalCompositeOperation = 'source-over';
     }
+
+    // 全画面表示の切り替え処理
+    function toggleFullscreen(e) {
+      if (e) e.stopPropagation();
+
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        const docElm = document.documentElement;
+        if (docElm.requestFullscreen) {
+          docElm.requestFullscreen();
+        } else if (docElm.webkitRequestFullscreen) { // Safari用
+          docElm.webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) { // Safari用
+          document.webkitExitFullscreen();
+        }
+      }
+    }
+
+    // 全画面状態の変化を検知してボタン表示を更新
+    function updateFullscreenButton() {
+      const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      if (isFS) {
+        fullscreenBtn.textContent = '📺 全画面：ON';
+        fullscreenBtn.style.background = 'rgba(0, 230, 118, 0.15)';
+        fullscreenBtn.style.color = '#00e676';
+        fullscreenBtn.style.borderColor = 'rgba(0, 230, 118, 0.4)';
+      } else {
+        fullscreenBtn.textContent = '📺 全画面：OFF';
+        fullscreenBtn.style.background = 'rgba(33, 150, 243, 0.15)';
+        fullscreenBtn.style.color = '#2196f3';
+        fullscreenBtn.style.borderColor = 'rgba(33, 150, 243, 0.4)';
+      }
+    }
+
+    document.addEventListener('fullscreenchange', updateFullscreenButton);
+    document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
 
     function toggleUI(e) {
       if (e.target.tagName === 'BUTTON' || e.target.closest('.controls')) {
