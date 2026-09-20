@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>ツイキャス用 簡易アニメPNGメーカー</title>
+  <title>ツイキャス用 簡易アニメPNGメーカー v2</title>
   <style>
     * {
       box-sizing: border-box;
@@ -27,8 +27,8 @@
     }
 
     .preview-box {
-      width: 260px;
-      height: 260px;
+      width: 300px;
+      height: 300px;
       border-radius: 12px;
       border: 2px dashed rgba(255, 255, 255, 0.2);
       background-color: #1a1a20;
@@ -46,9 +46,10 @@
       overflow: hidden;
     }
 
-    canvas {
+    canvas, img.result-img {
       max-width: 100%;
       max-height: 100%;
+      object-fit: contain;
     }
 
     .controls {
@@ -57,6 +58,27 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    label.field-label {
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: #222;
+      color: #fff;
+      font-size: 14px;
     }
 
     .btn {
@@ -98,26 +120,33 @@
     }
   </style>
 
-  <!-- 正しいAPNG構造を生成する軽量ライブラリ UPNG.js -->
   <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/upng-js@2.1.0/UPNG.js"></script>
 </head>
 <body>
 
-  <h1>🎬 ツイキャス用 簡易アニメPNGメーカー</h1>
+  <h1>🎬 アニメPNGメーカー v2</h1>
 
-  <div class="preview-box">
-    <canvas id="cv" width="300" height="300"></canvas>
+  <div class="preview-box" id="previewContainer">
+    <canvas id="cv" width="400" height="400"></canvas>
   </div>
 
   <div class="controls">
+    <!-- 1. 画像選択 -->
     <label class="btn file-label">
       📁 1. 画像をえらぶ
       <input type="file" id="fileInput" accept="image/*">
     </label>
 
+    <!-- 2. ファイル名指定 -->
+    <div class="input-group">
+      <label class="field-label">保存ファイル名（.pngは自動で付きます）</label>
+      <input type="text" id="fileNameInput" value="studio_overlay">
+    </div>
+
+    <!-- 3. 作成ボタン -->
     <button class="btn generate-btn" id="generateBtn" onclick="generateAPNG()">
-      💾 2. 動くPNGを作る
+      💾 3. 動くPNGを作る
     </button>
 
     <div id="status"></div>
@@ -127,8 +156,10 @@
     const cv = document.getElementById('cv');
     const ctx = cv.getContext('2d');
     const fileInput = document.getElementById('fileInput');
+    const fileNameInput = document.getElementById('fileNameInput');
     const generateBtn = document.getElementById('generateBtn');
     const status = document.getElementById('status');
+    const previewContainer = document.getElementById('previewContainer');
 
     let img = null;
     let angle = 0;
@@ -138,7 +169,7 @@
     function drawPlaceholder() {
       ctx.clearRect(0, 0, cv.width, cv.height);
       ctx.fillStyle = '#888';
-      ctx.font = '14px sans-serif';
+      ctx.font = '16px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('画像を選択してニャ', cv.width / 2, cv.height / 2);
     }
@@ -152,7 +183,10 @@
         const newImg = new Image();
         newImg.onload = () => {
           img = newImg;
-          status.textContent = '準備OK！作成ボタンを押してニャ！';
+          // Canvas表示を復元
+          previewContainer.innerHTML = '';
+          previewContainer.appendChild(cv);
+          status.textContent = '準備OK！ファイル名をきめてボタンを押してニャ！';
         };
         newImg.src = evt.target.result;
       };
@@ -165,9 +199,11 @@
       if (!img) return;
 
       targetCtx.save();
-      const offsetY = Math.sin(currentAngle) * 12; // ぷかぷか上下揺れ
+      // 💡【修正点1】揺れ幅を小刻み＆控えめに（12px → 4pxへ変更）
+      const offsetY = Math.sin(currentAngle) * 4;
 
-      const scale = Math.min((cv.width - 40) / img.width, (cv.height - 40) / img.height);
+      // 💡【修正点2】余白を小さくして、画像の描画サイズを大きく（余白ほぼ無し）
+      const scale = Math.min(cv.width / img.width, (cv.height - 8) / img.height);
       const w = img.width * scale;
       const h = img.height * scale;
       const x = (cv.width - w) / 2;
@@ -178,17 +214,14 @@
     }
 
     function previewLoop() {
-      angle = (angle + 0.06) % (Math.PI * 2);
-      if (img) {
+      angle = (angle + 0.05) % (Math.PI * 2);
+      if (img && previewContainer.contains(cv)) {
         drawFrameOnContext(ctx, angle);
-      } else {
-        drawPlaceholder();
       }
       requestAnimationFrame(previewLoop);
     }
     requestAnimationFrame(previewLoop);
 
-    // 本物の APNG (.png) 画像ファイルを生成する処理
     function generateAPNG() {
       if (!img) {
         alert('先に画像をえらんでニャ！');
@@ -196,12 +229,12 @@
       }
 
       generateBtn.disabled = true;
-      status.textContent = 'コマ画像を変換中ニャ…';
+      status.textContent = '動くPNGを変換中ニャ…';
 
       setTimeout(() => {
         const frames = [];
         const delays = [];
-        const totalFrames = 15; // 15コマでループ
+        const totalFrames = 20;
 
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = cv.width;
@@ -212,24 +245,32 @@
           const frameAngle = (i / totalFrames) * Math.PI * 2;
           drawFrameOnContext(tempCtx, frameAngle);
 
-          // RGBAのピクセル配列を取得
           const imgData = tempCtx.getImageData(0, 0, cv.width, cv.height);
           frames.push(imgData.data.buffer);
-          delays.push(66); // 各コマ約66ms（約15fps）
+          delays.push(60);
         }
 
-        // UPNGライブラリでAPNGバイナリを生成
         const apngBuffer = UPNG.encode(frames, cv.width, cv.height, 0, delays);
         const blob = new Blob([apngBuffer], { type: 'image/png' });
         const url = URL.createObjectURL(blob);
 
-        // 最初から .png の名前で出力（ツイキャス対応）
+        // 💡【修正点3】ファイル名指定＋スマホで長押し保存もできるようにプレビュー差し替え
+        let name = fileNameInput.value.trim() || 'studio_overlay';
+        if (!name.endsWith('.png')) name += '.png';
+
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'animated_overlay.png';
+        a.download = name;
         a.click();
 
-        status.textContent = '完成！動くPNG (.png) が保存されたニャ！';
+        // スマホで「画像を長押しして保存」もできるように、プレビュー枠に生成画像を置く
+        const resultImg = document.createElement('img');
+        resultImg.src = url;
+        resultImg.className = 'result-img';
+        previewContainer.innerHTML = '';
+        previewContainer.appendChild(resultImg);
+
+        status.textContent = '完成！DLされない場合は上の画像を「長押し保存」してニャ！';
         generateBtn.disabled = false;
       }, 50);
     }
