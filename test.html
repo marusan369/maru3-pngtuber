@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>リアルタイム美容＆演出フィルター v10（無劣化ライティング＋新演出）</title>
+  <title>リアルタイム美容＆カオスフィルター v11</title>
   <style>
     * {
       box-sizing: border-box;
@@ -35,23 +35,41 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: transform 0.2s ease, filter 0.25s ease;
-      /* CSSフィルターは初期状態では無し */
+      transition: transform 0.2s ease, filter 0.2s ease;
+      /* 高画質を維持するため初期値は無加工 */
     }
 
     video.mirror {
       transform: scaleX(-1);
     }
 
-    /* 画質を落とさずに明るくするための「光の膜（オーバーレイ）」 */
+    /* ★カオスフィルター1: レインボー（色相回転アニメーション）★ */
+    @keyframes rainbowShift {
+      0% { filter: hue-rotate(0deg); }
+      100% { filter: hue-rotate(360deg); }
+    }
+    video.rainbow-filter {
+      animation: rainbowShift 5s linear infinite; /* 5秒で一周 */
+    }
+
+    /* ★カオスフィルター2: ピクセルアート（ドット絵風）★ */
+    /* 映像をCSSで無理やり縮小描画してピクセルを粗くする */
+    video.pixel-filter {
+      filter: blur(10px); /* 一旦ボカして四角いピクセルを際立たせる */
+      image-rendering: pixelated; /* ピクセルのエッジをシャープにする（重要） */
+      object-fit: contain; /* 縮小時に画像全体を収める */
+      transform: scale(8); /* 8倍に拡大して大きなピクセルに見せる */
+      transform-origin: center;
+    }
+
     .light-overlay {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      pointer-events: none; /* タップを透過させる */
-      transition: background 0.25s ease, backdrop-filter 0.25s ease;
+      pointer-events: none;
+      transition: background 0.25s ease;
       z-index: 2;
     }
 
@@ -166,6 +184,13 @@
       box-shadow: 0 0 12px rgba(124, 77, 255, 0.4);
     }
 
+    button.chaos-btn.active {
+      background: linear-gradient(135deg, #7c4dff, #00e676); /* 紫から緑のカオスグラデ */
+      color: #fff;
+      border-color: #00e676;
+      box-shadow: 0 0 14px rgba(0, 230, 118, 0.5);
+    }
+
     button.mirror-on {
       background: rgba(0, 230, 118, 0.15);
       color: #00e676;
@@ -192,7 +217,6 @@
 
   <div class="video-container">
     <video id="webcam" autoplay playsinline muted class="mirror"></video>
-    <!-- カメラの上に重ねる光の膜 -->
     <div class="light-overlay" id="lightOverlay"></div>
   </div>
 
@@ -211,10 +235,12 @@
     <div class="divider"></div>
 
     <div class="section">
-      <div class="label">🎨 演出・ネタ</div>
+      <div class="label">🎨 演出・遊び心・カオス</div>
       <div class="button-group">
         <button onclick="setFilter('rosy', this)" class="fun-btn">🌸 血色ピンク</button>
-        <button onclick="setFilter('soft', this)" class="fun-btn">☁ ふんわり美肌</button>
+        <button onclick="setFilter('retro', this)" class="fun-btn">🎞️ レトロ</button>
+        <button onclick="setFilter('rainbow', this)" class="chaos-btn">🌈 レインボー</button>
+        <button onclick="setFilter('pixel', this)" class="chaos-btn">🎮 ピクセル</button>
       </div>
     </div>
 
@@ -293,7 +319,6 @@
       startCamera();
     }
 
-    /* フィルター設定。無劣化ライティングはoverlay、演出系はvideoのfilterまたはoverlayで調整 */
     function setFilter(type, btnElement) {
       const allButtons = document.querySelectorAll('.button-group button');
       allButtons.forEach(b => b.classList.remove('active'));
@@ -303,41 +328,44 @@
       }
 
       // 初期化
+      video.className = mirrorBtn.textContent.includes('ON') ? 'mirror' : ''; // mirrorクラスを維持
       video.style.filter = 'none';
       overlay.style.background = 'transparent';
-      overlay.style.backdropFilter = 'none';
 
       switch (type) {
         case 'off':
           break;
 
         case 'ring':
-          // ほんのり温かみのある光を薄く重ねる
           overlay.style.background = 'rgba(255, 250, 240, 0.12)';
           break;
 
         case 'studiolight':
-          // 透明感のある白を重ねてトーンアップ
           overlay.style.background = 'rgba(255, 255, 255, 0.2)';
           break;
 
         case 'actress':
-          // 強めの白＋中心から外側へ広がるライティング（スポットライト風）
           overlay.style.background = 'radial-gradient(circle, rgba(255,255,255,0.28) 30%, rgba(255,240,245,0.15) 100%)';
           break;
 
         case 'rosy':
-          // ★血色ピンク★
-          // 薄いピンク色の膜を重ねる
-          overlay.style.background = 'rgba(255, 182, 193, 0.15)'; // 薄いピンク
+          overlay.style.background = 'rgba(255, 182, 193, 0.15)';
           break;
 
-        case 'soft':
-          // ★ふんわり美肌★
-          // videoに軽いボカシをかける。ザラザラ感も軽減。
-          video.style.filter = 'blur(2.5px)'; // 軽いボカシ
-          // さらに薄い白を重ねて柔らかさを出す
-          overlay.style.background = 'rgba(255, 255, 255, 0.08)';
+        case 'retro':
+          video.style.filter = 'sepia(50%) brightness(1.1) contrast(1.1)'; // 少し明るくセピア
+          break;
+
+        case 'rainbow':
+          // ★カオス：レインボー★
+          // CSSアニメーション用クラスを追加
+          video.classList.add('rainbow-filter');
+          break;
+
+        case 'pixel':
+          // ★カオス：ピクセルアート★
+          // CSSドット絵用クラスを追加
+          video.classList.add('pixel-filter');
           break;
       }
     }
