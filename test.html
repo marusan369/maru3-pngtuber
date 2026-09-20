@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>リアルタイム美白＆演出フィルター v16（ナチュラル美肌調整版）</title>
+  <title>リアルタイム美白＆演出フィルター v17（コントラスト調整版）</title>
   <style>
     * {
       box-sizing: border-box;
@@ -42,24 +42,13 @@
       transform: scaleX(-1);
     }
 
-    /* 超高速レインボー（パーティーモード） */
+    /* パリピレインボー */
     @keyframes partyRainbow {
       0% { filter: hue-rotate(0deg) saturate(1.4); }
       100% { filter: hue-rotate(360deg) saturate(1.4); }
     }
     video.party-rainbow {
       animation: partyRainbow 0.8s linear infinite;
-    }
-
-    .light-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      transition: background 0.25s ease;
-      z-index: 2;
     }
 
     .ui-hint {
@@ -199,13 +188,12 @@
 
   <div class="video-container">
     <video id="webcam" autoplay playsinline muted class="mirror"></video>
-    <div class="light-overlay" id="lightOverlay"></div>
   </div>
 
   <div class="controls" id="controlsUI">
     
     <div class="section">
-      <div class="label">✨ 美白トーンアップ</div>
+      <div class="label">✨ 美肌トーン補正</div>
       <div class="button-group">
         <button onclick="setFilter('off', this)" class="active">OFF</button>
         <button onclick="setFilter('lvl1', this)">美白 Lv.1</button>
@@ -237,7 +225,6 @@
 
   <script>
     const video = document.getElementById('webcam');
-    const overlay = document.getElementById('lightOverlay');
     const mirrorBtn = document.getElementById('mirrorBtn');
     const controlsUI = document.getElementById('controlsUI');
     const uiHint = document.getElementById('uiHint');
@@ -310,30 +297,35 @@
 
       // 初期化
       video.className = mirrorBtn.textContent.includes('ON') ? 'mirror' : '';
-      video.style.filter = 'none';
-      overlay.style.background = 'transparent';
 
+      /* 
+        ★白を重ねず、CSSフィルタで映像のコントラスト・明るさ・彩度を計算調整★
+        - brightness: 明るさ（1.0が標準）
+        - contrast: コントラスト（影を引き締める）
+        - saturate: 彩度（血色感を保つ）
+      */
       switch (type) {
         case 'off':
+          video.style.filter = 'none';
           break;
 
         case 'lvl1':
-          // ★美白 Lv.1（ナチュラル美肌）：極薄のウォームホワイトで、白飛びさせずにくすみをオフ
-          overlay.style.background = 'rgba(255, 250, 245, 0.09)';
+          // ナチュラル美白：ほんのり明るく、くすみオフ
+          video.style.filter = 'brightness(1.08) contrast(1.03) saturate(1.05)';
           break;
 
         case 'lvl2':
-          // ★美白 Lv.2（血色美肌）：ほんのりピーチを混ぜて、白飛ばしせず肌を綺麗に見せる
-          overlay.style.background = 'rgba(255, 240, 235, 0.14)';
+          // くっきり美肌：明るさを上げつつコントラストを高めて黒目を引き締める
+          video.style.filter = 'brightness(1.15) contrast(1.06) saturate(1.08)';
           break;
 
         case 'lvl3':
-          // ★美白 Lv.3（透明感美肌）：白飛びしない限界レベル（18%）までトーンアップ
-          overlay.style.background = 'rgba(255, 255, 255, 0.18)';
+          // 高発色美肌：しっかり明るく、彩度とコントラストで白飛びを抑える
+          video.style.filter = 'brightness(1.22) contrast(1.08) saturate(1.10)';
           break;
 
         case 'rosy':
-          overlay.style.background = 'rgba(255, 182, 193, 0.15)';
+          video.style.filter = 'brightness(1.10) contrast(1.02) saturate(1.30) sepia(10%)';
           break;
 
         case 'retro':
