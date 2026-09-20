@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>リアルタイム美白＆演出フィルター v13</title>
+  <title>リアルタイム美白＆演出フィルター v14</title>
   <style>
     * {
       box-sizing: border-box;
@@ -205,7 +205,7 @@
   <div class="controls" id="controlsUI">
     
     <div class="section">
-      <div class="label">✨ 無劣化トーンアップ</div>
+      <div class="label">✨ 美白トーンアップ</div>
       <div class="button-group">
         <button onclick="setFilter('off', this)" class="active">OFF</button>
         <button onclick="setFilter('lvl1', this)">美白 Lv.1</button>
@@ -217,7 +217,7 @@
     <div class="divider"></div>
 
     <div class="section">
-      <div class="label">🎨 演出・パーティー</div>
+      <div class="label">🎨 演出</div>
       <div class="button-group">
         <button onclick="setFilter('rosy', this)" class="fun-btn">🌸 血色ピンク</button>
         <button onclick="setFilter('retro', this)" class="fun-btn">🎞️ レトロ</button>
@@ -318,17 +318,14 @@
           break;
 
         case 'lvl1':
-          // 美白 Lv.1（薄めの白でほんのりトーンアップ）
           overlay.style.background = 'rgba(255, 250, 240, 0.12)';
           break;
 
         case 'lvl2':
-          // 美白 Lv.2（中くらいの白で自然に明るく）
           overlay.style.background = 'rgba(255, 255, 255, 0.2)';
           break;
 
         case 'lvl3':
-          // 美白 Lv.3（しっかりめのグラデーション白でトーンアップ）
           overlay.style.background = 'radial-gradient(circle, rgba(255,255,255,0.28) 30%, rgba(255,240,245,0.15) 100%)';
           break;
 
