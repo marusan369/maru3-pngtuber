@@ -247,7 +247,7 @@
       text-align: center;
     }
 
-    /* 📱 スマホ横画面（画面高制限）時のレイアウト調整 */
+    /* スマホ横画面時の対応 */
     @media (max-height: 500px) {
       body {
         padding: 12px 16px;
@@ -434,54 +434,51 @@
     }
     requestAnimationFrame(previewLoop);
 
+    // 💡 遅延（setTimeout）を完全除去して即時実行に変更したニャ！
     function generateAPNG() {
       if (!img) {
         alert('先に透過PNG画像を選択してください。');
         return;
       }
 
-      generateBtn.disabled = true;
       status.textContent = 'アニメPNGを作成中…';
 
-      setTimeout(() => {
-        const frames = [];
-        const delays = [];
-        const totalFrames = 30; 
+      const frames = [];
+      const delays = [];
+      const totalFrames = 30; 
 
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = cv.width;
-        tempCanvas.height = cv.height;
-        const tempCtx = tempCanvas.getContext('2d');
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = cv.width;
+      tempCanvas.height = cv.height;
+      const tempCtx = tempCanvas.getContext('2d');
 
-        for (let i = 0; i < totalFrames; i++) {
-          const frameAngle = (i / totalFrames) * Math.PI * 2;
-          drawFrameOnContext(tempCtx, frameAngle);
+      for (let i = 0; i < totalFrames; i++) {
+        const frameAngle = (i / totalFrames) * Math.PI * 2;
+        drawFrameOnContext(tempCtx, frameAngle);
 
-          const imgData = tempCtx.getImageData(0, 0, cv.width, cv.height);
-          frames.push(imgData.data.buffer);
-          delays.push(100);
-        }
+        const imgData = tempCtx.getImageData(0, 0, cv.width, cv.height);
+        frames.push(imgData.data.buffer);
+        delays.push(100);
+      }
 
-        const apngBuffer = UPNG.encode(frames, cv.width, cv.height, 0, delays);
-        const blob = new Blob([apngBuffer], { type: 'image/png' });
-        const url = URL.createObjectURL(blob);
+      const apngBuffer = UPNG.encode(frames, cv.width, cv.height, 0, delays);
+      const blob = new Blob([apngBuffer], { type: 'image/png' });
+      const url = URL.createObjectURL(blob);
 
-        const fileName = `cas_${currentPattern}.png`;
+      const fileName = `cas_${currentPattern}.png`;
 
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        a.click();
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
 
-        const resultImg = document.createElement('img');
-        resultImg.src = url;
-        resultImg.className = 'result-img';
-        previewContainer.innerHTML = '';
-        previewContainer.appendChild(resultImg);
+      const resultImg = document.createElement('img');
+      resultImg.src = url;
+      resultImg.className = 'result-img';
+      previewContainer.innerHTML = '';
+      previewContainer.appendChild(resultImg);
 
-        status.textContent = '完成！保存されない場合は上の画像を長押しして保存してください。';
-        generateBtn.disabled = false;
-      }, 50);
+      status.textContent = '完成！保存されない場合は上の画像を長押しして保存してください。';
     }
   </script>
 </body>
