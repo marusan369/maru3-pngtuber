@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>リアルタイム美白＆演出フィルター v18（インパクト重視版）</title>
+  <title>リアルタイム美白＆スポットライティング v19</title>
   <style>
     * {
       box-sizing: border-box;
@@ -31,24 +31,16 @@
       overflow: hidden;
     }
 
-    video {
+    /* 映像本体ではなくCanvasで描画 */
+    canvas {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: transform 0.2s ease, filter 0.2s ease;
     }
 
-    video.mirror {
-      transform: scaleX(-1);
-    }
-
-    /* パリピレインボー */
-    @keyframes partyRainbow {
-      0% { filter: hue-rotate(0deg) saturate(1.6); }
-      100% { filter: hue-rotate(360deg) saturate(1.6); }
-    }
-    video.party-rainbow {
-      animation: partyRainbow 0.8s linear infinite;
+    /* バックグラウンド処理用の非表示video */
+    video {
+      display: none;
     }
 
     .ui-hint {
@@ -89,7 +81,7 @@
       gap: 12px;
       align-items: center;
       width: 90vw;
-      max-width: 420px;
+      max-width: 440px;
       backdrop-filter: blur(12px);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
       transition: opacity 0.3s ease, transform 0.3s ease;
@@ -123,8 +115,8 @@
     }
 
     button {
-      padding: 8px 12px;
-      font-size: 12px;
+      padding: 8px 10px;
+      font-size: 11px;
       font-weight: 600;
       cursor: pointer;
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -187,18 +179,22 @@
   <div class="ui-hint" id="uiHint">💡 画面タップでメニュー開閉</div>
 
   <div class="video-container">
-    <video id="webcam" autoplay playsinline muted class="mirror"></video>
+    <!-- 内部ビデオ処理用（非表示） -->
+    <video id="webcam" autoplay playsinline muted></video>
+    <!-- メイン描画用Canvas -->
+    <canvas id="outputCanvas"></canvas>
   </div>
 
   <div class="controls" id="controlsUI">
     
     <div class="section">
-      <div class="label">✨ 美肌トーン補正</div>
+      <div class="label">💡 ライティングプリセット</div>
       <div class="button-group">
-        <button onclick="setFilter('off', this)" class="active">OFF</button>
-        <button onclick="setFilter('lvl1', this)">美白 Lv.1</button>
-        <button onclick="setFilter('lvl2', this)">美白 Lv.2</button>
-        <button onclick="setFilter('lvl3', this)">美白 Lv.3</button>
+        <button onclick="setLighting('off', this)" class="active">OFF</button>
+        <button onclick="setLighting('natural', this)">🌿 自然光</button>
+        <button onclick="setLighting('ring', this)">⭕ リングライト</button>
+        <button onclick="setLighting('actress', this)">✨ 女優ライト</button>
+        <button onclick="setLighting('actressMax', this)">👑 女優ライトMAX</button>
       </div>
     </div>
 
@@ -207,9 +203,8 @@
     <div class="section">
       <div class="label">🎨 演出</div>
       <div class="button-group">
-        <button onclick="setFilter('rosy', this)" class="fun-btn">🌸 血色ピンク</button>
-        <button onclick="setFilter('retro', this)" class="fun-btn">🎞️ レトロ</button>
-        <button onclick="setFilter('party', this)" class="party-btn">🎉 パリピレインボー</button>
+        <button onclick="setLighting('rosy', this)" class="fun-btn">🌸 血色ピンク</button>
+        <button onclick="setLighting('party', this)" class="party-btn">🎉 パリピレインボー</button>
       </div>
     </div>
 
@@ -225,11 +220,17 @@
 
   <script>
     const video = document.getElementById('webcam');
+    const canvas = document.getElementById('outputCanvas');
+    const ctx = canvas.getContext('2d');
     const mirrorBtn = document.getElementById('mirrorBtn');
     const controlsUI = document.getElementById('controlsUI');
     const uiHint = document.getElementById('uiHint');
+
     let currentFacingMode = 'user';
     let currentStream = null;
+    let isMirror = true;
+    let currentMode = 'off';
+    let rainbowHue = 0;
 
     async function startCamera() {
       if (currentStream) {
@@ -240,16 +241,121 @@
         const constraints = {
           video: {
             facingMode: currentFacingMode,
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
           },
           audio: false
         };
 
         currentStream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = currentStream;
+        video.play();
       } catch (err) {
         alert('カメラ起動エラー: ' + err.message);
+      }
+    }
+
+    // Canvasへのリアルタイム描画ループ
+    function renderFrame() {
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        // 解像度の同期
+        if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+        }
+
+        ctx.save();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // ミラー処理
+        if (isMirror) {
+          ctx.translate(canvas.width, 0);
+          ctx.scale(-1, 1);
+        }
+
+        // ベースのCSSフィルター設定
+        applyBaseFilter();
+
+        // ビデオを描画
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // フィルターのリセット（オーバーレイ用）
+        ctx.filter = 'none';
+
+        // スポットライティング（中央を明るく照らす擬似スポット）
+        applySpotlightOverlay();
+
+        ctx.restore();
+      }
+
+      requestAnimationFrame(renderFrame);
+    }
+
+    // モードに応じた画像調整（CSS filter風の描画演算）
+    function applyBaseFilter() {
+      switch (currentMode) {
+        case 'natural':
+          ctx.filter = 'brightness(1.08) contrast(1.02) saturate(1.04)';
+          break;
+        case 'ring':
+          ctx.filter = 'brightness(1.15) contrast(1.06) saturate(1.06)';
+          break;
+        case 'actress':
+          ctx.filter = 'brightness(1.22) contrast(1.10) saturate(1.08)';
+          break;
+        case 'actressMax':
+          ctx.filter = 'brightness(1.32) contrast(1.14) saturate(1.10)';
+          break;
+        case 'rosy':
+          ctx.filter = 'brightness(1.12) contrast(1.03) saturate(1.30)';
+          break;
+        case 'party':
+          rainbowHue = (rainbowHue + 4) % 360;
+          ctx.filter = `hue-rotate(${rainbowHue}deg) saturate(1.5) brightness(1.1)`;
+          break;
+        default:
+          ctx.filter = 'none';
+          break;
+      }
+    }
+
+    // スポットライティング（顔周辺を中心に柔らかく照らす）
+    function applySpotlightOverlay() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const centerX = w / 2;
+      const centerY = h * 0.42; // 顔が来やすい少し高めの位置
+
+      if (currentMode === 'ring' || currentMode === 'actress' || currentMode === 'actressMax') {
+        const radius = Math.max(w, h) * 0.6;
+        const gradient = ctx.createRadialGradient(centerX, centerY, 50, centerX, centerY, radius);
+
+        if (currentMode === 'ring') {
+          // リングライト：顔の周りを中心にほんのり暖色ライト
+          gradient.addColorStop(0, 'rgba(255, 252, 245, 0.18)');
+          gradient.addColorStop(0.6, 'rgba(255, 245, 235, 0.08)');
+          gradient.addColorStop(1, 'rgba(0, 0, 0, 0.15)');
+        } else if (currentMode === 'actress') {
+          // 女優ライト：透明感のある明るいスポット
+          gradient.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
+          gradient.addColorStop(0.5, 'rgba(255, 248, 240, 0.12)');
+          gradient.addColorStop(1, 'rgba(0, 0, 0, 0.22)');
+        } else if (currentMode === 'actressMax') {
+          // 女優ライトMAX：強力な中央集中スポット＆外側シャドウ
+          gradient.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
+          gradient.addColorStop(0.4, 'rgba(255, 245, 245, 0.18)');
+          gradient.addColorStop(1, 'rgba(0, 0, 0, 0.30)');
+        }
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, w, h);
+      } else if (currentMode === 'rosy') {
+        const radius = Math.max(w, h) * 0.6;
+        const gradient = ctx.createRadialGradient(centerX, centerY, 50, centerX, centerY, radius);
+        gradient.addColorStop(0, 'rgba(255, 210, 220, 0.20)');
+        gradient.addColorStop(1, 'rgba(255, 180, 200, 0.05)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, w, h);
       }
     }
 
@@ -269,9 +375,7 @@
 
     function toggleMirror(e) {
       e.stopPropagation();
-      video.classList.toggle('mirror');
-      const isMirror = video.classList.contains('mirror');
-      
+      isMirror = !isMirror;
       if (isMirror) {
         mirrorBtn.textContent = '🪞 ミラー：ON';
         mirrorBtn.classList.add('mirror-on');
@@ -287,7 +391,7 @@
       startCamera();
     }
 
-    function setFilter(type, btnElement) {
+    function setLighting(mode, btnElement) {
       const allButtons = document.querySelectorAll('.button-group button');
       allButtons.forEach(b => b.classList.remove('active'));
 
@@ -295,50 +399,11 @@
         btnElement.classList.add('active');
       }
 
-      // 初期化
-      video.className = mirrorBtn.textContent.includes('ON') ? 'mirror' : '';
-
-      /* 
-        ★メリハリとインパクトを重視した値に再設定★
-        - Lv.1: 自然にくすみを消す
-        - Lv.2: はっきり明るく・白く見せる
-        - Lv.3: ドカンとトーンアップ（強力なインパクト）
-      */
-      switch (type) {
-        case 'off':
-          video.style.filter = 'none';
-          break;
-
-        case 'lvl1':
-          // Lv.1：ほんのり明度UP（+12%）
-          video.style.filter = 'brightness(1.12) contrast(1.04) saturate(1.05)';
-          break;
-
-        case 'lvl2':
-          // Lv.2：はっきり美白（+28%）。明るさとコントラストを同時に伸ばす
-          video.style.filter = 'brightness(1.28) contrast(1.12) saturate(1.10)';
-          break;
-
-        case 'lvl3':
-          // Lv.3：強烈な透明感（+45%）。一目で「白っ！」とわかるインパクト
-          video.style.filter = 'brightness(1.45) contrast(1.18) saturate(1.12)';
-          break;
-
-        case 'rosy':
-          video.style.filter = 'brightness(1.18) contrast(1.05) saturate(1.35) sepia(12%)';
-          break;
-
-        case 'retro':
-          video.style.filter = 'sepia(50%) brightness(1.1) contrast(1.1)';
-          break;
-
-        case 'party':
-          video.classList.add('party-rainbow');
-          break;
-      }
+      currentMode = mode;
     }
 
     startCamera();
+    requestAnimationFrame(renderFrame);
   </script>
 </body>
 </html>
