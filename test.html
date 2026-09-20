@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>リアルタイム美容フィルター＆ミラー検証</title>
+  <title>リアルタイム美容フィルター v3</title>
   <style>
     * {
       box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
     }
     body {
       margin: 0;
@@ -20,6 +21,7 @@
       align-items: center;
       justify-content: center;
       min-height: 100vh;
+      user-select: none;
     }
 
     /* カメラ映像を画面いっぱいに表示 */
@@ -27,10 +29,10 @@
       width: 100vw;
       height: 100vh;
       object-fit: cover;
-      transition: filter 0.3s ease, transform 0.2s ease;
+      transition: filter 0.2s ease, transform 0.2s ease;
     }
 
-    /* ミラー（左右反転）用のクラス */
+    /* ミラー（左右反転） */
     video.mirror {
       transform: scaleX(-1);
     }
@@ -42,44 +44,71 @@
       left: 50%;
       transform: translateX(-50%);
       z-index: 10;
-      background: rgba(0, 0, 0, 0.7);
-      padding: 12px 16px;
-      border-radius: 16px;
+      background: rgba(0, 0, 0, 0.75);
+      padding: 14px 18px;
+      border-radius: 20px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
       align-items: center;
-      max-width: 90vw;
-      backdrop-filter: blur(5px);
+      max-width: 95vw;
+      backdrop-filter: blur(8px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    /* メニュー非表示時のスタイル */
+    .controls.hidden {
+      opacity: 0;
+      transform: translate(-50%, 20px);
+      pointer-events: none; /* タップを通過させる */
+    }
+
+    /* 画面タップでUIを表示させるためのヒント案内 */
+    .ui-hint {
+      position: absolute;
+      top: 15px;
+      z-index: 5;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      color: #ddd;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .ui-hint.hidden {
+      opacity: 0;
     }
 
     .button-group {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 6px;
+      gap: 8px;
     }
 
     button {
-      padding: 8px 12px;
+      padding: 10px 14px;
       font-size: 13px;
       cursor: pointer;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       background: #333;
       color: white;
       font-weight: bold;
-      transition: background 0.2s;
+      transition: background 0.2s, transform 0.1s;
     }
 
     button:active {
-      transform: scale(0.95);
+      transform: scale(0.92);
     }
 
-    /* 選択中のプリセットボタンを強調 */
+    /* 選択中のプリセットボタン */
     button.active {
       background: #ff4081;
       color: white;
+      box-shadow: 0 0 10px rgba(255, 64, 129, 0.5);
     }
 
     /* ミラーボタンのON状態 */
@@ -90,36 +119,42 @@
 
     .label {
       font-size: 11px;
-      color: #aaa;
-      margin-bottom: 2px;
+      color: #ccc;
+      margin-bottom: 4px;
+      text-align: center;
     }
   </style>
 </head>
-<body>
+
+<!-- 画面全体をタップしてメニュー表示・非表示を切り替え -->
+<body onclick="toggleUI(event)">
+
+  <div class="ui-hint" id="uiHint">💡 画面をタップでメニュー開閉</div>
 
   <!-- カメラ映像本体 -->
   <video id="webcam" autoplay playsinline muted class="mirror"></video>
 
   <!-- 操作用UI -->
-  <div class="controls">
+  <div class="controls" id="controlsUI">
     
-    <!-- 美容フィルター切り替え -->
-    <div style="text-align: center;">
-      <div class="label">美容フィルター（ワンクリック切り替え）</div>
+    <!-- 美容フィルター切り替え（ガッツリ効くように調整！） -->
+    <div>
+      <div class="label">✨ 美容フィルター（強め調整版）</div>
       <div class="button-group">
         <button onclick="setFilter('off', this)" class="active">OFF</button>
-        <button onclick="setFilter('natural', this)">ナチュラル</button>
-        <button onclick="setFilter('soft', this)">やわらか美白</button>
-        <button onclick="setFilter('mori', this)">しっかり盛り</button>
-        <button onclick="setFilter('rosy', this)">血色感UP</button>
+        <button onclick="setFilter('natural', this)">ナチュラル美肌</button>
+        <button onclick="setFilter('soft', this)">爆盛り美白</button>
+        <button onclick="setFilter('rosy', this)">血色ピンク</button>
+
         <button onclick="setFilter('retro', this)">エモレトロ</button>
       </div>
     </div>
 
     <!-- 機能切り替え -->
-    <div class="button-group" style="margin-top: 4px;">
-      <button id="mirrorBtn" onclick="toggleMirror()" class="mirror-on">ミラー：ON</button>
-      <button onclick="toggleCamera()">カメラ切替</button>
+    <div class="button-group" style="margin-top: 2px;">
+      <button id="mirrorBtn" onclick="toggleMirror(event)" class="mirror-on">ミラー：ON</button>
+      <button onclick="toggleCamera(event)">カメラ切替</button>
+      <button onclick="hideUIExplicit(event)" style="background: #555;">画面を隠す ✕</button>
     </div>
 
   </div>
@@ -127,7 +162,9 @@
   <script>
     const video = document.getElementById('webcam');
     const mirrorBtn = document.getElementById('mirrorBtn');
-    let currentFacingMode = 'user'; // 'user' (イン) または 'environment' (アウト)
+    const controlsUI = document.getElementById('controlsUI');
+    const uiHint = document.getElementById('uiHint');
+    let currentFacingMode = 'user';
     let currentStream = null;
 
     // --- カメラ起動処理 ---
@@ -153,8 +190,26 @@
       }
     }
 
+    // --- メニュー表示・非表示のトグル（画面どこでもタップ） ---
+    function toggleUI(e) {
+      // ボタン自体を押し込んだ時はメニューを閉じないようにする
+      if (e.target.tagName === 'BUTTON' || e.target.closest('.controls')) {
+        return;
+      }
+      controlsUI.classList.toggle('hidden');
+      uiHint.classList.toggle('hidden');
+    }
+
+    // ボタンから直接メニューを隠す
+    function hideUIExplicit(e) {
+      e.stopPropagation();
+      controlsUI.classList.add('hidden');
+      uiHint.classList.add('hidden');
+    }
+
     // --- ミラー（左右反転）切り替え ---
-    function toggleMirror() {
+    function toggleMirror(e) {
+      e.stopPropagation();
       video.classList.toggle('mirror');
       const isMirror = video.classList.contains('mirror');
       
@@ -168,48 +223,44 @@
     }
 
     // --- イン/アウトカメラ切り替え ---
-    function toggleCamera() {
+    function toggleCamera(e) {
+      e.stopPropagation();
       currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
       startCamera();
     }
 
-    // --- 美容フィルター（CSS Filterの組み合わせ） ---
+    // --- ガッツリ効く！美容フィルター設定 ---
     function setFilter(type, btnElement) {
-      // ボタンの見た目を更新
-      const buttons = btnElement.parentElement.querySelectorAll('button');
-      buttons.forEach(b => b.classList.remove('active'));
-      btnElement.classList.add('active');
+      if (btnElement && btnElement.parentElement) {
+        const buttons = btnElement.parentElement.querySelectorAll('button');
+        buttons.forEach(b => b.classList.remove('active'));
+        btnElement.classList.add('active');
+      }
 
-      // フィルター適用
       switch (type) {
         case 'off':
-          // 加工なし
+          // ノーマル（加工なし）
           video.style.filter = 'none';
           break;
 
         case 'natural':
-          // ナチュラル：ほんのり明るく＆肌の凹凸感をやわらげる
-          video.style.filter = 'brightness(1.08) contrast(0.95) saturate(1.05) blur(0.4px)';
+          // ナチュラル美肌：しっかりトーンアップ＆程よい美肌ボカシ
+          video.style.filter = 'brightness(1.2) contrast(0.92) saturate(1.1) blur(1px)';
           break;
 
         case 'soft':
-          // やわらか美白：しっかり明るく＆ふんわりボカシ
-          video.style.filter = 'brightness(1.18) contrast(0.92) saturate(0.95) blur(0.8px)';
-          break;
-
-        case 'mori':
-          // しっかり盛り：トーンを上げつつコントラストと彩度でくっきり可愛く
-          video.style.filter = 'brightness(1.15) contrast(1.02) saturate(1.15) blur(0.5px)';
+          // 爆盛り美白：ガッツリ美白＆ふわふわライト（すっぴん隠しレベル）
+          video.style.filter = 'brightness(1.35) contrast(0.85) saturate(0.9) blur(1.8px)';
           break;
 
         case 'rosy':
-          // 血色感UP：ほんのりピンク・赤みを乗せて健康的な肌色に
-          video.style.filter = 'brightness(1.05) contrast(0.98) saturate(1.3) hue-rotate(-5deg) blur(0.4px)';
+          // 血色ピンク：チーク・リップが映える強力な赤み・血色補正
+          video.style.filter = 'brightness(1.15) contrast(1.05) saturate(1.6) hue-rotate(-10deg) blur(0.8px)';
           break;
 
         case 'retro':
-          // エモレトロ：雰囲気の出るレトロ調
-          video.style.filter = 'brightness(1.05) contrast(1.1) sepia(0.25) saturate(1.1)';
+          // エモレトロ：しっかり雰囲気が変わるシネマティック加工
+          video.style.filter = 'brightness(1.1) contrast(1.2) sepia(0.4) saturate(1.3)';
           break;
 
         default:
@@ -217,7 +268,7 @@
       }
     }
 
-    // 初期起動（最初はインカメラ・ミラーONで起動）
+    // 初期起動
     startCamera();
   </script>
 </body>
