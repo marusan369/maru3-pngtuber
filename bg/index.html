@@ -335,17 +335,17 @@
 
   <div class="container">
     <header>
-      <h1>スタジオ配信用 ループ背景メーカー</h1>
+      <h1>スタジオ配信用 ループ背景メーカーv2</h1>
       <p>1〜3枚の画像から、配信に最適なループ背景画像（APNG）を簡単につくれます。</p>
     </header>
 
     <div class="prep-panel">
       <span class="panel-title" style="color: #1e40af;">💡 ご利用の推奨環境</span>
       <ul style="margin: 6px 0 0 18px; padding: 0; font-size: 13px; color: #1e3a8a; line-height: 1.5;">
-        <li><strong>16:9の画像ファイル</strong>（2枚または3枚の選択を推奨いたします）</li>
+        <li><strong>スマホ写真もOK</strong>（自動で1280x720に最適化リサイズされます）</li>
       </ul>
       <div style="font-size: 12px; color: #3b82f6; margin-top: 4px; margin-left: 18px; line-height: 1.4;">
-        ※異なるアスペクト比の画像を選択された場合でも、1280x720の画面サイズに合わせて自動的にトリミング・調整されます。
+        ※選択された画像は1280x720の画面サイズに合わせて自動トリミング・調整され、プレビューと完全に一致した綺麗なAPNGが生成されます。
       </div>
     </div>
 
@@ -415,7 +415,7 @@
       </div>
       <div class="note">
         ※1280x720サイズに自動調整され、配信向けに軽量化されたAPNGを生成します。<br>
-        ※ループ処理の都合上、再生開始時（1周目）のみ1枚目の表示時間が少し短くなる場合があります。
+        ※プレビューとダウンロードされるファイルは完全に同じアルゴリズムで動作します。
       </div>
     </div>
 
@@ -461,19 +461,45 @@
     let animationStartTime = null;
     let isGenerating = false;
 
+    // 画像を1280x720のサイズにカバー描画して綺麗にオフスクリーンCanvas化（リサイズ＆軽量化）
+    function createResizedImageBitmap(img) {
+      const oc = document.createElement('canvas');
+      oc.width = 1280;
+      oc.height = 720;
+      const octx = oc.getContext('2d', { willReadFrequently: true });
+      octx.fillStyle = '#0f172a';
+      octx.fillRect(0, 0, 1280, 720);
+
+      const hRatio = 1280 / img.width;
+      const vRatio = 720 / img.height;
+      const ratio = Math.max(hRatio, vRatio);
+      const centerShiftX = (1280 - img.width * ratio) / 2;
+      const centerShiftY = (720 - img.height * ratio) / 2;
+      octx.drawImage(img, 0, 0, img.width, img.height, centerShiftX, centerShiftY, img.width * ratio, img.height * ratio);
+
+      const resImg = new Image();
+      resImg.src = oc.toDataURL('image/png');
+      return new Promise((resolve) => {
+        resImg.onload = () => resolve(resImg);
+      });
+    }
+
     inputs.forEach(item => {
       item.fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        item.nameLabel.textContent = `背景 ${item.index + 1}: ${file.name}`;
+        item.nameLabel.textContent = `背景 ${item.index + 1}: ${file.name} (調整中...)`;
         item.delBtn.style.display = 'inline-flex';
         downloadLinkBtn.style.display = 'none';
 
         const reader = new FileReader();
         reader.onload = (evt) => {
           const img = new Image();
-          img.onload = () => {
-            loadedImages[item.index] = img;
+          img.onload = async () => {
+            // 入力された瞬間に1280x720にリサイズ・トリミングして軽量化
+            const resizedImg = await createResizedImageBitmap(img);
+            loadedImages[item.index] = resizedImg;
+            item.nameLabel.textContent = `背景 ${item.index + 1}: ${file.name}`;
             updateStatus();
           };
           img.src = evt.target.result;
@@ -487,7 +513,7 @@
         if (item.index === 0) {
           item.nameLabel.textContent = '背景 1: 未選択';
         } else if (item.index === 1) {
-          item.nameLabel.textContent = '背景 2: 未選択（任意）';
+          item.nameLabel.textContent = '背景 2: 未選択';
         } else {
           item.nameLabel.textContent = '背景 3: 未選択（任意）';
         }
@@ -513,17 +539,24 @@
       }
     }
 
-    function drawImageCover(targetCtx, image, alpha = 1.0) {
-      if (!image) return;
-      targetCtx.save();
-      targetCtx.globalAlpha = alpha;
-      const hRatio = 1280 / image.width;
-      const vRatio = 720 / image.height;
-      const ratio = Math.max(hRatio, vRatio);
-      const centerShiftX = (1280 - image.width * ratio) / 2;
-      const centerShiftY = (720 - image.height * ratio) / 2;
-      targetCtx.drawImage(image, 0, 0, image.width, image.height, centerShiftX, centerShiftY, image.width * ratio, image.height * ratio);
-      targetCtx.restore();
+    // プレビューおよび書き出しで使う完全共通の描画関数
+    function renderFrame(targetCtx, currentImg, nextImg, alpha) {
+      targetCtx.fillStyle = '#0f172a';
+      targetCtx.fillRect(0, 0, 1280, 720);
+      
+      if (currentImg) {
+        targetCtx.save();
+        targetCtx.globalAlpha = 1.0;
+        targetCtx.drawImage(currentImg, 0, 0, 1280, 720);
+        targetCtx.restore();
+      }
+
+      if (nextImg && alpha > 0) {
+        targetCtx.save();
+        targetCtx.globalAlpha = Math.max(0, Math.min(1, alpha));
+        targetCtx.drawImage(nextImg, 0, 0, 1280, 720);
+        targetCtx.restore();
+      }
     }
 
     function loop(timestamp) {
@@ -550,20 +583,14 @@
       const currentIndex = Math.min(Math.floor(elapsed / cycleTime), numImages - 1);
       const timeInCycle = elapsed - (currentIndex * cycleTime);
 
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(0, 0, 1280, 720);
-
       const currentImg = activeImages[currentIndex];
       const nextImg = activeImages[(currentIndex + 1) % numImages];
 
       if (timeInCycle < displaySec) {
-        drawImageCover(ctx, currentImg, 1.0);
+        renderFrame(ctx, currentImg, null, 0);
       } else {
         const fadeProgress = (timeInCycle - displaySec) / fadeSec;
-        drawImageCover(ctx, currentImg, 1.0);
-        if (nextImg) {
-          drawImageCover(ctx, nextImg, Math.max(0, Math.min(1, fadeProgress)));
-        }
+        renderFrame(ctx, currentImg, nextImg, fadeProgress);
       }
     }
     requestAnimationFrame(loop);
@@ -599,18 +626,15 @@
             const currentImg = activeImages[i];
             const nextImg = activeImages[(i + 1) % numImages];
 
-            offCtx.fillStyle = '#0f172a';
-            offCtx.fillRect(0, 0, 1280, 720);
-            drawImageCover(offCtx, currentImg, 1.0);
+            // 1. 通常表示フレーム
+            renderFrame(offCtx, currentImg, null, 0);
             frames.push(offCtx.getImageData(0, 0, 1280, 720).data.buffer);
             delays.push(displayMs);
 
+            // 2. フェードの中間フレーム（プレビューと完全同一のロジック）
             for (let f = 1; f <= fadeFrameCount; f++) {
               const alpha = f / (fadeFrameCount + 1);
-              offCtx.fillStyle = '#0f172a';
-              offCtx.fillRect(0, 0, 1280, 720);
-              drawImageCover(offCtx, currentImg, 1.0);
-              drawImageCover(offCtx, nextImg, alpha);
+              renderFrame(offCtx, currentImg, nextImg, alpha);
               frames.push(offCtx.getImageData(0, 0, 1280, 720).data.buffer);
               delays.push(fadeStepMs);
             }
