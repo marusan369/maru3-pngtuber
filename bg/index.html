@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ツイキャス用 スタジオ配信ループ背景メーカー</title>
+  <title>スタジオ配信用-ループ背景メーカー</title>
   <!-- 必須依存ライブラリ (pako.js & UPNG.js) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/upng-js/2.1.0/UPNG.min.js"></script>
@@ -400,7 +400,7 @@
         <span style="color: var(--download-bg); font-weight: bold;">3枚（固定・最適化済み）</span>
       </div>
       <div class="note">
-        ※1280x720サイズに自動調整され、ツイキャス向けに軽量化されたAPNGを生成します。<br>
+        ※1280x720サイズに自動調整され、スタジオ配信向けに軽量化されたAPNGを生成します。<br>
         ※ループ処理の都合上、再生開始時（1周目）のみ1枚目の表示時間が少し短くなる場合があります。
       </div>
     </div>
@@ -424,7 +424,7 @@
         <span>•</span>
         <a href="https://www.amazon.jp/hz/wishlist/ls/1QBBDR3F83E00?ref_=wl_share" target="_blank" rel="noopener">🎁 欲しいものリスト</a>
       </div>
-      <div class="copyright">© ツイキャス用 ループ背景メーカー</div>
+      <div class="copyright">© スタジオ配信用 ループ背景メーカー</div>
     </footer>
   </div>
 
@@ -606,9 +606,13 @@
               const blob = new Blob([pngBuf], { type: 'image/png' });
               const url = URL.createObjectURL(blob);
               
-              // 自動ダウンロードせず、青いボタンにリンクをセットして表示する！
+              // 毎回異なるファイル名（タイムスタンプ付き）を生成して再ダウンロード確認を防ぐニャ！
+              const now = new Date();
+              const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+              const fileName = `stream_background_${timestamp}.png`;
+
               downloadLinkBtn.href = url;
-              downloadLinkBtn.download = 'stream_background.png';
+              downloadLinkBtn.download = fileName;
               downloadLinkBtn.style.display = 'block';
 
               statusInfo.style.color = '#66bb6a';
