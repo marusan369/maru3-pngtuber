@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ツイキャス用 ループ背景メーカー</title>
   <!-- 必須依存ライブラリ (pako.js & UPNG.js) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
@@ -29,8 +30,9 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 30px 15px;
+      padding: 20px 10px;
       margin: 0;
+      -webkit-text-size-adjust: 100%;
     }
 
     .container {
@@ -47,16 +49,17 @@
     }
 
     header h1 {
-      font-size: 22px;
+      font-size: 20px;
       margin: 0 0 6px 0;
       color: #fff;
       letter-spacing: 0.5px;
     }
 
     header p {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--text-sub);
       margin: 0;
+      line-height: 1.4;
     }
 
     /* 準備するものパネル */
@@ -64,7 +67,7 @@
       background: var(--panel-bg);
       border: 1px solid var(--panel-border);
       border-radius: 8px;
-      padding: 14px 18px;
+      padding: 12px 14px;
     }
 
     /* 利用規約パネル */
@@ -72,7 +75,7 @@
       background: #17171c;
       border: 1px solid #282833;
       border-radius: 8px;
-      padding: 12px 16px;
+      padding: 10px 14px;
       font-size: 12px;
       color: var(--text-sub);
       line-height: 1.6;
@@ -108,16 +111,16 @@
 
     .panel {
       background: var(--panel-bg);
-      padding: 18px;
+      padding: 14px;
       border-radius: 10px;
       border: 1px solid var(--panel-border);
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
     }
 
     .panel-title {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: bold;
       color: var(--text-sub);
       text-transform: uppercase;
@@ -138,35 +141,40 @@
       justify-content: space-between;
       align-items: center;
       font-size: 13px;
+      gap: 10px;
     }
 
     input[type="number"] {
-      width: 65px;
-      padding: 6px;
+      width: 70px;
+      padding: 8px;
       background: #121216;
       border: 1px solid #444;
       color: #fff;
       border-radius: 6px;
       text-align: center;
-      font-size: 13px;
+      font-size: 16px; /* スマホでフォーカス時にズームされないように16pxに */
     }
 
     .btn {
-      padding: 8px 14px;
+      padding: 10px 14px;
       background: var(--accent);
       color: #fff;
       border: none;
       border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
-      font-size: 12px;
+      font-size: 13px;
       transition: background 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
     }
     .btn:hover { background: var(--accent-hover); }
 
     .btn-danger {
       background: var(--danger);
-      padding: 8px 12px;
+      padding: 10px 12px;
     }
     .btn-danger:hover { background: var(--danger-hover); }
 
@@ -187,21 +195,28 @@
 
     .file-row {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      flex-direction: column;
+      align-items: stretch;
       font-size: 13px;
       background: #121216;
-      padding: 10px 14px;
+      padding: 12px;
       border-radius: 6px;
       border: 1px solid #2a2a35;
       gap: 10px;
+    }
+
+    @media (min-width: 480px) {
+      .file-row {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
     }
 
     .file-info-area {
       display: flex;
       align-items: center;
       gap: 10px;
-      flex-grow: 1;
       overflow: hidden;
     }
 
@@ -210,12 +225,22 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      font-size: 12px;
     }
 
     .file-actions {
       display: flex;
-      gap: 6px;
-      flex-shrink: 0;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .file-actions .btn {
+      flex: 1;
+    }
+    @media (min-width: 480px) {
+      .file-actions .btn {
+        flex: initial;
+      }
     }
 
     .status {
@@ -223,6 +248,7 @@
       color: var(--warning);
       text-align: center;
       font-weight: bold;
+      word-break: break-all;
     }
 
     .note {
@@ -278,10 +304,10 @@
     <!-- 推奨事項パネル -->
     <div class="prep-panel">
       <span class="panel-title">💡 ご利用の推奨環境</span>
-      <ul style="margin: 8px 0 0 18px; padding: 0; font-size: 13px; color: var(--text-main); line-height: 1.6;">
+      <ul style="margin: 6px 0 0 18px; padding: 0; font-size: 12px; color: var(--text-main); line-height: 1.5;">
         <li><strong>16:9の画像ファイル</strong>（2枚または3枚の選択を推奨いたします）</li>
       </ul>
-      <div style="font-size: 11px; color: #777788; margin-top: 6px; margin-left: 18px;">
+      <div style="font-size: 11px; color: #777788; margin-top: 4px; margin-left: 18px; line-height: 1.4;">
         ※異なるアスペクト比の画像を選択された場合でも、1280x720の画面サイズに合わせて自動的にトリミング・調整されます。
       </div>
     </div>
@@ -401,7 +427,7 @@
         const file = e.target.files[0];
         if (!file) return;
         item.nameLabel.textContent = `背景 ${item.index + 1}: ${file.name}`;
-        item.delBtn.style.display = 'inline-block';
+        item.delBtn.style.display = 'inline-flex';
 
         const reader = new FileReader();
         reader.onload = (evt) => {
