@@ -727,10 +727,10 @@ function updateStatus() {
    画像を16:9でカバー
 ========================= */
 
-function drawImageCover(ctx, img, alpha = 1.0) {
+function drawImageCover(targetCtx, img, alpha = 1.0) {
 
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
+    const canvasWidth = targetCtx.canvas.width;
+    const canvasHeight = targetCtx.canvas.height;
 
     const imageRatio =
         img.width / img.height;
@@ -767,9 +767,9 @@ function drawImageCover(ctx, img, alpha = 1.0) {
     }
 
 
-    ctx.globalAlpha = alpha;
+    targetCtx.globalAlpha = alpha;
 
-    ctx.drawImage(
+    targetCtx.drawImage(
         img,
         offsetX,
         offsetY,
@@ -777,7 +777,7 @@ function drawImageCover(ctx, img, alpha = 1.0) {
         drawHeight
     );
 
-    ctx.globalAlpha = 1.0;
+    targetCtx.globalAlpha = 1.0;
 }
 
 
@@ -1010,9 +1010,6 @@ generateBtn.addEventListener(
 
             /*
              * フェードの中間フレーム数
-             *
-             * 3枚
-             * 25% → 50% → 75%
              */
             const fadeFrameCount = 3;
 
@@ -1059,7 +1056,7 @@ generateBtn.addEventListener(
                     frameCanvas.getContext("2d");
 
 
-                drawImageCoverOnContext(
+                drawImageCover(
                     frameCtx,
                     currentImg,
                     1.0
@@ -1078,9 +1075,6 @@ generateBtn.addEventListener(
 
                 /*
                  * フェード開始まで表示
-                 *
-                 * 実際の表示時間から、
-                 * フェード用フレームの時間を除く。
                  */
                 const displayFrameDelay =
                     Math.max(
@@ -1131,7 +1125,7 @@ generateBtn.addEventListener(
                     /*
                      * 現在画像
                      */
-                    drawImageCoverOnContext(
+                    drawImageCover(
                         fadeCtx,
                         currentImg,
                         1.0
@@ -1141,7 +1135,7 @@ generateBtn.addEventListener(
                     /*
                      * 次画像を重ねる
                      */
-                    drawImageCoverOnContext(
+                    drawImageCover(
                         fadeCtx,
                         nextImg,
                         progress
@@ -1263,83 +1257,6 @@ generateBtn.addEventListener(
         generateBtn.disabled = false;
     }
 );
-
-
-/* =========================
-   任意のCanvasコンテキストへ
-   画像を16:9で描画
-========================= */
-
-function drawImageCoverOnContext(
-    targetCtx,
-    img,
-    alpha = 1.0
-) {
-
-    const canvasWidth =
-        targetCtx.canvas.width;
-
-    const canvasHeight =
-        targetCtx.canvas.height;
-
-
-    const imageRatio =
-        img.width / img.height;
-
-    const canvasRatio =
-        canvasWidth / canvasHeight;
-
-
-    let drawWidth;
-    let drawHeight;
-    let offsetX;
-    let offsetY;
-
-
-    if (imageRatio > canvasRatio) {
-
-        drawHeight =
-            canvasHeight;
-
-        drawWidth =
-            drawHeight * imageRatio;
-
-        offsetX =
-            (canvasWidth - drawWidth) / 2;
-
-        offsetY = 0;
-
-    } else {
-
-        drawWidth =
-            canvasWidth;
-
-        drawHeight =
-            drawWidth / imageRatio;
-
-        offsetX = 0;
-
-        offsetY =
-            (canvasHeight - drawHeight) / 2;
-    }
-
-
-    targetCtx.globalAlpha =
-        alpha;
-
-
-    targetCtx.drawImage(
-        img,
-        offsetX,
-        offsetY,
-        drawWidth,
-        drawHeight
-    );
-
-
-    targetCtx.globalAlpha =
-        1.0;
-}
 
 </script>
 
