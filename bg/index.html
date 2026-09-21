@@ -62,7 +62,6 @@
       line-height: 1.4;
     }
 
-    /* 準備するものパネル */
     .prep-panel {
       background: var(--panel-bg);
       border: 1px solid var(--panel-border);
@@ -70,7 +69,6 @@
       padding: 12px 14px;
     }
 
-    /* 利用規約パネル */
     .terms-panel {
       background: #17171c;
       border: 1px solid #282833;
@@ -169,6 +167,7 @@
       align-items: center;
       justify-content: center;
       text-align: center;
+      text-decoration: none;
     }
     .btn:hover { background: var(--accent-hover); }
 
@@ -190,6 +189,27 @@
     }
     .btn-download:hover { background: var(--download-hover); }
     .btn-download:disabled { background: #333; color: #777; cursor: not-allowed; box-shadow: none; }
+
+    /* 生成された後に現れる青い保存用ボタン */
+    .download-action-btn {
+      background: #00b0ff;
+      color: #000;
+      display: none;
+      width: 100%;
+      padding: 14px;
+      font-size: 15px;
+      border-radius: 8px;
+      font-weight: bold;
+      box-shadow: 0 4px 14px rgba(0, 176, 255, 0.3);
+      animation: pulse 1.5s infinite;
+      text-align: center;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+      100% { transform: scale(1.01); }
+    }
 
     input[type="file"] { display: none; }
 
@@ -386,8 +406,11 @@
       <div class="status" id="statusInfo">背景画像を選択してください。</div>
     </div>
 
-    <div class="panel">
-      <button class="btn btn-download" id="downloadBtn" disabled>📥 PNG（APNG）ファイルをダウンロード</button>
+    <div class="panel" style="gap: 10px;">
+      <!-- 生成スタートボタン -->
+      <button class="btn btn-download" id="downloadBtn" disabled>📥 PNG（APNG）ファイルを生成する</button>
+      <!-- 生成完了後に現れる手動保存用ボタン -->
+      <a id="downloadLinkBtn" class="download-action-btn" download="stream_background.png">📥 このボタンをタップして保存する</a>
     </div>
 
     <footer>
@@ -406,6 +429,7 @@
     const statusInfo = document.getElementById('statusInfo');
     const displayDurationInput = document.getElementById('displayDuration');
     const downloadBtn = document.getElementById('downloadBtn');
+    const downloadLinkBtn = document.getElementById('downloadLinkBtn');
 
     const inputs = [
       { fileInput: document.getElementById('file1'), nameLabel: document.getElementById('nameA'), delBtn: document.getElementById('del1'), index: 0 },
@@ -423,6 +447,7 @@
         if (!file) return;
         item.nameLabel.textContent = `背景 ${item.index + 1}: ${file.name}`;
         item.delBtn.style.display = 'inline-flex';
+        downloadLinkBtn.style.display = 'none'; // 画像を変更したら保存ボタンを隠す
 
         const reader = new FileReader();
         reader.onload = (evt) => {
@@ -447,6 +472,7 @@
           item.nameLabel.textContent = '背景 3: 未選択（任意）';
         }
         item.delBtn.style.display = 'none';
+        downloadLinkBtn.style.display = 'none';
         updateStatus();
       });
     });
@@ -525,8 +551,9 @@
 
       isGenerating = true;
       downloadBtn.disabled = true;
+      downloadLinkBtn.style.display = 'none';
       statusInfo.style.color = 'var(--download-bg)';
-      statusInfo.textContent = '⚙️ APNGファイルを生成中……（スマホの性能により数秒かかります）';
+      statusInfo.textContent = '⚙️ APNGファイルを生成中……（数秒かかります）';
 
       setTimeout(async () => {
         try {
@@ -566,7 +593,7 @@
             }
           }
 
-          statusInfo.textContent = '📦 データを圧縮・ファイル化しています……';
+          statusInfo.textContent = '📦 データを圧縮しています……';
 
           setTimeout(() => {
             try {
@@ -574,16 +601,13 @@
               const blob = new Blob([pngBuf], { type: 'image/png' });
               const url = URL.createObjectURL(blob);
               
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = 'stream_background.png';
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              URL.revokeObjectURL(url);
+              // 自動ダウンロードせず、青い保存ボタンにリンクをセットして表示する！
+              downloadLinkBtn.href = url;
+              downloadLinkBtn.download = 'stream_background.png';
+              downloadLinkBtn.style.display = 'block';
 
               statusInfo.style.color = '#66bb6a';
-              statusInfo.textContent = '🎉 生成・ダウンロードが完了しました！';
+              statusInfo.textContent = '🎉 生成完了！下の青いボタンをタップして保存してね👇';
             } catch (innerErr) {
               console.error(innerErr);
               statusInfo.style.color = 'var(--danger)';
@@ -604,6 +628,5 @@
       }, 100);
     });
   </script>
-
 </body>
 </html>
