@@ -1,1264 +1,657 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>スタジオ配信用・ループ背景メーカー</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>スタジオ配信用 ループ背景メーカー</title>
+  <!-- 必須依存ライブラリ (pako.js & UPNG.js) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/upng-js/2.1.0/UPNG.min.js"></script>
+  <style>
+    :root {
+      --bg-color: #f4f8fb;
+      --panel-bg: #ffffff;
+      --panel-border: #e2e8f0;
+      --accent: #4f46e5;
+      --accent-hover: #4338ca;
+      --download-bg: #0ea5e9;
+      --download-hover: #0284c7;
+      --text-main: #1e293b;
+      --text-sub: #64748b;
+      --warning: #d97706;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --success: #10b981;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    }
 
-<script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/upng-js@2.1.0/UPNG.js"></script>
+    * {
+      box-sizing: border-box;
+    }
 
-<style>
-:root {
-    --bg-color: #f3f7fb;
-    --panel-color: #ffffff;
-    --panel-sub: #f7faff;
-    --border-color: #d9e2ec;
-    --accent-color: #3f51b5;
-    --accent-hover: #303f9f;
-    --download-color: #0097d9;
-    --download-hover: #007eb5;
-    --success-color: #2e9d61;
-    --warning-color: #e58b00;
-    --danger-color: #d64545;
-    --text-color: #263238;
-    --sub-text: #607080;
-    --shadow: 0 4px 16px rgba(40, 70, 100, 0.08);
-}
-
-* {
-    box-sizing: border-box;
-}
-
-body {
-    margin: 0;
-    padding: 20px 12px 40px;
-    background: var(--bg-color);
-    color: var(--text-color);
-    font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        "Noto Sans JP",
-        sans-serif;
-    line-height: 1.6;
-}
-
-.container {
-    width: 100%;
-    max-width: 720px;
-    margin: 0 auto;
-}
-
-header {
-    text-align: center;
-    margin-bottom: 22px;
-}
-
-header h1 {
-    margin: 0 0 6px;
-    font-size: 24px;
-    font-weight: 700;
-    color: #1e2a35;
-}
-
-header p {
-    margin: 0;
-    color: var(--sub-text);
-    font-size: 14px;
-}
-
-.panel {
-    background: var(--panel-color);
-    border: 1px solid var(--border-color);
-    border-radius: 14px;
-    padding: 18px;
-    margin-bottom: 16px;
-    box-shadow: var(--shadow);
-}
-
-.panel-title {
-    margin: 0 0 14px;
-    font-size: 18px;
-    font-weight: 700;
-}
-
-.info-box {
-    background: #eef6ff;
-    border: 1px solid #cfe3f7;
-    border-radius: 10px;
-    padding: 13px 14px;
-    color: #35516b;
-    font-size: 13px;
-}
-
-.warning-box {
-    background: #fff8e8;
-    border: 1px solid #f0d89c;
-    border-radius: 10px;
-    padding: 13px 14px;
-    color: #70551d;
-    font-size: 13px;
-}
-
-details {
-    margin-top: 12px;
-}
-
-summary {
-    cursor: pointer;
-    font-weight: 600;
-    color: var(--accent-color);
-    padding: 4px 0;
-}
-
-.terms {
-    margin-top: 10px;
-    background: var(--panel-sub);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    padding: 12px;
-    font-size: 12px;
-    color: var(--sub-text);
-}
-
-.file-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #f8fafc;
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    padding: 10px;
-    margin-bottom: 10px;
-}
-
-.file-number {
-    flex: 0 0 auto;
-    width: 34px;
-    height: 34px;
-    border-radius: 9px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #e8efff;
-    color: var(--accent-color);
-    font-weight: 700;
-    font-size: 14px;
-}
-
-.file-input-wrap {
-    flex: 1;
-    min-width: 0;
-}
-
-.file-input {
-    width: 100%;
-    font-size: 13px;
-}
-
-.file-name {
-    margin-top: 4px;
-    font-size: 12px;
-    color: var(--sub-text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.delete-btn {
-    flex: 0 0 auto;
-    border: none;
-    background: #ffecec;
-    color: var(--danger-color);
-    border-radius: 8px;
-    padding: 9px 11px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.delete-btn:hover {
-    background: #ffdede;
-}
-
-.setting-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 14px;
-}
-
-.setting-row:last-child {
-    margin-bottom: 0;
-}
-
-.setting-label {
-    min-width: 120px;
-    font-weight: 600;
-    font-size: 14px;
-}
-
-.setting-input {
-    width: 100px;
-    padding: 9px 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 15px;
-    background: #fff;
-    color: var(--text-color);
-}
-
-.unit {
-    font-size: 13px;
-    color: var(--sub-text);
-}
-
-.preview-wrapper {
-    background: #edf1f5;
-    border-radius: 12px;
-    padding: 8px;
-}
-
-#previewCanvas {
-    display: block;
-    width: 100%;
-    height: auto;
-    aspect-ratio: 16 / 9;
-    background: #111;
-    border-radius: 8px;
-}
-
-.preview-note {
-    margin-top: 9px;
-    font-size: 12px;
-    color: var(--sub-text);
-    text-align: center;
-}
-
-.btn {
-    width: 100%;
-    border: none;
-    border-radius: 10px;
-    padding: 14px 16px;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
-}
-
-.btn:active {
-    transform: translateY(1px);
-}
-
-.btn-primary {
-    background: var(--accent-color);
-    color: #fff;
-}
-
-.btn-primary:hover {
-    background: var(--accent-hover);
-}
-
-.btn-primary:disabled {
-    background: #aab3c7;
-    cursor: not-allowed;
-}
-
-.btn-download {
-    display: block;
-    margin-top: 10px;
-    text-align: center;
-    text-decoration: none;
-    background: var(--download-color);
-    color: #fff;
-}
-
-.btn-download:hover {
-    background: var(--download-hover);
-}
-
-.btn-download.disabled {
-    background: #b8c3cb;
-    pointer-events: none;
-}
-
-.status {
-    margin-top: 12px;
-    min-height: 24px;
-    text-align: center;
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.status.success {
-    color: var(--success-color);
-}
-
-.status.warning {
-    color: var(--warning-color);
-}
-
-.status.error {
-    color: var(--danger-color);
-}
-
-footer {
-    margin-top: 24px;
-    text-align: center;
-    font-size: 11px;
-    color: #82909c;
-}
-
-@media (max-width: 600px) {
     body {
-        padding: 12px 8px 30px;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 12px;
+      margin: 0;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 6px;
     }
 
     header h1 {
-        font-size: 21px;
+      font-size: 22px;
+      margin: 0 0 8px 0;
+      color: var(--text-main);
+      letter-spacing: 0.5px;
+      font-weight: 800;
+    }
+
+    header p {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .prep-panel {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .terms-panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--text-sub);
+      line-height: 1.6;
+      box-shadow: var(--shadow);
+    }
+
+    .terms-panel summary {
+      cursor: pointer;
+      font-weight: bold;
+      color: var(--accent);
+      outline: none;
+      transition: color 0.2s;
+    }
+
+    .terms-panel summary:hover {
+      color: var(--accent-hover);
+    }
+
+    .terms-content {
+      margin-top: 12px;
+      border-top: 1px solid var(--panel-border);
+      padding-top: 12px;
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
+    .terms-content ol {
+      margin: 6px 0 0 18px;
+      padding: 0;
+    }
+
+    .terms-content li {
+      margin-bottom: 6px;
     }
 
     .panel {
-        padding: 14px;
-        border-radius: 12px;
+      background: var(--panel-bg);
+      padding: 18px;
+      border-radius: 16px;
+      border: 1px solid var(--panel-border);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 100%;
+      box-shadow: var(--shadow);
     }
 
     .panel-title {
-        font-size: 17px;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
+
+    canvas {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #0f172a;
+      border: 3px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .control-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 600;
+      gap: 10px;
+    }
+
+    input[type="number"] {
+      width: 80px;
+      padding: 8px 10px;
+      background: #f8fafc;
+      border: 1px solid var(--panel-border);
+      color: var(--text-main);
+      border-radius: 8px;
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 13px;
+      transition: background 0.2s, transform 0.1s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      text-decoration: none;
+    }
+    .btn:hover { background: var(--accent-hover); }
+    .btn:active { transform: scale(0.98); }
+
+    .btn-danger {
+      background: #fee2e2;
+      color: var(--danger);
+      padding: 10px 14px;
+      border: 1px solid #fecaca;
+    }
+    .btn-danger:hover { background: #fecaca; color: var(--danger-hover); }
+
+    .btn-download {
+      background: var(--download-bg);
+      color: #fff;
+      font-size: 15px;
+      padding: 16px;
+      width: 100%;
+      border-radius: 12px;
+      font-weight: bold;
+      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.3);
+    }
+    .btn-download:hover { background: var(--download-hover); }
+    .btn-download:disabled { background: #cbd5e1; color: #94a3b8; cursor: not-allowed; box-shadow: none; }
+
+    .download-action-btn {
+      background: var(--success);
+      color: #fff;
+      display: none;
+      width: 100%;
+      padding: 16px;
+      font-size: 15px;
+      border-radius: 12px;
+      font-weight: bold;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+      animation: pulse 1.5s infinite;
+      text-align: center;
+      text-decoration: none;
+    }
+    .download-action-btn:hover { background: #059669; }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.01); }
+      100% { transform: scale(1); }
+    }
+
+    input[type="file"] { display: none; }
 
     .file-row {
-        align-items: flex-start;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      font-size: 13px;
+      background: #f8fafc;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--panel-border);
+      gap: 10px;
     }
 
-    .setting-row {
+    @media (min-width: 480px) {
+      .file-row {
+        flex-direction: row;
         align-items: center;
+        justify-content: space-between;
+      }
     }
 
-    .setting-label {
-        min-width: 105px;
+    .file-info-area {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow: hidden;
     }
 
-    .setting-input {
-        width: 90px;
+    .file-name {
+      color: var(--text-sub);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+      font-weight: 500;
     }
-}
-</style>
+
+    .file-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .file-actions .btn {
+      flex: 1;
+    }
+    @media (min-width: 480px) {
+      .file-actions .btn {
+        flex: initial;
+      }
+    }
+
+    .status {
+      font-size: 14px;
+      color: var(--warning);
+      text-align: center;
+      font-weight: bold;
+      word-break: break-all;
+    }
+
+    .note {
+      font-size: 12px;
+      color: var(--text-sub);
+      line-height: 1.6;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 10px;
+      padding: 20px 0;
+      border-top: 1px solid var(--panel-border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      font-size: 13px;
+    }
+
+    .footer-links a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: bold;
+      transition: opacity 0.2s;
+    }
+
+    .footer-links a:hover {
+      opacity: 0.8;
+      text-decoration: underline;
+    }
+
+    .copyright {
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+  </style>
 </head>
-
 <body>
 
-<div class="container">
+  <div class="container">
+    <header>
+      <h1>スタジオ配信用 ループ背景メーカー</h1>
+      <p>1〜3枚の画像から、配信に最適なループ背景画像（APNG）を簡単につくれます。</p>
+    </header>
 
-<header>
-    <h1>スタジオ配信用・ループ背景メーカー</h1>
-    <p>最大3枚の画像からループするAPNG背景を作成します</p>
-</header>
-
-<section class="panel">
-
-    <h2 class="panel-title">推奨環境</h2>
-
-    <div class="info-box">
-        PCでの利用を推奨しています。スマートフォンでも利用できますが、
-        高解像度画像や長時間のアニメーションでは処理に時間がかかる場合があります。
+    <div class="prep-panel">
+      <span class="panel-title" style="color: #1e40af;">💡 ご利用の推奨環境</span>
+      <ul style="margin: 6px 0 0 18px; padding: 0; font-size: 13px; color: #1e3a8a; line-height: 1.5;">
+        <li><strong>16:9の画像ファイル</strong>（2枚または3枚の選択を推奨いたします）</li>
+      </ul>
+      <div style="font-size: 12px; color: #3b82f6; margin-top: 4px; margin-left: 18px; line-height: 1.4;">
+        ※異なるアスペクト比の画像を選択された場合でも、1280x720の画面サイズに合わせて自動的にトリミング・調整されます。
+      </div>
     </div>
 
-    <details>
-        <summary>利用上の注意</summary>
-
-        <div class="terms">
-            <p>
-                このツールはブラウザ上で画像を処理します。
-                選択した画像はサーバーへアップロードされません。
-            </p>
-
-            <p>
-                生成されるAPNGは1280×720ピクセルです。
-            </p>
-
-            <p>
-                ブラウザや利用環境によって、APNGの再生速度や表示方法が
-                異なる場合があります。
-            </p>
-        </div>
+    <details class="terms-panel">
+      <summary>📜 利用規約・免責事項</summary>
+      <div class="terms-content">
+        <div style="margin-bottom: 6px; color: var(--warning);">※本サービスを利用することにより、以下の規約に同意したものとみなします。</div>
+        <ol>
+          <li><strong>権利の帰属</strong><br>本サービスのプログラム、システム、デザインに関する著作権および知的財産権は、すべて運営者に帰属します。</li>
+          <li><strong>生成物の権利と利用範囲</strong><br>本サービスを利用して生成されたアニメーション画像の権利は、元画像の権利者に帰属します。生成物は商用・非商用を問わずご利用いただけます。</li>
+          <li><strong>免責事項</strong><br>本サービスは現状有姿で提供されるものであり、動作の完全性や特定目的への適合性を保証するものではありません。本サービスの利用によって生じた損害について、運営者は一切の責任を負いかねます。</li>
+          <li><strong>禁止事項</strong><br>第三者の著作権や肖像権を侵害する画像の利用、およびシステムに過度な負荷をかける行為を禁止します。</li>
+          <li><strong>サービスの変更・終了</strong><br>運営者は、事前通知なく本サービスの内容変更または提供の終了を行うことができるものとします。</li>
+        </ol>
+      </div>
     </details>
 
-</section>
-
-
-<section class="panel">
-
-    <h2 class="panel-title">画像を選択</h2>
-
-    <div class="file-row">
-
-        <div class="file-number">1</div>
-
-        <div class="file-input-wrap">
-            <input
-                type="file"
-                id="imageInput1"
-                class="file-input"
-                accept="image/*"
-            >
-            <div id="fileName1" class="file-name">
-                必須
-            </div>
+    <div class="panel">
+      <span class="panel-title">1. 背景画像の選択（1〜3枚）</span>
+      <div class="file-row">
+        <div class="file-info-area">
+          <span class="file-name" id="nameA">背景 1: 未選択</span>
         </div>
-
-        <button
-            type="button"
-            class="delete-btn"
-            onclick="clearImage(0)"
-        >
-            削除
-        </button>
-
+        <div class="file-actions">
+          <button class="btn btn-danger" id="del1" style="display: none;">❌ 削除</button>
+          <label class="btn">
+            📁 選択
+            <input type="file" id="file1" accept="image/*">
+          </label>
+        </div>
+      </div>
+      <div class="file-row">
+        <div class="file-info-area">
+          <span class="file-name" id="nameB">背景 2: 未選択</span>
+        </div>
+        <div class="file-actions">
+          <button class="btn btn-danger" id="del2" style="display: none;">❌ 削除</button>
+          <label class="btn">
+            📁 選択
+            <input type="file" id="file2" accept="image/*">
+          </label>
+        </div>
+      </div>
+      <div class="file-row">
+        <div class="file-info-area">
+          <span class="file-name" id="nameC">背景 3: 未選択（任意）</span>
+        </div>
+        <div class="file-actions">
+          <button class="btn btn-danger" id="del3" style="display: none;">❌ 削除</button>
+          <label class="btn">
+            📁 選択
+            <input type="file" id="file3" accept="image/*">
+          </label>
+        </div>
+      </div>
     </div>
 
-
-    <div class="file-row">
-
-        <div class="file-number">2</div>
-
-        <div class="file-input-wrap">
-            <input
-                type="file"
-                id="imageInput2"
-                class="file-input"
-                accept="image/*"
-            >
-            <div id="fileName2" class="file-name">
-                任意
-            </div>
-        </div>
-
-        <button
-            type="button"
-            class="delete-btn"
-            onclick="clearImage(1)"
-        >
-            削除
-        </button>
-
+    <div class="panel">
+      <span class="panel-title">2. アニメーション設定</span>
+      <div class="control-row">
+        <span>1枚あたりの表示時間（秒）:</span>
+        <input type="number" id="displayDuration" value="10" min="1" max="120">
+      </div>
+      <div class="control-row">
+        <span>フェードの中間フレーム数:</span>
+        <span style="color: var(--accent); font-weight: bold;">3枚（固定・最適化済み）</span>
+      </div>
+      <div class="note">
+        ※1280x720サイズに自動調整され、配信向けに軽量化されたAPNGを生成します。<br>
+        ※ループ処理の都合上、再生開始時（1周目）のみ1枚目の表示時間が少し短くなる場合があります。
+      </div>
     </div>
 
-
-    <div class="file-row">
-
-        <div class="file-number">3</div>
-
-        <div class="file-input-wrap">
-            <input
-                type="file"
-                id="imageInput3"
-                class="file-input"
-                accept="image/*"
-            >
-            <div id="fileName3" class="file-name">
-                任意
-            </div>
-        </div>
-
-        <button
-            type="button"
-            class="delete-btn"
-            onclick="clearImage(2)"
-        >
-            削除
-        </button>
-
+    <div class="panel" style="align-items: center;">
+      <span class="panel-title" style="align-self: flex-start;">3. プレビュー</span>
+      <canvas id="previewCanvas" width="1280" height="720"></canvas>
+      <div class="status" id="statusInfo">背景画像を選択してください。</div>
     </div>
 
-</section>
-
-
-<section class="panel">
-
-    <h2 class="panel-title">アニメーション設定</h2>
-
-    <div class="setting-row">
-
-        <div class="setting-label">
-            表示時間
-        </div>
-
-        <input
-            type="number"
-            id="displayDuration"
-            class="setting-input"
-            min="1"
-            max="300"
-            value="10"
-        >
-
-        <div class="unit">
-            秒 / 1枚
-        </div>
-
+    <div class="panel" style="gap: 10px;">
+      <!-- 生成スタートボタン -->
+      <button class="btn btn-download" id="downloadBtn" disabled>✨ PNG（APNG）ファイルを生成する</button>
+      <!-- 生成完了後に現れる手動保存用ボタン -->
+      <a id="downloadLinkBtn" class="download-action-btn" download="stream_background.png">💾 このボタンをタップして保存する</a>
     </div>
 
+    <footer>
+      <div class="copyright">もしこのツールを気に入っていただけましたら…</div>
+      <div class="footer-links">
+        <a href="https://x.com/marusan_369xii" target="_blank" rel="noopener">🐦 X (旧Twitter)</a>
+        <span>•</span>
+        <a href="https://www.amazon.jp/hz/wishlist/ls/1QBBDR3F83E00?ref_=wl_share" target="_blank" rel="noopener">🎁 欲しいものリスト</a>
+      </div>
+      <div class="copyright">© スタジオ配信用 ループ背景メーカー</div>
+    </footer>
+  </div>
 
-    <div class="setting-row">
+  <script>
+    const canvas = document.getElementById('previewCanvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const statusInfo = document.getElementById('statusInfo');
+    const displayDurationInput = document.getElementById('displayDuration');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const downloadLinkBtn = document.getElementById('downloadLinkBtn');
 
-        <div class="setting-label">
-            フェード時間
-        </div>
+    const inputs = [
+      { fileInput: document.getElementById('file1'), nameLabel: document.getElementById('nameA'), delBtn: document.getElementById('del1'), index: 0 },
+      { fileInput: document.getElementById('file2'), nameLabel: document.getElementById('nameB'), delBtn: document.getElementById('del2'), index: 1 },
+      { fileInput: document.getElementById('file3'), nameLabel: document.getElementById('nameC'), delBtn: document.getElementById('del3'), index: 2 },
+    ];
 
-        <input
-            type="number"
-            id="fadeDuration"
-            class="setting-input"
-            min="0.1"
-            max="10"
-            step="0.1"
-            value="0.6"
-        >
+    let loadedImages = [null, null, null];
+    let animationStartTime = null;
+    let isGenerating = false;
 
-        <div class="unit">
-            秒
-        </div>
-
-    </div>
-
-</section>
-
-
-<section class="panel">
-
-    <h2 class="panel-title">プレビュー</h2>
-
-    <div class="preview-wrapper">
-        <canvas
-            id="previewCanvas"
-            width="1280"
-            height="720"
-        ></canvas>
-    </div>
-
-    <div class="preview-note">
-        実際の生成結果とは表示環境によって若干異なる場合があります。
-    </div>
-
-</section>
-
-
-<section class="panel">
-
-    <button
-        id="generateBtn"
-        class="btn btn-primary"
-        disabled
-    >
-        APNGを生成
-    </button>
-
-    <div
-        id="status"
-        class="status"
-    ></div>
-
-    <a
-        id="downloadBtn"
-        class="btn btn-download disabled"
-        href="#"
-        download
-    >
-        生成したAPNGを保存
-    </a>
-
-</section>
-
-
-<footer>
-    Studio Streaming Loop Background Maker
-</footer>
-
-</div>
-
-
-<script>
-
-const canvas = document.getElementById("previewCanvas");
-const ctx = canvas.getContext("2d");
-
-const generateBtn = document.getElementById("generateBtn");
-const downloadBtn = document.getElementById("downloadBtn");
-const statusEl = document.getElementById("status");
-
-const displayDurationInput =
-    document.getElementById("displayDuration");
-
-const fadeDurationInput =
-    document.getElementById("fadeDuration");
-
-
-const imageInputs = [
-    document.getElementById("imageInput1"),
-    document.getElementById("imageInput2"),
-    document.getElementById("imageInput3")
-];
-
-
-const fileNameEls = [
-    document.getElementById("fileName1"),
-    document.getElementById("fileName2"),
-    document.getElementById("fileName3")
-];
-
-
-const loadedImages = [
-    null,
-    null,
-    null
-];
-
-
-let animationStartTime = null;
-let animationFrameId = null;
-let downloadUrl = null;
-
-
-/* =========================
-   画像読み込み
-========================= */
-
-imageInputs.forEach((input, index) => {
-
-    input.addEventListener("change", function () {
-
-        const file = this.files[0];
-
-        if (!file) {
-            clearImage(index);
-            return;
-        }
+    inputs.forEach(item => {
+      item.fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        item.nameLabel.textContent = `背景 ${item.index + 1}: ${file.name}`;
+        item.delBtn.style.display = 'inline-flex';
+        downloadLinkBtn.style.display = 'none';
 
         const reader = new FileReader();
-
-        reader.onload = function (event) {
-
-            const img = new Image();
-
-            img.onload = function () {
-
-                loadedImages[index] = img;
-
-                fileNameEls[index].textContent =
-                    file.name;
-
-                updateStatus();
-            };
-
-            img.onerror = function () {
-
-                loadedImages[index] = null;
-
-                fileNameEls[index].textContent =
-                    "画像を読み込めませんでした";
-
-                updateStatus();
-            };
-
-            img.src = event.target.result;
+        reader.onload = (evt) => {
+          const img = new Image();
+          img.onload = () => {
+            loadedImages[item.index] = img;
+            updateStatus();
+          };
+          img.src = evt.target.result;
         };
-
         reader.readAsDataURL(file);
+      });
 
+      item.delBtn.addEventListener('click', () => {
+        loadedImages[item.index] = null;
+        item.fileInput.value = '';
+        if (item.index === 0) {
+          item.nameLabel.textContent = '背景 1: 未選択';
+        } else if (item.index === 1) {
+          item.nameLabel.textContent = '背景 2: 未選択（任意）';
+        } else {
+          item.nameLabel.textContent = '背景 3: 未選択（任意）';
+        }
+        item.delBtn.style.display = 'none';
+        downloadLinkBtn.style.display = 'none';
+        updateStatus();
+      });
     });
 
-});
-
-
-/* =========================
-   画像削除
-========================= */
-
-function clearImage(index) {
-
-    loadedImages[index] = null;
-
-    imageInputs[index].value = "";
-
-    fileNameEls[index].textContent =
-        index === 0 ? "必須" : "任意";
-
-    updateStatus();
-}
-
-
-/* =========================
-   ステータス
-========================= */
-
-function updateStatus() {
-
-    const activeImages =
-        loadedImages.filter(img => img !== null);
-
-    generateBtn.disabled =
-        activeImages.length === 0;
-
-    if (activeImages.length === 0) {
-
-        statusEl.textContent =
-            "画像を1枚以上選択してください";
-
-        statusEl.className =
-            "status warning";
-
-    } else {
-
-        statusEl.textContent =
-            activeImages.length + "枚の画像を読み込み済み";
-
-        statusEl.className =
-            "status success";
+    function updateStatus() {
+      if (isGenerating) return;
+      const activeImgs = loadedImages.filter(img => img !== null);
+      if (activeImgs.length > 0) {
+        statusInfo.style.color = '#10b981';
+        statusInfo.textContent = `✨ 準備完了（${activeImgs.length}枚の画像でループ中）`;
+        downloadBtn.disabled = false;
+        animationStartTime = performance.now();
+      } else {
+        statusInfo.style.color = 'var(--warning)';
+        statusInfo.textContent = '背景画像を選択してください。';
+        downloadBtn.disabled = true;
+        animationStartTime = null;
+      }
     }
 
-    animationStartTime = performance.now();
-
-}
-
-
-/* =========================
-   画像を16:9でカバー
-========================= */
-
-function drawImageCover(targetCtx, img, alpha = 1.0) {
-
-    const canvasWidth = targetCtx.canvas.width;
-    const canvasHeight = targetCtx.canvas.height;
-
-    const imageRatio =
-        img.width / img.height;
-
-    const canvasRatio =
-        canvasWidth / canvasHeight;
-
-    let drawWidth;
-    let drawHeight;
-    let offsetX;
-    let offsetY;
-
-    if (imageRatio > canvasRatio) {
-
-        drawHeight = canvasHeight;
-        drawWidth =
-            drawHeight * imageRatio;
-
-        offsetX =
-            (canvasWidth - drawWidth) / 2;
-
-        offsetY = 0;
-
-    } else {
-
-        drawWidth = canvasWidth;
-        drawHeight =
-            drawWidth / imageRatio;
-
-        offsetX = 0;
-
-        offsetY =
-            (canvasHeight - drawHeight) / 2;
+    function drawImageCover(targetCtx, image, alpha = 1.0) {
+      if (!image) return;
+      targetCtx.save();
+      targetCtx.globalAlpha = alpha;
+      const hRatio = 1280 / image.width;
+      const vRatio = 720 / image.height;
+      const ratio = Math.max(hRatio, vRatio);
+      const centerShiftX = (1280 - image.width * ratio) / 2;
+      const centerShiftY = (720 - image.height * ratio) / 2;
+      targetCtx.drawImage(image, 0, 0, image.width, image.height, centerShiftX, centerShiftY, image.width * ratio, image.height * ratio);
+      targetCtx.restore();
     }
 
+    function loop(timestamp) {
+      requestAnimationFrame(loop);
+      if (isGenerating) return;
 
-    targetCtx.globalAlpha = alpha;
-
-    targetCtx.drawImage(
-        img,
-        offsetX,
-        offsetY,
-        drawWidth,
-        drawHeight
-    );
-
-    targetCtx.globalAlpha = 1.0;
-}
-
-
-/* =========================
-   プレビューアニメーション
-========================= */
-
-function animate(timestamp) {
-
-    const activeImages =
-        loadedImages.filter(img => img !== null);
-
-    if (activeImages.length === 0) {
-
-        ctx.clearRect(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
-
-        animationFrameId =
-            requestAnimationFrame(animate);
-
+      const activeImages = loadedImages.filter(img => img !== null);
+      if (activeImages.length === 0) {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, 1280, 720);
         return;
+      }
+
+      if (!animationStartTime) animationStartTime = timestamp;
+
+      const displaySec = parseFloat(displayDurationInput.value) || 10;
+      const numImages = activeImages.length;
+      const fadeSec = 0.6;
+      const cycleTime = displaySec + fadeSec;
+      const totalLoopTime = cycleTime * numImages;
+
+      const elapsed = ((timestamp - animationStartTime) / 1000) % totalLoopTime;
+
+      const currentIndex = Math.floor(elapsed / cycleTime);
+      const timeInCycle = elapsed % cycleTime;
+
+      ctx.clearRect(0, 0, 1280, 720);
+
+      const currentImg = activeImages[currentIndex];
+      const nextImg = activeImages[(currentIndex + 1) % numImages];
+
+      if (timeInCycle < displaySec) {
+        drawImageCover(ctx, currentImg, 1.0);
+      } else {
+        const fadeProgress = (timeInCycle - displaySec) / fadeSec;
+        const steppedAlpha = Math.min(Math.floor(fadeProgress * 4) / 3, 1.0);
+        
+        drawImageCover(ctx, currentImg, 1.0);
+        drawImageCover(ctx, nextImg, steppedAlpha);
+      }
     }
+    requestAnimationFrame(loop);
 
+    downloadBtn.addEventListener('click', () => {
+      const activeImages = loadedImages.filter(img => img !== null);
+      if (activeImages.length === 0) return;
 
-    if (animationStartTime === null) {
-        animationStartTime = timestamp;
-    }
+      isGenerating = true;
+      downloadBtn.disabled = true;
+      downloadLinkBtn.style.display = 'none';
+      statusInfo.style.color = 'var(--accent)';
+      statusInfo.textContent = '⚙️ APNGファイルを生成中……（数秒かかります）';
 
-
-    const displaySec =
-        Math.max(
-            0.1,
-            Number(displayDurationInput.value) || 10
-        );
-
-
-    const fadeSec =
-        Math.max(
-            0.1,
-            Number(fadeDurationInput.value) || 0.6
-        );
-
-
-    const cycleDuration =
-        displaySec + fadeSec;
-
-
-    const totalLoopTime =
-        cycleDuration * activeImages.length;
-
-
-    /*
-     * 現在のループ内位置を計算
-     */
-    const elapsed =
-        ((timestamp - animationStartTime) / 1000)
-        % totalLoopTime;
-
-
-    /*
-     * 現在何枚目なのか
-     */
-    const currentIndex =
-        Math.floor(
-            elapsed / cycleDuration
-        );
-
-
-    /*
-     * その画像のサイクル開始から
-     * 何秒経過したか
-     */
-    const timeInCycle =
-        elapsed % cycleDuration;
-
-
-    const currentImg =
-        activeImages[
-            currentIndex % activeImages.length
-        ];
-
-
-    const nextImg =
-        activeImages[
-            (currentIndex + 1)
-            % activeImages.length
-        ];
-
-
-    /*
-     * 背景をクリア
-     */
-    ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-
-    /*
-     * まず現在画像を完全に描画
-     */
-    drawImageCover(
-        ctx,
-        currentImg,
-        1.0
-    );
-
-
-    /*
-     * 表示時間を過ぎたら
-     * 次画像を上から重ねてフェード
-     */
-    if (timeInCycle >= displaySec) {
-
-        const fadeProgress =
-            Math.min(
-                Math.max(
-                    (timeInCycle - displaySec)
-                    / fadeSec,
-                    0
-                ),
-                1.0
-            );
-
-
-        drawImageCover(
-            ctx,
-            nextImg,
-            fadeProgress
-        );
-    }
-
-
-    animationFrameId =
-        requestAnimationFrame(animate);
-}
-
-
-/* =========================
-   アニメーション開始
-========================= */
-
-animationStartTime =
-    performance.now();
-
-animationFrameId =
-    requestAnimationFrame(animate);
-
-
-/* =========================
-   設定変更時
-========================= */
-
-displayDurationInput.addEventListener(
-    "input",
-    function () {
-
-        animationStartTime =
-            performance.now();
-    }
-);
-
-
-fadeDurationInput.addEventListener(
-    "input",
-    function () {
-
-        animationStartTime =
-            performance.now();
-    }
-);
-
-
-/* =========================
-   APNG生成
-========================= */
-
-generateBtn.addEventListener(
-    "click",
-    async function () {
-
-        const activeImages =
-            loadedImages.filter(img => img !== null);
-
-
-        if (activeImages.length === 0) {
-
-            statusEl.textContent =
-                "画像を1枚以上選択してください";
-
-            statusEl.className =
-                "status error";
-
-            return;
-        }
-
-
-        generateBtn.disabled = true;
-
-        statusEl.textContent =
-            "APNGを生成しています……";
-
-        statusEl.className =
-            "status warning";
-
-
+      setTimeout(async () => {
         try {
+          const displaySec = parseFloat(displayDurationInput.value) || 10;
+          const displayMs = displaySec * 1000;
+          const fadeFrameCount = 3;
+          const fadeStepMs = Math.round(600 / (fadeFrameCount + 1));
 
-            const displaySec =
-                Math.max(
-                    0.1,
-                    Number(displayDurationInput.value)
-                    || 10
-                );
+          let frames = [];
+          let delays = [];
 
+          const offCanvas = document.createElement('canvas');
+          offCanvas.width = 1280;
+          offCanvas.height = 720;
+          const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
 
-            const fadeSec =
-                Math.max(
-                    0.1,
-                    Number(fadeDurationInput.value)
-                    || 0.6
-                );
+          const numImages = activeImages.length;
 
+          for (let i = 0; i < numImages; i++) {
+            const currentImg = activeImages[i];
+            const nextImg = activeImages[(i + 1) % numImages];
 
-            /*
-             * フェードの中間フレーム数
-             */
-            const fadeFrameCount = 3;
+            offCtx.fillStyle = '#0f172a';
+            offCtx.fillRect(0, 0, 1280, 720);
+            drawImageCover(offCtx, currentImg, 1.0);
+            frames.push(offCtx.getImageData(0, 0, 1280, 720).data.buffer);
+            delays.push(displayMs);
 
-
-            const frames = [];
-            const delays = [];
-
-
-            /*
-             * 各画像について
-             *
-             * ① 完全表示
-             * ② 次画像とのフェード
-             */
-            for (
-                let i = 0;
-                i < activeImages.length;
-                i++
-            ) {
-
-                const currentImg =
-                    activeImages[i];
-
-                const nextImg =
-                    activeImages[
-                        (i + 1)
-                        % activeImages.length
-                    ];
-
-
-                /*
-                 * -------------------------
-                 * 完全表示フレーム
-                 * -------------------------
-                 */
-
-                const frameCanvas =
-                    document.createElement("canvas");
-
-                frameCanvas.width = 1280;
-                frameCanvas.height = 720;
-
-                const frameCtx =
-                    frameCanvas.getContext("2d");
-
-
-                drawImageCover(
-                    frameCtx,
-                    currentImg,
-                    1.0
-                );
-
-
-                frames.push(
-                    frameCtx.getImageData(
-                        0,
-                        0,
-                        1280,
-                        720
-                    ).data
-                );
-
-
-                /*
-                 * フェード開始まで表示
-                 */
-                const displayFrameDelay =
-                    Math.max(
-                        1,
-                        Math.round(
-                            (
-                                displaySec
-                                -
-                                fadeSec
-                            ) * 1000
-                        )
-                    );
-
-
-                delays.push(
-                    displayFrameDelay
-                );
-
-
-                /*
-                 * -------------------------
-                 * フェードフレーム
-                 * -------------------------
-                 */
-
-                for (
-                    let f = 1;
-                    f <= fadeFrameCount;
-                    f++
-                ) {
-
-                    const progress =
-                        f
-                        / (fadeFrameCount + 1);
-
-
-                    const fadeCanvas =
-                        document.createElement("canvas");
-
-                    fadeCanvas.width = 1280;
-                    fadeCanvas.height = 720;
-
-
-                    const fadeCtx =
-                        fadeCanvas.getContext("2d");
-
-
-                    /*
-                     * 現在画像
-                     */
-                    drawImageCover(
-                        fadeCtx,
-                        currentImg,
-                        1.0
-                    );
-
-
-                    /*
-                     * 次画像を重ねる
-                     */
-                    drawImageCover(
-                        fadeCtx,
-                        nextImg,
-                        progress
-                    );
-
-
-                    frames.push(
-                        fadeCtx.getImageData(
-                            0,
-                            0,
-                            1280,
-                            720
-                        ).data
-                    );
-
-
-                    const fadeDelay =
-                        Math.max(
-                            1,
-                            Math.round(
-                                fadeSec * 1000
-                                / (fadeFrameCount + 1)
-                            )
-                        );
-
-
-                    delays.push(
-                        fadeDelay
-                    );
-                }
+            for (let f = 1; f <= fadeFrameCount; f++) {
+              const alpha = f / (fadeFrameCount + 1);
+              offCtx.fillStyle = '#0f172a';
+              offCtx.fillRect(0, 0, 1280, 720);
+              drawImageCover(offCtx, currentImg, 1.0);
+              drawImageCover(offCtx, nextImg, alpha);
+              frames.push(offCtx.getImageData(0, 0, 1280, 720).data.buffer);
+              delays.push(fadeStepMs);
             }
+          }
 
+          statusInfo.textContent = '📦 データを圧縮しています……';
 
-            /*
-             * UPNGでAPNG生成
-             */
-            const result =
-                UPNG.encode(
-                    frames,
-                    1280,
-                    720,
-                    256,
-                    delays
-                );
+          setTimeout(() => {
+            try {
+              const pngBuf = UPNG.encode(frames, 1280, 720, 256, delays);
+              const blob = new Blob([pngBuf], { type: 'image/png' });
+              const url = URL.createObjectURL(blob);
+              
+              const now = new Date();
+              const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+              const fileName = `stream_background_${timestamp}.png`;
 
+              downloadLinkBtn.href = url;
+              downloadLinkBtn.download = fileName;
+              downloadLinkBtn.style.display = 'block';
 
-            const blob =
-                new Blob(
-                    [result],
-                    {
-                        type: "image/png"
-                    }
-                );
-
-
-            /*
-             * 古いURLを解放
-             */
-            if (downloadUrl) {
-                URL.revokeObjectURL(downloadUrl);
+              statusInfo.style.color = '#10b981';
+              statusInfo.textContent = '🎉 生成完了！下の緑のボタンをタップして保存してね👇';
+            } catch (innerErr) {
+              console.error(innerErr);
+              statusInfo.style.color = 'var(--danger)';
+              statusInfo.textContent = '❌ エンコード中にエラーが発生しました。';
+            } finally {
+              isGenerating = false;
+              downloadBtn.disabled = false;
             }
+          }, 100);
 
-
-            downloadUrl =
-                URL.createObjectURL(blob);
-
-
-            const now =
-                new Date();
-
-
-            const pad =
-                n => String(n).padStart(2, "0");
-
-
-            const filename =
-                "stream_background_"
-                + now.getFullYear()
-                + pad(now.getMonth() + 1)
-                + pad(now.getDate())
-                + "_"
-                + pad(now.getHours())
-                + pad(now.getMinutes())
-                + pad(now.getSeconds())
-                + ".png";
-
-
-            downloadBtn.href =
-                downloadUrl;
-
-            downloadBtn.download =
-                filename;
-
-            downloadBtn.classList.remove(
-                "disabled"
-            );
-
-
-            statusEl.textContent =
-                "APNGの生成が完了しました";
-
-            statusEl.className =
-                "status success";
-
-
-        } catch (error) {
-
-            console.error(error);
-
-            statusEl.textContent =
-                "APNGの生成中にエラーが発生しました";
-
-            statusEl.className =
-                "status error";
-
+        } catch (err) {
+          console.error(err);
+          statusInfo.style.color = 'var(--danger)';
+          statusInfo.textContent = '❌ エラーが発生しました。';
+          isGenerating = false;
+          downloadBtn.disabled = false;
         }
-
-
-        generateBtn.disabled = false;
-    }
-);
-
-</script>
-
+      }, 100);
+    });
+  </script>
 </body>
 </html>
