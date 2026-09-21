@@ -335,7 +335,7 @@
 
   <div class="container">
     <header>
-      <h1>スタジオ配信用 ループ背景メーカーv3</h1>
+      <h1>スタジオ配信用 ループ背景メーカー</h1>
       <p>1〜3枚の画像から、配信に最適なループ背景画像（APNG）を簡単につくれます。</p>
     </header>
 
@@ -547,8 +547,8 @@
 
       const elapsed = ((timestamp - animationStartTime) / 1000) % totalLoopTime;
 
-      const currentIndex = Math.floor(elapsed / cycleTime);
-      const timeInCycle = elapsed % cycleTime;
+      const currentIndex = Math.min(Math.floor(elapsed / cycleTime), numImages - 1);
+      const timeInCycle = elapsed - (currentIndex * cycleTime);
 
       ctx.fillStyle = '#0f172a';
       ctx.fillRect(0, 0, 1280, 720);
@@ -556,7 +556,6 @@
       const currentImg = activeImages[currentIndex];
       const nextImg = activeImages[(currentIndex + 1) % numImages];
 
-      // スマホのブラウザでも確実にフェードするように、透過処理を段階的に安全に描画
       if (timeInCycle < displaySec) {
         drawImageCover(ctx, currentImg, 1.0);
       } else {
