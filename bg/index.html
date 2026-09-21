@@ -23,6 +23,10 @@
       --danger-hover: #e53935;
     }
 
+    * {
+      box-sizing: border-box; /* はみ出し防止の基本設定ニャ！ */
+    }
+
     body {
       background-color: var(--bg-color);
       color: var(--text-main);
@@ -115,6 +119,7 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
+      width: 100%; /* 横幅いっぱいに収めるニャ */
     }
 
     .panel-title {
@@ -190,7 +195,7 @@
     .btn-download:hover { background: var(--download-hover); }
     .btn-download:disabled { background: #333; color: #777; cursor: not-allowed; box-shadow: none; }
 
-    /* 生成された後に現れる青い保存用ボタン */
+    /* 生成された後に現れる青い保存用ボタン（はみ出さないようにサイズ調整） */
     .download-action-btn {
       background: #00b0ff;
       color: #000;
@@ -207,8 +212,8 @@
 
     @keyframes pulse {
       0% { transform: scale(1); }
-      50% { transform: scale(1.02); }
-      100% { transform: scale(1.01); }
+      50% { transform: scale(1.01); }
+      100% { transform: scale(1); }
     }
 
     input[type="file"] { display: none; }
@@ -601,7 +606,7 @@
               const blob = new Blob([pngBuf], { type: 'image/png' });
               const url = URL.createObjectURL(blob);
               
-              // 自動ダウンロードせず、青い保存ボタンにリンクをセットして表示する！
+              // 自動ダウンロードせず、青いボタンにリンクをセットして表示する！
               downloadLinkBtn.href = url;
               downloadLinkBtn.download = 'stream_background.png';
               downloadLinkBtn.style.display = 'block';
