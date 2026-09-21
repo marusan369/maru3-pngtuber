@@ -3,38 +3,40 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>スタジオ配信用-ループ背景メーカー</title>
+  <title>スタジオ配信用 ループ背景メーカー</title>
   <!-- 必須依存ライブラリ (pako.js & UPNG.js) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/upng-js/2.1.0/UPNG.min.js"></script>
   <style>
     :root {
-      --bg-color: #121216;
-      --panel-bg: #1e1e24;
-      --panel-border: #2a2a35;
-      --accent: #3f51b5;
-      --accent-hover: #5c6bc0;
-      --download-bg: #00b0ff;
-      --download-hover: #33c9ff;
-      --text-main: #ffffff;
-      --text-sub: #b0b0bc;
-      --warning: #ffb74d;
-      --danger: #ef5350;
-      --danger-hover: #e53935;
+      --bg-color: #f4f8fb;
+      --panel-bg: #ffffff;
+      --panel-border: #e2e8f0;
+      --accent: #4f46e5;
+      --accent-hover: #4338ca;
+      --download-bg: #0ea5e9;
+      --download-hover: #0284c7;
+      --text-main: #1e293b;
+      --text-sub: #64748b;
+      --warning: #d97706;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --success: #10b981;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
     }
 
     * {
-      box-sizing: border-box; /* はみ出し防止の基本設定 */
+      box-sizing: border-box;
     }
 
     body {
       background-color: var(--bg-color);
       color: var(--text-main);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 20px 10px;
+      padding: 24px 12px;
       margin: 0;
       -webkit-text-size-adjust: 100%;
     }
@@ -49,57 +51,61 @@
 
     header {
       text-align: center;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
 
     header h1 {
-      font-size: 20px;
-      margin: 0 0 6px 0;
-      color: #fff;
+      font-size: 22px;
+      margin: 0 0 8px 0;
+      color: var(--text-main);
       letter-spacing: 0.5px;
+      font-weight: 800;
     }
 
     header p {
-      font-size: 12px;
+      font-size: 13px;
       color: var(--text-sub);
       margin: 0;
-      line-height: 1.4;
+      line-height: 1.5;
     }
 
     .prep-panel {
-      background: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      border-radius: 8px;
-      padding: 12px 14px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
     }
 
     .terms-panel {
-      background: #17171c;
-      border: 1px solid #282833;
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 12px;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 13px;
       color: var(--text-sub);
       line-height: 1.6;
+      box-shadow: var(--shadow);
     }
 
     .terms-panel summary {
       cursor: pointer;
       font-weight: bold;
-      color: #c0c0d0;
+      color: var(--accent);
       outline: none;
+      transition: color 0.2s;
     }
 
     .terms-panel summary:hover {
-      color: #fff;
+      color: var(--accent-hover);
     }
 
     .terms-content {
-      margin-top: 10px;
-      border-top: 1px solid #282833;
-      padding-top: 10px;
-      font-size: 11px;
-      color: #9999aa;
+      margin-top: 12px;
+      border-top: 1px solid var(--panel-border);
+      padding-top: 12px;
+      font-size: 12px;
+      color: var(--text-sub);
     }
 
     .terms-content ol {
@@ -113,19 +119,20 @@
 
     .panel {
       background: var(--panel-bg);
-      padding: 14px;
-      border-radius: 10px;
+      padding: 18px;
+      border-radius: 16px;
       border: 1px solid var(--panel-border);
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      width: 100%; /* 横幅いっぱいに収める */
+      gap: 14px;
+      width: 100%;
+      box-shadow: var(--shadow);
     }
 
     .panel-title {
-      font-size: 12px;
-      font-weight: bold;
-      color: var(--text-sub);
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--accent);
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -133,41 +140,43 @@
     canvas {
       width: 100%;
       aspect-ratio: 16 / 9;
-      background: #000;
-      border: 2px solid var(--accent);
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      background: #0f172a;
+      border: 3px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
 
     .control-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 13px;
+      font-size: 14px;
+      font-weight: 600;
       gap: 10px;
     }
 
     input[type="number"] {
-      width: 70px;
-      padding: 8px;
-      background: #121216;
-      border: 1px solid #444;
-      color: #fff;
-      border-radius: 6px;
+      width: 80px;
+      padding: 8px 10px;
+      background: #f8fafc;
+      border: 1px solid var(--panel-border);
+      color: var(--text-main);
+      border-radius: 8px;
       text-align: center;
       font-size: 16px;
+      font-weight: bold;
     }
 
     .btn {
-      padding: 10px 14px;
+      padding: 10px 16px;
       background: var(--accent);
       color: #fff;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
       font-weight: bold;
       font-size: 13px;
-      transition: background 0.2s;
+      transition: background 0.2s, transform 0.1s;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -175,40 +184,44 @@
       text-decoration: none;
     }
     .btn:hover { background: var(--accent-hover); }
+    .btn:active { transform: scale(0.98); }
 
     .btn-danger {
-      background: var(--danger);
-      padding: 10px 12px;
+      background: #fee2e2;
+      color: var(--danger);
+      padding: 10px 14px;
+      border: 1px solid #fecaca;
     }
-    .btn-danger:hover { background: var(--danger-hover); }
+    .btn-danger:hover { background: #fecaca; color: var(--danger-hover); }
 
     .btn-download {
       background: var(--download-bg);
-      color: #000;
+      color: #fff;
       font-size: 15px;
-      padding: 14px;
+      padding: 16px;
       width: 100%;
-      border-radius: 8px;
+      border-radius: 12px;
       font-weight: bold;
-      box-shadow: 0 4px 14px rgba(0, 176, 255, 0.2);
+      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.3);
     }
     .btn-download:hover { background: var(--download-hover); }
-    .btn-download:disabled { background: #333; color: #777; cursor: not-allowed; box-shadow: none; }
+    .btn-download:disabled { background: #cbd5e1; color: #94a3b8; cursor: not-allowed; box-shadow: none; }
 
-    /* 生成された後に現れる青い保存用ボタン（はみ出さないようにサイズ調整） */
     .download-action-btn {
-      background: #00b0ff;
-      color: #000;
+      background: var(--success);
+      color: #fff;
       display: none;
       width: 100%;
-      padding: 14px;
+      padding: 16px;
       font-size: 15px;
-      border-radius: 8px;
+      border-radius: 12px;
       font-weight: bold;
-      box-shadow: 0 4px 14px rgba(0, 176, 255, 0.3);
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
       animation: pulse 1.5s infinite;
       text-align: center;
+      text-decoration: none;
     }
+    .download-action-btn:hover { background: #059669; }
 
     @keyframes pulse {
       0% { transform: scale(1); }
@@ -223,10 +236,10 @@
       flex-direction: column;
       align-items: stretch;
       font-size: 13px;
-      background: #121216;
-      padding: 12px;
-      border-radius: 6px;
-      border: 1px solid #2a2a35;
+      background: #f8fafc;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--panel-border);
       gap: 10px;
     }
 
@@ -250,7 +263,8 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      font-size: 12px;
+      font-size: 13px;
+      font-weight: 500;
     }
 
     .file-actions {
@@ -269,7 +283,7 @@
     }
 
     .status {
-      font-size: 13px;
+      font-size: 14px;
       color: var(--warning);
       text-align: center;
       font-weight: bold;
@@ -277,16 +291,16 @@
     }
 
     .note {
-      font-size: 11px;
-      color: #777788;
-      line-height: 1.5;
+      font-size: 12px;
+      color: var(--text-sub);
+      line-height: 1.6;
     }
 
     footer {
       text-align: center;
       margin-top: 10px;
       padding: 20px 0;
-      border-top: 1px solid #22222a;
+      border-top: 1px solid var(--panel-border);
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -300,7 +314,7 @@
     }
 
     .footer-links a {
-      color: var(--download-bg);
+      color: var(--accent);
       text-decoration: none;
       font-weight: bold;
       transition: opacity 0.2s;
@@ -312,8 +326,8 @@
     }
 
     .copyright {
-      font-size: 11px;
-      color: #666677;
+      font-size: 12px;
+      color: var(--text-sub);
     }
   </style>
 </head>
@@ -321,16 +335,16 @@
 
   <div class="container">
     <header>
-      <h1>スタジオ配信用-ループ背景メーカー</h1>
-      <p>1〜3枚の画像から、ツイキャス用のスタジオ配信に最適なループ背景画像（APNG）を生成します。</p>
+      <h1>スタジオ配信用 ループ背景メーカー</h1>
+      <p>1〜3枚の画像から、配信に最適なループ背景画像（APNG）を簡単につくれます。</p>
     </header>
 
     <div class="prep-panel">
-      <span class="panel-title">💡 ご利用の推奨環境</span>
-      <ul style="margin: 6px 0 0 18px; padding: 0; font-size: 12px; color: var(--text-main); line-height: 1.5;">
+      <span class="panel-title" style="color: #1e40af;">💡 ご利用の推奨環境</span>
+      <ul style="margin: 6px 0 0 18px; padding: 0; font-size: 13px; color: #1e3a8a; line-height: 1.5;">
         <li><strong>16:9の画像ファイル</strong>（2枚または3枚の選択を推奨いたします）</li>
       </ul>
-      <div style="font-size: 11px; color: #777788; margin-top: 4px; margin-left: 18px; line-height: 1.4;">
+      <div style="font-size: 12px; color: #3b82f6; margin-top: 4px; margin-left: 18px; line-height: 1.4;">
         ※異なるアスペクト比の画像を選択された場合でも、1280x720の画面サイズに合わせて自動的にトリミング・調整されます。
       </div>
     </div>
@@ -397,10 +411,10 @@
       </div>
       <div class="control-row">
         <span>フェードの中間フレーム数:</span>
-        <span style="color: var(--download-bg); font-weight: bold;">3枚（固定・最適化済み）</span>
+        <span style="color: var(--accent); font-weight: bold;">3枚（固定・最適化済み）</span>
       </div>
       <div class="note">
-        ※1280x720サイズに自動調整され、スタジオ配信向けに軽量化されたAPNGを生成します。<br>
+        ※1280x720サイズに自動調整され、配信向けに軽量化されたAPNGを生成します。<br>
         ※ループ処理の都合上、再生開始時（1周目）のみ1枚目の表示時間が少し短くなる場合があります。
       </div>
     </div>
@@ -413,9 +427,9 @@
 
     <div class="panel" style="gap: 10px;">
       <!-- 生成スタートボタン -->
-      <button class="btn btn-download" id="downloadBtn" disabled>📥 PNG（APNG）ファイルを生成する</button>
+      <button class="btn btn-download" id="downloadBtn" disabled>✨ PNG（APNG）ファイルを生成する</button>
       <!-- 生成完了後に現れる手動保存用ボタン -->
-      <a id="downloadLinkBtn" class="download-action-btn" download="stream_background.png">📥 このボタンをタップして保存する</a>
+      <a id="downloadLinkBtn" class="download-action-btn" download="stream_background.png">💾 このボタンをタップして保存する</a>
     </div>
 
     <footer>
@@ -453,7 +467,7 @@
         if (!file) return;
         item.nameLabel.textContent = `背景 ${item.index + 1}: ${file.name}`;
         item.delBtn.style.display = 'inline-flex';
-        downloadLinkBtn.style.display = 'none'; // 画像を変更したら保存ボタンを隠す
+        downloadLinkBtn.style.display = 'none';
 
         const reader = new FileReader();
         reader.onload = (evt) => {
@@ -487,10 +501,12 @@
       if (isGenerating) return;
       const activeImgs = loadedImages.filter(img => img !== null);
       if (activeImgs.length > 0) {
-        statusInfo.textContent = `準備完了（${activeImgs.length}枚の画像でループ中）`;
+        statusInfo.style.color = '#10b981';
+        statusInfo.textContent = `✨ 準備完了（${activeImgs.length}枚の画像でループ中）`;
         downloadBtn.disabled = false;
         animationStartTime = performance.now();
       } else {
+        statusInfo.style.color = 'var(--warning)';
         statusInfo.textContent = '背景画像を選択してください。';
         downloadBtn.disabled = true;
         animationStartTime = null;
@@ -516,7 +532,7 @@
 
       const activeImages = loadedImages.filter(img => img !== null);
       if (activeImages.length === 0) {
-        ctx.fillStyle = '#111';
+        ctx.fillStyle = '#0f172a';
         ctx.fillRect(0, 0, 1280, 720);
         return;
       }
@@ -531,10 +547,11 @@
 
       const elapsed = ((timestamp - animationStartTime) / 1000) % totalLoopTime;
 
-      const currentIndex = Math.floor(elapsed / cycleTime);
-      const timeInCycle = elapsed % cycleTime;
+      const currentIndex = Math.min(Math.floor(elapsed / cycleTime), numImages - 1);
+      const timeInCycle = elapsed - (currentIndex * cycleTime);
 
-      ctx.clearRect(0, 0, 1280, 720);
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, 1280, 720);
 
       const currentImg = activeImages[currentIndex];
       const nextImg = activeImages[(currentIndex + 1) % numImages];
@@ -543,10 +560,10 @@
         drawImageCover(ctx, currentImg, 1.0);
       } else {
         const fadeProgress = (timeInCycle - displaySec) / fadeSec;
-        const steppedAlpha = Math.min(Math.floor(fadeProgress * 4) / 3, 1.0);
-        
         drawImageCover(ctx, currentImg, 1.0);
-        drawImageCover(ctx, nextImg, steppedAlpha);
+        if (nextImg) {
+          drawImageCover(ctx, nextImg, Math.max(0, Math.min(1, fadeProgress)));
+        }
       }
     }
     requestAnimationFrame(loop);
@@ -558,7 +575,7 @@
       isGenerating = true;
       downloadBtn.disabled = true;
       downloadLinkBtn.style.display = 'none';
-      statusInfo.style.color = 'var(--download-bg)';
+      statusInfo.style.color = 'var(--accent)';
       statusInfo.textContent = '⚙️ APNGファイルを生成中……（数秒かかります）';
 
       setTimeout(async () => {
@@ -582,7 +599,7 @@
             const currentImg = activeImages[i];
             const nextImg = activeImages[(i + 1) % numImages];
 
-            offCtx.fillStyle = '#000';
+            offCtx.fillStyle = '#0f172a';
             offCtx.fillRect(0, 0, 1280, 720);
             drawImageCover(offCtx, currentImg, 1.0);
             frames.push(offCtx.getImageData(0, 0, 1280, 720).data.buffer);
@@ -590,7 +607,7 @@
 
             for (let f = 1; f <= fadeFrameCount; f++) {
               const alpha = f / (fadeFrameCount + 1);
-              offCtx.fillStyle = '#000';
+              offCtx.fillStyle = '#0f172a';
               offCtx.fillRect(0, 0, 1280, 720);
               drawImageCover(offCtx, currentImg, 1.0);
               drawImageCover(offCtx, nextImg, alpha);
@@ -607,7 +624,6 @@
               const blob = new Blob([pngBuf], { type: 'image/png' });
               const url = URL.createObjectURL(blob);
               
-              // 毎回異なるファイル名（タイムスタンプ付き）を生成して再ダウンロード確認を防ぐ
               const now = new Date();
               const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
               const fileName = `stream_background_${timestamp}.png`;
@@ -616,8 +632,8 @@
               downloadLinkBtn.download = fileName;
               downloadLinkBtn.style.display = 'block';
 
-              statusInfo.style.color = '#66bb6a';
-              statusInfo.textContent = '🎉 生成完了！下の青いボタンをタップして保存してね👇';
+              statusInfo.style.color = '#10b981';
+              statusInfo.textContent = '🎉 生成完了！下の緑のボタンをタップして保存してね👇';
             } catch (innerErr) {
               console.error(innerErr);
               statusInfo.style.color = 'var(--danger)';
