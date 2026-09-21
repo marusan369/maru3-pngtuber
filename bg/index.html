@@ -152,7 +152,7 @@
       color: #fff;
       border-radius: 6px;
       text-align: center;
-      font-size: 16px; /* スマホでフォーカス時にズームされないように16pxに */
+      font-size: 16px;
     }
 
     .btn {
@@ -257,7 +257,6 @@
       line-height: 1.5;
     }
 
-    /* フッター（リンクエリア） */
     footer {
       text-align: center;
       margin-top: 10px;
@@ -301,7 +300,6 @@
       <p>1〜3枚の画像から、ツイキャス配信に最適なループ背景画像（APNG）を生成します。</p>
     </header>
 
-    <!-- 推奨事項パネル -->
     <div class="prep-panel">
       <span class="panel-title">💡 ご利用の推奨環境</span>
       <ul style="margin: 6px 0 0 18px; padding: 0; font-size: 12px; color: var(--text-main); line-height: 1.5;">
@@ -312,7 +310,6 @@
       </div>
     </div>
 
-    <!-- 利用規約・免責事項 -->
     <details class="terms-panel">
       <summary>📜 利用規約・免責事項</summary>
       <div class="terms-content">
@@ -393,7 +390,6 @@
       <button class="btn btn-download" id="downloadBtn" disabled>📥 PNG（APNG）ファイルをダウンロード</button>
     </div>
 
-    <!-- フッター（リンクエリア） -->
     <footer>
       <div class="footer-links">
         <a href="https://x.com/marusan_369xii" target="_blank" rel="noopener">🐦 X (旧Twitter)</a>
@@ -422,7 +418,6 @@
     let isGenerating = false;
 
     inputs.forEach(item => {
-      // ファイル選択時の処理
       item.fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -441,10 +436,9 @@
         reader.readAsDataURL(file);
       });
 
-      // 削除ボタン押下時の処理
       item.delBtn.addEventListener('click', () => {
         loadedImages[item.index] = null;
-        item.fileInput.value = ''; // 同じファイルを再選択できるようにリセット
+        item.fileInput.value = '';
         if (item.index === 0) {
           item.nameLabel.textContent = '背景 1: 未選択';
         } else if (item.index === 1) {
@@ -458,11 +452,12 @@
     });
 
     function updateStatus() {
+      if (isGenerating) return;
       const activeImgs = loadedImages.filter(img => img !== null);
       if (activeImgs.length > 0) {
         statusInfo.textContent = `準備完了（${activeImgs.length}枚の画像でループ中）`;
         downloadBtn.disabled = false;
-        animationStartTime = performance.now(); // タイマーをリセット
+        animationStartTime = performance.now();
       } else {
         statusInfo.textContent = '背景画像を選択してください。';
         downloadBtn.disabled = true;
@@ -502,7 +497,6 @@
       const cycleTime = displaySec + fadeSec;
       const totalLoopTime = cycleTime * numImages;
 
-      // 経過時間を正確に計算
       const elapsed = ((timestamp - animationStartTime) / 1000) % totalLoopTime;
 
       const currentIndex = Math.floor(elapsed / cycleTime);
@@ -525,71 +519,89 @@
     }
     requestAnimationFrame(loop);
 
-    downloadBtn.addEventListener('click', async () => {
+    downloadBtn.addEventListener('click', () => {
       const activeImages = loadedImages.filter(img => img !== null);
       if (activeImages.length === 0) return;
 
       isGenerating = true;
-      statusInfo.textContent = 'APNGファイルを生成中です。しばらくお待ちください……';
       downloadBtn.disabled = true;
+      statusInfo.style.color = 'var(--download-bg)';
+      statusInfo.textContent = '⚙️ APNGファイルを生成中……（スマホの性能により数秒かかります）';
 
-      const displaySec = parseFloat(displayDurationInput.value) || 10;
-      const displayMs = displaySec * 1000;
-      const fadeFrameCount = 3;
-      const fadeStepMs = Math.round(600 / (fadeFrameCount + 1));
+      setTimeout(async () => {
+        try {
+          const displaySec = parseFloat(displayDurationInput.value) || 10;
+          const displayMs = displaySec * 1000;
+          const fadeFrameCount = 3;
+          const fadeStepMs = Math.round(600 / (fadeFrameCount + 1));
 
-      let frames = [];
-      let delays = [];
+          let frames = [];
+          let delays = [];
 
-      const offCanvas = document.createElement('canvas');
-      offCanvas.width = 1280;
-      offCanvas.height = 720;
-      const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
+          const offCanvas = document.createElement('canvas');
+          offCanvas.width = 1280;
+          offCanvas.height = 720;
+          const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
 
-      const numImages = activeImages.length;
+          const numImages = activeImages.length;
 
-      for (let i = 0; i < numImages; i++) {
-        const currentImg = activeImages[i];
-        const nextImg = activeImages[(i + 1) % numImages];
+          for (let i = 0; i < numImages; i++) {
+            const currentImg = activeImages[i];
+            const nextImg = activeImages[(i + 1) % numImages];
 
-        offCtx.fillStyle = '#000';
-        offCtx.fillRect(0, 0, 1280, 720);
-        drawImageCover(offCtx, currentImg, 1.0);
-        frames.push(offCtx.getImageData(0, 0, 1280, 720).data.buffer);
-        delays.push(displayMs);
+            offCtx.fillStyle = '#000';
+            offCtx.fillRect(0, 0, 1280, 720);
+            drawImageCover(offCtx, currentImg, 1.0);
+            frames.push(offCtx.getImageData(0, 0, 1280, 720).data.buffer);
+            delays.push(displayMs);
 
-        for (let f = 1; f <= fadeFrameCount; f++) {
-          const alpha = f / (fadeFrameCount + 1);
-          offCtx.fillStyle = '#000';
-          offCtx.fillRect(0, 0, 1280, 720);
-          drawImageCover(offCtx, currentImg, 1.0);
-          drawImageCover(offCtx, nextImg, alpha);
-          frames.push(offCtx.getImageData(0, 0, 1280, 720).data.buffer);
-          delays.push(fadeStepMs);
+            for (let f = 1; f <= fadeFrameCount; f++) {
+              const alpha = f / (fadeFrameCount + 1);
+              offCtx.fillStyle = '#000';
+              offCtx.fillRect(0, 0, 1280, 720);
+              drawImageCover(offCtx, currentImg, 1.0);
+              drawImageCover(offCtx, nextImg, alpha);
+              frames.push(offCtx.getImageData(0, 0, 1280, 720).data.buffer);
+              delays.push(fadeStepMs);
+            }
+          }
+
+          statusInfo.textContent = '📦 データを圧縮・ファイル化しています……';
+
+          setTimeout(() => {
+            try {
+              const pngBuf = UPNG.encode(frames, 1280, 720, 256, delays);
+              const blob = new Blob([pngBuf], { type: 'image/png' });
+              const url = URL.createObjectURL(blob);
+              
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'stream_background.png';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+
+              statusInfo.style.color = '#66bb6a';
+              statusInfo.textContent = '🎉 生成・ダウンロードが完了しました！';
+            } catch (innerErr) {
+              console.error(innerErr);
+              statusInfo.style.color = 'var(--danger)';
+              statusInfo.textContent = '❌ エンコード中にエラーが発生しました。';
+            } finally {
+              isGenerating = false;
+              downloadBtn.disabled = false;
+            }
+          }, 100);
+
+        } catch (err) {
+          console.error(err);
+          statusInfo.style.color = 'var(--danger)';
+          statusInfo.textContent = '❌ エラーが発生しました。';
+          isGenerating = false;
+          downloadBtn.disabled = false;
         }
-      }
-
-      try {
-        const pngBuf = UPNG.encode(frames, 1280, 720, 256, delays);
-        const blob = new Blob([pngBuf], { type: 'image/png' });
-        const url = URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'stream_background.png';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-        statusInfo.textContent = 'ファイルのダウンロードが完了しました。';
-      } catch (err) {
-        console.error(err);
-        statusInfo.textContent = 'エラーが発生しました。コンソールをご確認ください。';
-      } finally {
-        isGenerating = false;
-        downloadBtn.disabled = false;
-      }
+      }, 100);
     });
   </script>
 
