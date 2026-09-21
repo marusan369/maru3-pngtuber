@@ -555,14 +555,13 @@
       const currentImg = activeImages[currentIndex];
       const nextImg = activeImages[(currentIndex + 1) % numImages];
 
+      // 修正：表示時間を過ぎたら次の画像へ向けて滑らかにフェードインさせる
       if (timeInCycle < displaySec) {
         drawImageCover(ctx, currentImg, 1.0);
       } else {
         const fadeProgress = (timeInCycle - displaySec) / fadeSec;
-        const steppedAlpha = Math.min(Math.floor(fadeProgress * 4) / 3, 1.0);
-        
         drawImageCover(ctx, currentImg, 1.0);
-        drawImageCover(ctx, nextImg, steppedAlpha);
+        drawImageCover(ctx, nextImg, fadeProgress);
       }
     }
     requestAnimationFrame(loop);
