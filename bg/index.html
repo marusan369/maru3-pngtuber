@@ -24,7 +24,7 @@
     }
 
     * {
-      box-sizing: border-box; /* はみ出し防止の基本設定ニャ！ */
+      box-sizing: border-box; /* はみ出し防止の基本設定 */
     }
 
     body {
@@ -119,7 +119,7 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
-      width: 100%; /* 横幅いっぱいに収めるニャ */
+      width: 100%; /* 横幅いっぱいに収める */
     }
 
     .panel-title {
@@ -322,7 +322,7 @@
   <div class="container">
     <header>
       <h1>スタジオ配信用-ループ背景メーカー</h1>
-      <p>1〜3枚の画像から、スタジオ配信に最適なループ背景画像（APNG）を生成します。</p>
+      <p>1〜3枚の画像から、ツイキャス用のスタジオ配信に最適なループ背景画像（APNG）を生成します。</p>
     </header>
 
     <div class="prep-panel">
@@ -607,7 +607,7 @@
               const blob = new Blob([pngBuf], { type: 'image/png' });
               const url = URL.createObjectURL(blob);
               
-              // 毎回異なるファイル名（タイムスタンプ付き）を生成して再ダウンロード確認を防ぐニャ！
+              // 毎回異なるファイル名（タイムスタンプ付き）を生成して再ダウンロード確認を防ぐ
               const now = new Date();
               const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
               const fileName = `stream_background_${timestamp}.png`;
