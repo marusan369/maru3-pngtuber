@@ -336,17 +336,16 @@
   <div class="container">
     <header>
       <h1>スタジオ配信用 ループ背景メーカー</h1>
-      <h3>ツイキャス - スタジオ配信用素材</h3>
-      <p>1〜3枚の画像から、ツイキャスのスタジオ配信に最適なループ背景画像（APNG）を簡単につくれます。</p>
+      <p>1〜3枚の画像から、配信に最適なループ背景画像（APNG）を簡単につくれます。</p>
     </header>
 
     <div class="prep-panel">
       <span class="panel-title" style="color: #1e40af;">💡 ご利用の推奨環境</span>
       <ul style="margin: 6px 0 0 18px; padding: 0; font-size: 13px; color: #1e3a8a; line-height: 1.5;">
-        <li><strong>スマホ写真もOK</strong>（横長の画像を仕様してください）</li>
+        <li><strong>スマホ・PC対応</strong>（自動で最適な保存方法に切り替わります）</li>
       </ul>
       <div style="font-size: 12px; color: #3b82f6; margin-top: 4px; margin-left: 18px; line-height: 1.4;">
-        ※選択された画像は1280x720の画面サイズに合わせて自動トリミング・調整され、スタジオ配信の背景に設定可能なPNG形式のAPNGが生成されます。
+        ※iPhoneの場合は、生成後に表示されるボタンをタップすると画像が表示されますので、画像を長押しして「写真に追加」してください。
       </div>
     </div>
 
@@ -416,7 +415,7 @@
       </div>
       <div class="note">
         ※1280x720サイズに自動調整され、配信向けに軽量化されたAPNGを生成します。<br>
-        ※プレビューとダウンロードされるファイルは同じアルゴリズムで動作します。
+        ※プレビューとダウンロードされるファイルは完全に同じアルゴリズムで動作します。
       </div>
     </div>
 
@@ -462,7 +461,11 @@
     let animationStartTime = null;
     let isGenerating = false;
 
-    // 画像を1280x720のサイズにカバー描画して綺麗にオフスクリーンCanvas化（リサイズ＆軽量化）
+    // iPhone（iOS / iPadOS）判定
+    function isIOS() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
     function createResizedImageBitmap(img) {
       const oc = document.createElement('canvas');
       oc.width = 1280;
@@ -497,7 +500,6 @@
         reader.onload = (evt) => {
           const img = new Image();
           img.onload = async () => {
-            // 入力された瞬間に1280x720にリサイズ・トリミングして軽量化
             const resizedImg = await createResizedImageBitmap(img);
             loadedImages[item.index] = resizedImg;
             item.nameLabel.textContent = `背景 ${item.index + 1}: ${file.name}`;
@@ -540,7 +542,6 @@
       }
     }
 
-    // プレビューおよび書き出しで使う完全共通の描画関数
     function renderFrame(targetCtx, currentImg, nextImg, alpha) {
       targetCtx.fillStyle = '#0f172a';
       targetCtx.fillRect(0, 0, 1280, 720);
@@ -627,12 +628,10 @@
             const currentImg = activeImages[i];
             const nextImg = activeImages[(i + 1) % numImages];
 
-            // 1. 通常表示フレーム
             renderFrame(offCtx, currentImg, null, 0);
             frames.push(offCtx.getImageData(0, 0, 1280, 720).data.buffer);
             delays.push(displayMs);
 
-            // 2. フェードの中間フレーム（プレビューと完全同一のロジック）
             for (let f = 1; f <= fadeFrameCount; f++) {
               const alpha = f / (fadeFrameCount + 1);
               renderFrame(offCtx, currentImg, nextImg, alpha);
@@ -653,12 +652,26 @@
               const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
               const fileName = `stream_background_${timestamp}.png`;
 
-              downloadLinkBtn.href = url;
-              downloadLinkBtn.download = fileName;
-              downloadLinkBtn.style.display = 'block';
+              // iPhoneの場合はblobリンク直接ダウンロードでバグるため、別タブで画像を開かせて長押し保存させる方式に分岐
+              if (isIOS()) {
+                downloadLinkBtn.href = url;
+                downloadLinkBtn.removeAttribute('download'); // iOSではdownload属性が効かないため削除
+                downloadLinkBtn.target = '_blank';
+                downloadLinkBtn.innerHTML = '📱【iPhone用】画像を長押しして保存する';
+                downloadLinkBtn.style.display = 'block';
 
-              statusInfo.style.color = '#10b981';
-              statusInfo.textContent = '🎉 生成完了！下の緑のボタンをタップして保存してね👇';
+                statusInfo.style.color = '#10b981';
+                statusInfo.textContent = '🎉 生成完了！下の緑のボタンを押して、開いた画像を長押しして「写真に追加」してね👇';
+              } else {
+                downloadLinkBtn.href = url;
+                downloadLinkBtn.download = fileName;
+                downloadLinkBtn.target = '_self';
+                downloadLinkBtn.innerHTML = '💾 このボタンをタップして保存する';
+                downloadLinkBtn.style.display = 'block';
+
+                statusInfo.style.color = '#10b981';
+                statusInfo.textContent = '🎉 生成完了！下の緑のボタンをタップして保存してね👇';
+              }
             } catch (innerErr) {
               console.error(innerErr);
               statusInfo.style.color = 'var(--danger)';
