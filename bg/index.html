@@ -3,7 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>スタジオ配信用 ループ背景メーカー</title>
+  <title>スタジオ配信用 ループ背景メーカー（スマートフォン用）</title>
+  
+  <!-- PCからのアクセスなら自動でPC用ページへリダイレクト -->
+  <script>
+    var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (!isMobile) {
+      window.location.replace("https://marusan369.github.io/maru3-pngtuber/bg/pc.html");
+    }
+  </script>
+
   <!-- 必須依存ライブラリ (pako.js & UPNG.js) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/upng-js/2.1.0/UPNG.min.js"></script>
@@ -67,14 +76,6 @@
       color: var(--text-sub);
       margin: 0;
       line-height: 1.5;
-    }
-
-    .prep-panel {
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      border-radius: 12px;
-      padding: 14px 16px;
-      box-shadow: var(--shadow);
     }
 
     .terms-panel {
@@ -290,6 +291,26 @@
       word-break: break-all;
     }
 
+    .save-guide-box {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: #166534;
+      display: none;
+      line-height: 1.5;
+    }
+
+    .completed-msg {
+      font-size: 14px;
+      color: var(--success);
+      font-weight: bold;
+      text-align: center;
+      display: none;
+      margin-top: 6px;
+    }
+
     .note {
       font-size: 12px;
       color: var(--text-sub);
@@ -336,18 +357,8 @@
   <div class="container">
     <header>
       <h1>スタジオ配信用 ループ背景メーカー</h1>
-      <p>1〜3枚の画像から、配信に最適なループ背景画像（APNG）を簡単につくれます。</p>
+      <p>スマートフォン用サイトです。1〜3枚の画像から、配信に最適なループ背景画像（APNG）をつくれます。</p>
     </header>
-
-    <div class="prep-panel">
-      <span class="panel-title" style="color: #1e40af;">💡 ご利用の推奨環境</span>
-      <ul style="margin: 6px 0 0 18px; padding: 0; font-size: 13px; color: #1e3a8a; line-height: 1.5;">
-        <li><strong>スマホ・PC対応</strong>（自動で最適な保存方法に切り替わります）</li>
-      </ul>
-      <div style="font-size: 12px; color: #3b82f6; margin-top: 4px; margin-left: 18px; line-height: 1.4;">
-        ※iPhoneの場合は、生成後に表示されるボタンをタップすると画像が表示されますので、画像を長押しして「写真に追加」してください。
-      </div>
-    </div>
 
     <details class="terms-panel">
       <summary>📜 利用規約・免責事項</summary>
@@ -428,8 +439,18 @@
     <div class="panel" style="gap: 10px;">
       <!-- 生成スタートボタン -->
       <button class="btn btn-download" id="downloadBtn" disabled>✨ PNG（APNG）ファイルを生成する</button>
-      <!-- 生成完了後に現れる手動保存用ボタン -->
+      
+      <!-- iPhoneなどの保存手順案内（ダウンロードボタンのすぐ上） -->
+      <div class="save-guide-box" id="saveGuideBox">
+        <strong>💡 iPhoneでの保存方法：</strong><br>
+        下の緑のボタンをタップすると新しいタブで画像が開きます。開いた画像を<strong>長押し</strong>して「写真に追加」を選択してください。
+      </div>
+
+      <!-- 生成完了後に現れる保存用ボタン -->
       <a id="downloadLinkBtn" class="download-action-btn" download="stream_background.png">💾 このボタンをタップして保存する</a>
+      
+      <!-- 完了通知文字 -->
+      <div class="completed-msg" id="completedMsg">✅ ダウンロードしました！</div>
     </div>
 
     <footer>
@@ -450,6 +471,8 @@
     const displayDurationInput = document.getElementById('displayDuration');
     const downloadBtn = document.getElementById('downloadBtn');
     const downloadLinkBtn = document.getElementById('downloadLinkBtn');
+    const saveGuideBox = document.getElementById('saveGuideBox');
+    const completedMsg = document.getElementById('completedMsg');
 
     const inputs = [
       { fileInput: document.getElementById('file1'), nameLabel: document.getElementById('nameA'), delBtn: document.getElementById('del1'), index: 0 },
@@ -495,6 +518,8 @@
         item.nameLabel.textContent = `背景 ${item.index + 1}: ${file.name} (調整中...)`;
         item.delBtn.style.display = 'inline-flex';
         downloadLinkBtn.style.display = 'none';
+        saveGuideBox.style.display = 'none';
+        completedMsg.style.display = 'none';
 
         const reader = new FileReader();
         reader.onload = (evt) => {
@@ -522,6 +547,8 @@
         }
         item.delBtn.style.display = 'none';
         downloadLinkBtn.style.display = 'none';
+        saveGuideBox.style.display = 'none';
+        completedMsg.style.display = 'none';
         updateStatus();
       });
     });
@@ -604,6 +631,8 @@
       isGenerating = true;
       downloadBtn.disabled = true;
       downloadLinkBtn.style.display = 'none';
+      saveGuideBox.style.display = 'none';
+      completedMsg.style.display = 'none';
       statusInfo.style.color = 'var(--accent)';
       statusInfo.textContent = '⚙️ APNGファイルを生成中……（数秒かかります）';
 
@@ -652,26 +681,24 @@
               const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
               const fileName = `stream_background_${timestamp}.png`;
 
-              // iPhoneの場合はblobリンク直接ダウンロードでバグるため、別タブで画像を開かせて長押し保存させる方式に分岐
               if (isIOS()) {
+                saveGuideBox.style.display = 'block';
                 downloadLinkBtn.href = url;
-                downloadLinkBtn.removeAttribute('download'); // iOSではdownload属性が効かないため削除
+                downloadLinkBtn.removeAttribute('download');
                 downloadLinkBtn.target = '_blank';
                 downloadLinkBtn.innerHTML = '📱【iPhone用】画像を長押しして保存する';
-                downloadLinkBtn.style.display = 'block';
-
-                statusInfo.style.color = '#10b981';
-                statusInfo.textContent = '🎉 生成完了！下の緑のボタンを押して、開いた画像を長押しして「写真に追加」してね👇';
               } else {
+                saveGuideBox.style.display = 'none';
                 downloadLinkBtn.href = url;
                 downloadLinkBtn.download = fileName;
                 downloadLinkBtn.target = '_self';
                 downloadLinkBtn.innerHTML = '💾 このボタンをタップして保存する';
-                downloadLinkBtn.style.display = 'block';
-
-                statusInfo.style.color = '#10b981';
-                statusInfo.textContent = '🎉 生成完了！下の緑のボタンをタップして保存してね👇';
               }
+
+              downloadLinkBtn.style.display = 'block';
+              statusInfo.style.color = '#10b981';
+              statusInfo.textContent = '🎉 生成完了！下のボタンから保存してね👇';
+
             } catch (innerErr) {
               console.error(innerErr);
               statusInfo.style.color = 'var(--danger)';
@@ -690,6 +717,11 @@
           downloadBtn.disabled = false;
         }
       }, 100);
+    });
+
+    // 保存ボタンをタップしたときに「ダウンロードしました」を表示
+    downloadLinkBtn.addEventListener('click', () => {
+      completedMsg.style.display = 'block';
     });
   </script>
 </body>
