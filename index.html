@@ -12,107 +12,145 @@
 <meta name="twitter:card" content="summary_large_image">
 <style>
     body {
-        font-family: sans-serif;
-        background: #2b2b2b;
-        color: #fff;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        background: #fff5f8; /* ふんわりした薄ピンクの背景 */
+        color: #555555;      /* 優しいダークグレーの文字 */
         margin: 0;
-        padding: 20px;
+        padding: 40px 30px;
         box-sizing: border-box;
+        display: flex;
+        justify-content: center;
     }
     .container {
-        background: rgba(0, 0, 0, 0.6);
-        padding: 25px;
-        border-radius: 12px;
+        background: #ffffff; /* 清潔感のある白ベース */
+        padding: 40px 50px;
+        border-radius: 24px;
         text-align: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        max-width: 480px;
+        box-shadow: 0 10px 35px rgba(255, 182, 193, 0.35); /* ピンクの優しい影 */
+        border: 2px solid #ffd1dc; /* パステルピンクのふち */
         width: 100%;
+        max-width: 900px; /* PCの画面で広々と使えるサイズ感に変更 */
+        box-sizing: border-box;
+        position: relative;
     }
-    /* ★【追加】言語切り替えボタンの配置エリア用スタイル */
+    /* 言語切り替えボタンの配置エリア用スタイル */
     .lang-switch {
         display: flex;
         justify-content: flex-end;
-        margin-bottom: 10px;
+        margin-bottom: 5px;
     }
     .lang-btn {
-        background: rgba(255, 255, 255, 0.1);
+        background: #fff0f5;
         color: #ff69b4;
-        border: 1px solid #ff69b4;
-        padding: 4px 10px;
-        font-size: 11px;
+        border: 1px solid #ffb6c1;
+        padding: 6px 14px;
+        font-size: 12px;
         font-weight: bold;
-        border-radius: 6px;
+        border-radius: 20px;
         text-decoration: none;
-        transition: background 0.2s, color 0.2s;
+        transition: background 0.2s, color 0.2s, transform 0.1s;
     }
     .lang-btn:hover {
         background: #ff69b4;
         color: #fff;
+        transform: translateY(-1px);
     }
 
     h1 {
-        font-size: 20px;
-        margin-bottom: 15px;
+        font-size: 26px;
+        color: #d14782; /* 映える可愛い濃いピンク */
+        margin-bottom: 10px;
+        letter-spacing: 0.5px;
     }
+    
+    p {
+        font-size: 14px;
+        margin-bottom: 25px;
+        color: #666;
+    }
+
     button {
         background-color: #ff69b4;
         color: white;
         border: none;
-        padding: 12px 24px;
-        font-size: 16px;
+        padding: 16px 36px;
+        font-size: 18px;
         font-weight: bold;
-        border-radius: 8px;
+        border-radius: 30px; /* 丸みのある可愛いボタン */
         cursor: pointer;
-        transition: opacity 0.2s;
-        margin-bottom: 15px;
+        transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 15px rgba(255, 105, 180, 0.4);
     }
     button:hover {
-        opacity: 0.9;
+        background-color: #ff479e;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 105, 180, 0.5);
     }
+    button:active {
+        transform: translateY(0);
+    }
+
+    /* 上下の情報を横並びに配置するためのグリッドコンテナ */
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        text-align: left;
+        margin-bottom: 20px;
+    }
+
     /* 本格的な利用規約を表示するスクロールボックス */
     .terms-box {
         font-size: 11px;
-        color: #ccc;
-        text-align: left;
-        background: rgba(0, 0, 0, 0.4);
-        border: 1px solid #444;
-        padding: 10px 12px;
-        border-radius: 6px;
-        height: 110px;
+        color: #666;
+        background: #fffafc;
+        border: 1px solid #ffd1dc;
+        padding: 15px;
+        border-radius: 12px;
+        height: 220px; /* 縦幅を広げて見やすく調整 */
         overflow-y: scroll;
-        margin-bottom: 15px;
-        line-height: 1.5;
+        line-height: 1.6;
+    }
+    .terms-box::-webkit-scrollbar {
+        width: 6px;
+    }
+    .terms-box::-webkit-scrollbar-thumb {
+        background: #ffb6c1;
+        border-radius: 3px;
     }
     .terms-box h3 {
-        font-size: 11px;
-        color: #ff69b4;
-        margin: 0 0 6px 0;
+        font-size: 12px;
+        color: #d14782;
+        margin: 0 0 8px 0;
         position: sticky;
         top: 0;
-        background: rgba(0, 0, 0, 0.85);
-        padding: 2px 0;
+        background: #fffafc;
+        padding: 4px 0;
+        border-bottom: 1px solid #ffe4e1;
     }
     .terms-box p {
         margin: 0;
         white-space: pre-wrap;
     }
+
     .steps {
         font-size: 12px;
-        color: #ddd;
-        text-align: left;
-        line-height: 1.5;
-        background: rgba(255, 255, 255, 0.05);
-        padding: 12px 15px;
-        border-radius: 8px;
-        margin-bottom: 15px;
+        color: #555;
+        line-height: 1.6;
+        background: #fff0f5;
+        padding: 15px 18px;
+        border-radius: 12px;
+        border: 1px solid #ffc0cb;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .steps strong {
+        color: #d14782;
     }
     .steps ol {
-        margin: 0;
+        margin: 6px 0 0 0;
         padding-left: 20px;
     }
     .steps li {
@@ -122,29 +160,37 @@
     /* 更新履歴エリアのスタイル */
     .changelog-box {
         font-size: 11px;
-        color: #ccc;
+        color: #666;
         text-align: left;
-        background: rgba(0, 0, 0, 0.4);
-        border: 1px solid #444;
-        padding: 10px 12px;
-        border-radius: 6px;
-        height: 90px;
+        background: #fffafc;
+        border: 1px solid #ffd1dc;
+        padding: 15px;
+        border-radius: 12px;
+        height: 140px;
         overflow-y: scroll;
-        margin-bottom: 15px;
-        line-height: 1.5;
+        margin-bottom: 20px;
+        line-height: 1.6;
+    }
+    .changelog-box::-webkit-scrollbar {
+        width: 6px;
+    }
+    .changelog-box::-webkit-scrollbar-thumb {
+        background: #ffb6c1;
+        border-radius: 3px;
     }
     .changelog-box h3 {
-        font-size: 11px;
-        color: #ff69b4;
-        margin: 0 0 6px 0;
+        font-size: 12px;
+        color: #d14782;
+        margin: 0 0 8px 0;
         position: sticky;
         top: 0;
-        background: rgba(0, 0, 0, 0.85);
-        padding: 2px 0;
+        background: #fffafc;
+        padding: 4px 0;
+        border-bottom: 1px solid #ffe4e1;
     }
     .changelog-box ul {
-        margin: 0;
-        padding-left: 15px;
+        margin: 6px 0 0 0;
+        padding-left: 18px;
     }
     .changelog-box li {
         margin-bottom: 4px;
@@ -154,13 +200,13 @@
     .sample-preview {
         margin-top: 10px;
         padding-top: 10px;
-        border-top: 1px dashed rgba(255, 255, 255, 0.2);
+        border-top: 1px dashed #ffb6c1;
         text-align: center;
     }
     .sample-preview p {
-        margin: 0 0 6px 0;
+        margin: 0 0 8px 0;
         font-size: 11px;
-        color: #ff69b4;
+        color: #d14782;
     }
     .sample-images {
         display: flex;
@@ -168,26 +214,32 @@
         gap: 12px;
     }
     .sample-item {
-        font-size: 10px;
-        color: #aaa;
+        font-size: 11px;
+        color: #777;
         text-align: center;
     }
     .sample-item img {
-        width: 120px;
-        height: 120px;
+        width: 90px;
+        height: 90px;
         object-fit: contain;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 4px;
-        border: 1px solid #555;
+        background: #ffffff;
+        border-radius: 8px;
+        border: 1px solid #ffb6c1;
         display: block;
-        margin-bottom: 2px;
+        margin-bottom: 4px;
+        box-shadow: 0 2px 6px rgba(255, 182, 193, 0.2);
     }
+
     /* 欲しいものリスト支援エリアのスタイル */
     .support-section {
         margin-top: 15px;
-        font-size: 11px;
-        color: #aaa;
+        font-size: 12px;
+        color: #666;
         text-align: center;
+        line-height: 1.8;
+    }
+    .support-section span {
+        color: #555;
     }
     .support-section a {
         color: #ff69b4;
@@ -196,25 +248,62 @@
     }
     .support-section a:hover {
         text-decoration: underline;
+        color: #ff1493;
     }
 </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- ★【追加】一番上の右側に配置した英語ページへの切り替えボタン -->
+    <!-- 一番上の右側に配置した英語ページへの切り替えボタン -->
     <div class="lang-switch">
         <a href="index_en.html" class="lang-btn">🌐 English</a>
     </div>
 
-    <h1>PC用無料PNGTuberアプリ 【まるPNG】</h1>
+    <h1>無料PNGTuberアプリ 【まるPNG】</h1>
     <p>マイクの音声に反応してアバターが動くブラウザツールです</p>
     <button id="launchButton">アバターウィンドウを開く</button>
 
-    <!-- 本格的な利用規約ボックス -->
-    <div class="terms-box">
-        <h3>【 利用規約 】</h3>
-        <p><strong>第1条（はじめに）</strong>
+    <!-- 使い方と利用規約を横並びにして広く配置 -->
+    <div class="content-grid">
+        <!-- 使い方 ＋ サンプル画像エリア -->
+        <div class="steps">
+            <div>
+                <strong>【 使い方 】</strong>
+                <ol>
+                    <li>画像を3枚（16:9推奨）用意する（通常・喋り・瞬き）</li>
+                    <li>画像１枚を３箇所に設定してもＯＫ！</li>
+                    <li>ボタンを押してウィンドウを出し、各画像を設定する</li>
+                    <li>背景ボタンで透過色を選ぶ（緑・青・マゼンダ）</li>
+                    <li>「マイク開始」を押して声を連動させる</li>
+                    <li>画面をクリックしてメニュー画面を消す</li>
+                </ol>
+            </div>
+
+            <!-- すぐ試せるサンプル画像プレビュー -->
+            <div class="sample-preview">
+                <p><strong>💡 お試し用サンプル画像（右クリックで保存して使えます）</strong></p>
+                <div class="sample-images">
+                    <div class="sample-item">
+                        <img src="sample_normal.png" alt="通常">
+                        <span>通常</span>
+                    </div>
+                    <div class="sample-item">
+                        <img src="sample_talk.png" alt="喋り">
+                        <span>喋り</span>
+                    </div>
+                    <div class="sample-item">
+                        <img src="sample_blink.png" alt="瞬き">
+                        <span>瞬き</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 本格的な利用規約ボックス -->
+        <div class="terms-box">
+            <h3>【 利用規約 】</h3>
+            <p><strong>第1条（はじめに）</strong>
 「まるPNG」（以下「本ツール」）は、まるさんが個人制作したブラウザ用PNGTuberツールです。本ツールを利用される方は、本規約に同意したものとみなします。
 
 <strong>第2条（ライセンス・利用範囲）</strong>
@@ -226,6 +315,8 @@
 1. 本ツールのソースコードを流用して、自身の自作発言や偽った配布を行うこと。
 2. 本ツールの運営やGitHub Pagesのホスティングを妨害するような行為。
 3. 公序良俗に反する内容や、法律に違反する配信・動画での利用。
+4. 政治的活動、宗教的活動、またはそれらに類する目的での利用。
+5. アダルトサイトや公序良俗に反するサイト・配信での利用。
 
 <strong>第4条（免責事項）</strong>
 1. 作者は、本ツールの動作について、バグや不具合がないこと、特定の目的に適合することを保証するものではありません。
@@ -233,37 +324,6 @@
 
 <strong>第5条（規約の変更）</strong>
 本規約は、予告なく変更される場合があります。</p>
-    </div>
-
-    <!-- 使い方 ＋ サンプル画像エリア -->
-    <div class="steps">
-        <strong>【 使い方 】</strong>
-        <ol>
-            <li>画像を3枚（16:9推奨）用意する（通常・喋り・瞬き）</li>
-            <li>通常絵に画像１枚セットだけでもＯＫ！</li>
-            <li>ボタンを押してウィンドウを出し、各画像を設定する</li>
-            <li>背景ボタンで透過色を選ぶ（緑・青・マゼンダ）</li>
-            <li>「マイク開始」を押して声を連動させる</li>
-            <li>画面をクリックしてメニュー画面を消す</li>
-        </ol>
-
-        <!-- すぐ試せるサンプル画像プレビュー -->
-        <div class="sample-preview">
-            <p><strong>💡 お試し用サンプル画像（右クリックで保存して使えます）</strong></p>
-            <div class="sample-images">
-                <div class="sample-item">
-                    <img src="sample_normal.png" alt="通常">
-                    <span>通常</span>
-                </div>
-                <div class="sample-item">
-                    <img src="sample_talk.png" alt="喋り">
-                    <span>喋り</span>
-                </div>
-                <div class="sample-item">
-                    <img src="sample_blink.png" alt="瞬き">
-                    <span>瞬き</span>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -285,7 +345,7 @@
     <div class="support-section">
         <span>気に入っていただけたら… 👉 </span>
         <a href="https://www.amazon.jp/hz/wishlist/ls/1QBBDR3F83E00?ref_=wl_share" target="_blank">🎁 作者の欲しいものリスト支援</a><br>
-        <span style="display: inline-block; margin-top: 6px;">💬 不具合報告・連絡先 👉 </span>
+        <span style="display: inline-block; margin-top: 4px;">💬 不具合報告・連絡先 👉 </span>
         <a href="https://x.com/marusan_369xii" target="_blank">🕊️ 作者のX（@marusan_369xii）</a>
     </div>
 </div>
@@ -314,9 +374,7 @@
             `resizable=no,scrollbars=no,toolbar=no,location=no,status=no,menubar=no`
         );
 
-        if (window.focus && newWindow) {
-            newWindow.focus();
-        }
+        (window.focus && newWindow) && newWindow.focus();
     };
 </script>
 </body>
