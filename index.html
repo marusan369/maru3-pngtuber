@@ -1,20 +1,20 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<title>まるPNG - 無料PNGTuberツール・マイク連動アバター作成</title>
-<!-- SEO・SNSシェア用のメタタグ -->
-<meta name="description" content="「まるPNG」は、マイクの音声に反応して口パク・まばたき・ふわふわ揺れるアバターが動く、無料のブラウザ用PNGTuberツールです。配信や動画制作に最適！">
-<meta property="og:title" content="まるPNG - 無料PNGTuberツール・マイク連動アバター作成">
-<meta property="og:description" content="マイクの音声に反応して口パク・まばたき・ふわふわ動く！配信に便利な無料のブラウザ用PNGTuberツール。">
+<title>maruPNG - Free PNGTuber Tool / Mic-Linked Avatar Creator</title>
+<!-- SEO / Social Sharing Meta Tags -->
+<meta name="description" content="“maruPNG” is a free browser-based PNGTuber tool where avatars move, lip-sync, blink, and float in response to your microphone audio. Perfect for live streaming and video creation!">
+<meta property="og:title" content="maruPNG - Free PNGTuber Tool / Mic-Linked Avatar Creator">
+<meta property="og:description" content="Lip-sync, blink, and float in response to your voice! A free browser-based PNGTuber tool convenient for streaming.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://marusan369.github.io/maru3-pngtuber/">
 <meta name="twitter:card" content="summary_large_image">
 <style>
     body {
-        font-family: "Helvetica Neue", Arial, sans-serif;
-        background: #fff5f8; /* ふんわりした薄ピンクの背景 */
-        color: #555555;      /* 優しいダークグレーの文字 */
+        font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+        background: #121216; /* 深みのあるダークネイビー/ブラック背景 */
+        color: #e0e0e6;       /* 見やすい明るいグレーの文字 */
         margin: 0;
         padding: 40px 30px;
         box-sizing: border-box;
@@ -22,27 +22,28 @@
         justify-content: center;
     }
     .container {
-        background: #ffffff; /* 清潔感のある白ベース */
+        background: #1a1a24; /* 少し明るいダークトーンのカードベース */
         padding: 40px 50px;
         border-radius: 24px;
         text-align: center;
-        box-shadow: 0 10px 35px rgba(255, 182, 193, 0.35); /* ピンクの優しい影 */
-        border: 2px solid #ffd1dc; /* パステルピンクのふち */
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);
+        border: 1px solid #2e2e42; /* シックな境界線 */
         width: 100%;
-        max-width: 900px; /* PCの画面で広々と使えるサイズ感に変更 */
+        max-width: 900px; /* PC画面で広々と使えるサイズ感 */
         box-sizing: border-box;
         position: relative;
     }
-    /* 言語切り替えボタンの配置エリア用スタイル */
+    
+    /* Language switch button */
     .lang-switch {
         display: flex;
         justify-content: flex-end;
         margin-bottom: 5px;
     }
     .lang-btn {
-        background: #fff0f5;
-        color: #ff69b4;
-        border: 1px solid #ffb6c1;
+        background: #252536;
+        color: #ff79c6; /* ネオンピンク系 */
+        border: 1px solid #444460;
         padding: 6px 14px;
         font-size: 12px;
         font-weight: bold;
@@ -51,14 +52,14 @@
         transition: background 0.2s, color 0.2s, transform 0.1s;
     }
     .lang-btn:hover {
-        background: #ff69b4;
-        color: #fff;
+        background: #ff79c6;
+        color: #121216;
         transform: translateY(-1px);
     }
 
     h1 {
         font-size: 26px;
-        color: #d14782; /* 映える可愛い濃いピンク */
+        color: #ff79c6; /* 映えるネオンピンク */
         margin-bottom: 10px;
         letter-spacing: 0.5px;
     }
@@ -66,32 +67,32 @@
     p {
         font-size: 14px;
         margin-bottom: 25px;
-        color: #666;
+        color: #a0a0b0;
     }
 
     button {
-        background-color: #ff69b4;
-        color: white;
+        background-color: #ff79c6;
+        color: #121216;
         border: none;
         padding: 16px 36px;
         font-size: 18px;
         font-weight: bold;
-        border-radius: 30px; /* 丸みのある可愛いボタン */
+        border-radius: 30px;
         cursor: pointer;
         transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
         margin-bottom: 25px;
-        box-shadow: 0 4px 15px rgba(255, 105, 180, 0.4);
+        box-shadow: 0 4px 20px rgba(255, 121, 198, 0.3);
     }
     button:hover {
-        background-color: #ff479e;
+        background-color: #ff92d0;
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(255, 105, 180, 0.5);
+        box-shadow: 0 6px 25px rgba(255, 121, 198, 0.4);
     }
     button:active {
         transform: translateY(0);
     }
 
-    /* 上下の情報を横並びに配置するためのグリッドコンテナ */
+    /* Grid container for side-by-side layout */
     .content-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -100,15 +101,15 @@
         margin-bottom: 20px;
     }
 
-    /* 本格的な利用規約を表示するスクロールボックス */
+    /* Scrollable Terms Box */
     .terms-box {
         font-size: 11px;
-        color: #666;
-        background: #fffafc;
-        border: 1px solid #ffd1dc;
+        color: #b0b0c0;
+        background: #14141d;
+        border: 1px solid #2e2e42;
         padding: 15px;
         border-radius: 12px;
-        height: 220px; /* 縦幅を広げて見やすく調整 */
+        height: 220px;
         overflow-y: scroll;
         line-height: 1.6;
     }
@@ -116,38 +117,39 @@
         width: 6px;
     }
     .terms-box::-webkit-scrollbar-thumb {
-        background: #ffb6c1;
+        background: #444460;
         border-radius: 3px;
     }
     .terms-box h3 {
         font-size: 12px;
-        color: #d14782;
+        color: #ff79c6;
         margin: 0 0 8px 0;
         position: sticky;
         top: 0;
-        background: #fffafc;
+        background: #14141d;
         padding: 4px 0;
-        border-bottom: 1px solid #ffe4e1;
+        border-bottom: 1px solid #2e2e42;
     }
     .terms-box p {
         margin: 0;
         white-space: pre-wrap;
+        color: #a0a0b0;
     }
 
     .steps {
         font-size: 12px;
-        color: #555;
+        color: #c0c0d0;
         line-height: 1.6;
-        background: #fff0f5;
+        background: #20202e;
         padding: 15px 18px;
         border-radius: 12px;
-        border: 1px solid #ffc0cb;
+        border: 1px solid #36364f;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
     }
     .steps strong {
-        color: #d14782;
+        color: #ff79c6;
     }
     .steps ol {
         margin: 6px 0 0 0;
@@ -157,13 +159,13 @@
         margin-bottom: 4px;
     }
     
-    /* 更新履歴エリアのスタイル */
+    /* Changelog Box Style */
     .changelog-box {
         font-size: 11px;
-        color: #666;
+        color: #b0b0c0;
         text-align: left;
-        background: #fffafc;
-        border: 1px solid #ffd1dc;
+        background: #14141d;
+        border: 1px solid #2e2e42;
         padding: 15px;
         border-radius: 12px;
         height: 140px;
@@ -175,18 +177,18 @@
         width: 6px;
     }
     .changelog-box::-webkit-scrollbar-thumb {
-        background: #ffb6c1;
+        background: #444460;
         border-radius: 3px;
     }
     .changelog-box h3 {
         font-size: 12px;
-        color: #d14782;
+        color: #ff79c6;
         margin: 0 0 8px 0;
         position: sticky;
         top: 0;
-        background: #fffafc;
+        background: #14141d;
         padding: 4px 0;
-        border-bottom: 1px solid #ffe4e1;
+        border-bottom: 1px solid #2e2e42;
     }
     .changelog-box ul {
         margin: 6px 0 0 0;
@@ -194,19 +196,20 @@
     }
     .changelog-box li {
         margin-bottom: 4px;
+        color: #a0a0b0;
     }
 
-    /* サンプル画像プレビューのスタイル */
+    /* Sample Image Preview Style */
     .sample-preview {
         margin-top: 10px;
         padding-top: 10px;
-        border-top: 1px dashed #ffb6c1;
+        border-top: 1px dashed #36364f;
         text-align: center;
     }
     .sample-preview p {
         margin: 0 0 8px 0;
         font-size: 11px;
-        color: #d14782;
+        color: #ff79c6;
     }
     .sample-images {
         display: flex;
@@ -215,149 +218,147 @@
     }
     .sample-item {
         font-size: 11px;
-        color: #777;
+        color: #a0a0b0;
         text-align: center;
     }
     .sample-item img {
         width: 90px;
         height: 90px;
         object-fit: contain;
-        background: #ffffff;
+        background: #1a1a24;
         border-radius: 8px;
-        border: 1px solid #ffb6c1;
+        border: 1px solid #36364f;
         display: block;
         margin-bottom: 4px;
-        box-shadow: 0 2px 6px rgba(255, 182, 193, 0.2);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
     }
 
-    /* 欲しいものリスト支援エリアのスタイル */
+    /* Support Section Style */
     .support-section {
         margin-top: 15px;
         font-size: 12px;
-        color: #666;
+        color: #a0a0b0;
         text-align: center;
         line-height: 1.8;
     }
     .support-section span {
-        color: #555;
+        color: #c0c0d0;
     }
     .support-section a {
-        color: #ff69b4;
+        color: #ff79c6;
         text-decoration: none;
         font-weight: bold;
     }
     .support-section a:hover {
         text-decoration: underline;
-        color: #ff1493;
+        color: #ff92d0;
     }
 </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- 一番上の右側に配置した英語ページへの切り替えボタン -->
+    <!-- Back to Japanese page button -->
     <div class="lang-switch">
-        <a href="index_en.html" class="lang-btn">🌐 English</a>
+        <a href="index_jp.html" class="lang-btn">🇯🇵 日本語</a>
     </div>
 
-    <h1>無料PNGTuberアプリ 【まるPNG】</h1>
-    <p>マイクの音声に反応してアバターが動くブラウザツールです</p>
-    <button id="launchButton">アバターウィンドウを開く</button>
+    <h1>Free PNGTuber App [maruPNG]</h1>
+    <p>A browser tool where your avatar moves in response to your mic audio</p>
+    <button id="launchButton">Open Avatar Window</button>
 
-    <!-- 使い方と利用規約を横並びにして広く配置 -->
+    <!-- Side-by-side grid container for How to Use and Terms of Use -->
     <div class="content-grid">
-        <!-- 使い方 ＋ サンプル画像エリア -->
+        <!-- How to Use + Sample Images Area -->
         <div class="steps">
             <div>
-                <strong>【 使い方 】</strong>
+                <strong>[ How to Use ]</strong>
                 <ol>
-                    <li>画像を3枚（16:9推奨）用意する（通常・喋り・瞬き）</li>
-                    <li>画像１枚を３箇所に設定してもＯＫ！</li>
-                    <li>ボタンを押してウィンドウを出し、各画像を設定する</li>
-                    <li>背景ボタンで透過色を選ぶ（緑・青・マゼンダ）</li>
-                    <li>「マイク開始」を押して声を連動させる</li>
-                    <li>画面をクリックしてメニュー画面を消す</li>
+                    <li>Prepare 3 images (16:9 recommended): Normal, Talking, and Blinking</li>
+                    <li>You can even use a single image for all three slots!</li>
+                    <li>Click the button to open the window and set each image</li>
+                    <li>Select the transparency color using the background button (Green, Blue, Magenta)</li>
+                    <li>Click "Start Mic" to sync your voice</li>
+                    <li>Click anywhere on the screen to hide the menu UI</li>
                 </ol>
             </div>
 
-            <!-- すぐ試せるサンプル画像プレビュー -->
+            <!-- Sample Image Preview -->
             <div class="sample-preview">
-                <p><strong>💡 お試し用サンプル画像（右クリックで保存して使えます）</strong></p>
+                <p><strong>💡 Trial Sample Images (Right-click to save and use)</strong></p>
                 <div class="sample-images">
                     <div class="sample-item">
-                        <img src="sample_normal.png" alt="通常">
-                        <span>通常</span>
+                        <img src="sample_normal.png" alt="Normal">
+                        <span>Normal</span>
                     </div>
                     <div class="sample-item">
-                        <img src="sample_talk.png" alt="喋り">
-                        <span>喋り</span>
+                        <img src="sample_talk.png" alt="Talking">
+                        <span>Talking</span>
                     </div>
                     <div class="sample-item">
-                        <img src="sample_blink.png" alt="瞬き">
-                        <span>瞬き</span>
+                        <img src="sample_blink.png" alt="Blinking">
+                        <span>Blinking</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 本格的な利用規約ボックス -->
+        <!-- Scrollable Terms of Use Box -->
         <div class="terms-box">
-            <h3>【 利用規約 】</h3>
-            <p><strong>第1条（はじめに）</strong>
-「まるPNG」（以下「本ツール」）は、まるさんが個人制作したブラウザ用PNGTuberツールです。本ツールを利用される方は、本規約に同意したものとみなします。
+            <h3>[ Terms of Use ]</h3>
+            <p><strong>Article 1 (Introduction)</strong>
+"maruPNG" (hereinafter "this tool") is a browser-based PNGTuber tool independently created by Maru. Users of this tool are deemed to have agreed to these Terms.
 
-<strong>第2条（ライセンス・利用範囲）</strong>
-1. 本ツールの利用は無料です。個人・法人、商用・非商用問わず、配信や動画制作にご自由にお使いいただけます。
-2. 本ツールを使用して作成した動画や配信の収益化（スーパーチャット、メンバーシップ、広告収入など）についても制限はありません。
+<strong>Article 2 (License & Usage Scope)</strong>
+1. Use of this tool is free. You are free to use it for live streaming and video creation, regardless of whether it is personal or corporate, commercial or non-commercial.
+2. There are no restrictions on the monetization (Super Chats, Memberships, ad revenue, etc.) of videos or streams created using this tool.
 
-<strong>第3条（禁止事項）</strong>
-利用者は、以下の行為を行ってはならないものとします。
-1. 本ツールのソースコードを流用して、自身の自作発言や偽った配布を行うこと。
-2. 本ツールの運営やGitHub Pagesのホスティングを妨害するような行為。
-3. 公序良俗に反する内容や、法律に違反する配信・動画での利用。
-4. 政治的活動、宗教的活動、またはそれらに類する目的での利用。
-5. アダルトサイトや公序良俗に反するサイト・配信での利用。
+<strong>Article 3 (Prohibited Matters)</strong>
+Users shall not engage in the following acts:
+1. Misappropriating the source code of this tool to claim authorship or distribute it under false pretenses.
+2. Interfering with the operation of this tool or the hosting of GitHub Pages.
+3. Using the tool in streams or videos containing content that violates public order, morals, or laws.
+4. Using the tool for political or religious activities, or similar purposes.
+5. Using the tool on adult sites or sites/streams that violate public order and morals.
 
-<strong>第4条（免責事項）</strong>
-1. 作者は、本ツールの動作について、バグや不具合がないこと、特定の目的に適合することを保証するものではありません。
-2. 本ツールの利用、または利用できなかったことによって発生したいかなる損害についても、作者は一切の責任を負いません。
+<strong>Article 4 (Disclaimer & Limitation of Liability)</strong>
+1. THIS TOOL IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE TOOL OR THE USE OR OTHER DEALINGS IN THE TOOL.
+2. USERS SHALL USE THIS TOOL SOLELY AT THEIR OWN RISK. THE AUTHOR ASSUMES NO RESPONSIBILITY OR LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OF OR INABILITY TO USE THIS TOOL.
 
-<strong>第5条（規約の変更）</strong>
-本規約は、予告なく変更される場合があります。</p>
+<strong>Article 5 (Revision of Terms)</strong>
+These terms are subject to change without prior notice.</p>
         </div>
     </div>
 
-    <!-- 更新履歴エリア -->
+    <!-- Changelog Area -->
     <div class="changelog-box">
-        <h3>📜 更新履歴</h3>
+        <h3>📜 Changelog</h3>
         <ul>
-            <li><strong>2026.09.20</strong>: デフォルトでアバターが跳ねる動作をしていたものをボタンでオン/オフ出来るようにしました！</li>
-            <li><strong>2026.09.19</strong>: メニュー画面とアバター表示の仕方を変更しました！</li>
-            <li><strong>2026.09.19</strong>: アバターが左右に揺れるゆれゆれボタン機能を追加しました！</li>
-            <li><strong>2026.09.17</strong>: アバターが上下にふわふわ揺れるふわふわボタン機能を追加しました！</li>
-            <li><strong>2026.09.17</strong>: 無言の時にイラストを暗くする機能（オン/オフ）を追加しました！</li>
-            <li><strong>2026.09.16</strong>: アバターが揺れた際の画像の切れ目が見える対策として120%表示していたものを110%表示に下げました。</li>
-            <li><strong>2026.09.15</strong>: まるPNGを公開しました 🎉</li>
+            <li><strong>2026.09.20</strong>: Added an ON/OFF toggle button for the avatar's bouncing motion while speaking!</li>
+            <li><strong>2026.09.19</strong>: Updated the menu interface and avatar view.</li>
+            <li><strong>2026.09.19</strong>: Added the "Yureyure" (side-to-side swaying) button feature!</li>
+            <li><strong>2026.09.17</strong>: Added the "Fuwafuwa" (floating) button feature to make the avatar bob up and down!</li>
+            <li><strong>2026.09.17</strong>: Added the "Dim on Silence" feature (ON/OFF toggle) to darken the illustration when silent!</li>
+            <li><strong>2026.09.16</strong>: Reduced the default display zoom from 120% to 110% to prevent image edges from showing when bouncing.</li>
+            <li><strong>2026.09.15</strong>: Released maruPNG 🎉</li>
         </ul>
     </div>
 
-    <!-- 欲しいものリスト＆X（Twitter）連絡・フォローエリア -->
+    <!-- Support & Contact Area -->
     <div class="support-section">
-        <span>気に入っていただけたら… 👉 </span>
-        <a href="https://www.amazon.jp/hz/wishlist/ls/1QBBDR3F83E00?ref_=wl_share" target="_blank">🎁 作者の欲しいものリスト支援</a><br>
-        <span style="display: inline-block; margin-top: 4px;">💬 不具合報告・連絡先 👉 </span>
-        <a href="https://x.com/marusan_369xii" target="_blank">🕊️ 作者のX（@marusan_369xii）</a>
+        <span>If you like it... 👉 </span>
+        <a href="https://www.amazon.jp/hz/wishlist/ls/1QBBDR3F83E00?ref_=wl_share" target="_blank">🎁 Author's Wishlist Support</a><br>
+        <span style="display: inline-block; margin-top: 4px;">💬 Bug Reports & Contact 👉 </span>
+        <a href="https://x.com/marusan_369xii" target="_blank">🕊️ Author's X (@marusan_369xii)</a>
     </div>
 </div>
 
 <script>
-    // 本体のアバターファイルのファイル名（同じフォルダにあるファイル名に合わせる）
-    const targetFile = 'maru3-pngtuber.html'; 
+    const targetFile = 'maru3-pngtuber_en.html'; 
     const width = 1280;
-    const height = 720; // 16:9配信サイズ
+    const height = 720; // 16:9 stream size
 
     document.getElementById('launchButton').onclick = () => {
-        // 画面中央にウィンドウを配置するための計算
         const dualScreenLeft = window.screenLeft !== undefined ? window.screenLeft : window.screenX;
         const dualScreenTop = window.screenTop !== undefined ? window.screenTop : window.screenY;
 
