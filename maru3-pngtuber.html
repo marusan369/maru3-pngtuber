@@ -372,52 +372,57 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         updateAvatarAppearance(isSpeaking, now) {
-            this.imgIdle.classList.remove('active');
-            this.imgActive.classList.remove('active');
-            this.imgBlink.classList.remove('active');
+        this.imgIdle.classList.remove('active');
+        this.imgActive.classList.remove('active');
+        this.imgBlink.classList.remove('active');
 
-            const hasIdle = !!this.imgIdle.getAttribute('src');
-            const hasActive = !!this.imgActive.getAttribute('src');
-            const hasBlink = !!this.imgBlink.getAttribute('src');
+        const hasIdle = !!this.imgIdle.getAttribute('src');
+        const hasActive = !!this.imgActive.getAttribute('src');
+        const hasBlink = !!this.imgBlink.getAttribute('src');
 
-            if (isSpeaking) {
-                this.isBlinking = false;
-                const toggleInterval = 300;
-                const shouldBeActive = Math.floor(now / toggleInterval) % 2 === 0;
-
-                if (shouldBeActive && hasActive) {
-                    this.imgActive.classList.add('active');
-                } else if (hasIdle) {
-                    this.imgIdle.classList.add('active');
-                } else if (hasActive) {
-                    this.imgActive.classList.add('active');
-                }
-            } else {
-                if (!this.isBlinking && now >= this.nextBlinkTime && hasBlink) {
-                    this.isBlinking = true;
-                    this.blinkEndTime = now + 120;
-                }
-
-                if (this.isBlinking && now >= this.blinkEndTime) {
-                    this.isBlinking = false;
-                    this.scheduleNextBlink();
-                }
-
-                if (this.isBlinking && hasBlink) {
-                    this.imgBlink.classList.add('active');
-                } else if (hasIdle) {
-                    this.imgIdle.classList.add('active');
-                }
-            }
-
-            document.querySelectorAll('img.layer').forEach(img => {
-                if (!isSpeaking && this.isDimModeEnabled) {
-                    img.classList.add('is-dimmed');
-                } else {
-                    img.classList.remove('is-dimmed');
-                }
-            });
+        // --- 1. 瞬きのタイマー判定（喋り中・無言中にかかわらず共通で進める） ---
+        if (!this.isBlinking && now >= this.nextBlinkTime && hasBlink) {
+            this.isBlinking = true;
+            this.blinkEndTime = now + 120; // 瞬きの持続時間 (120ms)
         }
+
+        if (this.isBlinking && now >= this.blinkEndTime) {
+            this.isBlinking = false;
+            this.scheduleNextBlink(); // 次の瞬きまでの時間を再設定
+        }
+
+        // --- 2. どの絵を表示するか決定する優先順位 ---
+        if (this.isBlinking && hasBlink) {
+            // 瞬き中なら、喋っていようが通常時だろうが最優先で瞬き絵！
+            this.imgBlink.classList.add('active');
+        } else if (isSpeaking) {
+            // 喋っている時
+            const toggleInterval = 300;
+            const shouldBeActive = Math.floor(now / toggleInterval) % 2 === 0;
+
+            if (shouldBeActive && hasActive) {
+                this.imgActive.classList.add('active');
+            } else if (hasIdle) {
+                this.imgIdle.classList.add('active');
+            } else if (hasActive) {
+                this.imgActive.classList.add('active');
+            }
+        } else {
+            // 無言＆瞬きしていない時
+            if (hasIdle) {
+                this.imgIdle.classList.add('active');
+            }
+        }
+
+        // 暗転モードの処理
+        document.querySelectorAll('img.layer').forEach(img => {
+            if (!isSpeaking && this.isDimModeEnabled) {
+                img.classList.add('is-dimmed');
+            } else {
+                img.classList.remove('is-dimmed');
+            }
+        });
+    }
 
         updateThresholdLine() {
             const thresholdValue = Number(this.thresholdInput.value);
