@@ -14,7 +14,11 @@ const sampleAvatars = [
         preview: "avatar-sample/no03.png",
         zipUrl: "avatar-set/no03_set.zip"
     },
-    
+    {
+        name: "No.04",
+        preview: "avatar-sample/no04.png",
+        zipUrl: "avatar-set/no04_set.zip"
+    },
     
     // アバターが増えたらここに足していく（自動で4×3のページに割り振られます）
 ];
