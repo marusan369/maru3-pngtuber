@@ -162,6 +162,33 @@
         margin-bottom: 4px;
     }
     
+    /* Sample Button Area Style (Replaced old preview) */
+    .sample-link-area {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px dashed #36364f;
+        text-align: center;
+    }
+    .sample-link-btn {
+        display: inline-block;
+        background-color: #ff79c6;
+        color: #121216;
+        border: none;
+        padding: 12px 24px;
+        font-size: 14px;
+        font-weight: bold;
+        border-radius: 25px;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+        box-shadow: 0 4px 15px rgba(255, 121, 198, 0.3);
+    }
+    .sample-link-btn:hover {
+        background-color: #ff92d0;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 121, 198, 0.4);
+    }
+
     /* Changelog Box Style */
     .changelog-box {
         font-size: 11px;
@@ -202,40 +229,6 @@
         color: #a0a0b0;
     }
 
-    /* Sample Image Preview Style */
-    .sample-preview {
-        margin-top: 10px;
-        padding-top: 10px;
-        border-top: 1px dashed #36364f;
-        text-align: center;
-    }
-    .sample-preview p {
-        margin: 0 0 8px 0;
-        font-size: 11px;
-        color: #ff79c6;
-    }
-    .sample-images {
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-    }
-    .sample-item {
-        font-size: 11px;
-        color: #a0a0b0;
-        text-align: center;
-    }
-    .sample-item img {
-        width: 90px;
-        height: 90px;
-        object-fit: contain;
-        background: #1a1a24;
-        border-radius: 8px;
-        border: 1px solid #36364f;
-        display: block;
-        margin-bottom: 4px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-    }
-
     /* Support Section Style */
     .support-section {
         margin-top: 15px;
@@ -272,7 +265,7 @@
 
     <!-- Side-by-side grid container for How to Use and Terms of Use -->
     <div class="content-grid">
-        <!-- How to Use + Sample Images Area -->
+        <!-- How to Use + Sample Avatar Link Area -->
         <div class="steps">
             <div>
                 <strong>[ How to Use ]</strong>
@@ -286,23 +279,9 @@
                 </ol>
             </div>
 
-            <!-- Sample Image Preview -->
-            <div class="sample-preview">
-                <p><strong>💡 Trial Sample Images (Right-click to save and use)</strong></p>
-                <div class="sample-images">
-                    <div class="sample-item">
-                        <img src="sample_normal.png" alt="Normal">
-                        <span>Normal</span>
-                    </div>
-                    <div class="sample-item">
-                        <img src="sample_talk.png" alt="Talking">
-                        <span>Talking</span>
-                    </div>
-                    <div class="sample-item">
-                        <img src="sample_blink.png" alt="Blinking">
-                        <span>Blinking</span>
-                    </div>
-                </div>
+            <!-- Sample Avatar Gallery Link Button Area -->
+            <div class="sample-link-area">
+                <button id="sampleGalleryButton" class="sample-link-btn">✨ Open Sample Avatar Gallery</button>
             </div>
         </div>
 
@@ -315,6 +294,7 @@
 <strong>Article 2 (License & Usage Scope)</strong>
 1. Use of this tool is free. You are free to use it for live streaming and video creation, regardless of whether it is personal or corporate, commercial or non-commercial.
 2. There are no restrictions on the monetization (Super Chats, Memberships, ad revenue, etc.) of videos or streams created using this tool.
+3. Sample avatar images provided on this tool's pages can be freely used for testing and trial purposes (note that some include AI-generated content which may not be subject to standard copyright claims).
 
 <strong>Article 3 (Prohibited Matters)</strong>
 Users shall not engage in the following acts:
@@ -337,6 +317,8 @@ These terms are subject to change without prior notice.</p>
     <div class="changelog-box">
         <h3>📜 Changelog</h3>
         <ul>
+            <li><strong>2026.10.04</strong>: Added the Sample Avatar page. We plan to add more sample avatars in the future so you can try out various options!</li>
+            <li><strong>2026.10.02</strong>: Adjusted the blinking frequency.</li>
             <li><strong>2026.09.20</strong>: Added an ON/OFF toggle button for the avatar's bouncing motion while speaking!</li>
             <li><strong>2026.09.19</strong>: Updated the menu interface and avatar view.</li>
             <li><strong>2026.09.19</strong>: Added the "Yureyure" (side-to-side swaying) button feature!</li>
@@ -379,6 +361,30 @@ These terms are subject to change without prior notice.</p>
         );
 
         (window.focus && newWindow) && newWindow.focus();
+    };
+
+    // サンプルアバターギャラリーをポップアップで開く処理
+    document.getElementById('sampleGalleryButton').onclick = () => {
+        const sampleWidth = 950;
+        const sampleHeight = 700;
+        
+        const dualScreenLeft = window.screenLeft !== undefined ? window.screenLeft : window.screenX;
+        const dualScreenTop = window.screenTop !== undefined ? window.screenTop : window.screenY;
+
+        const screenWidth = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth ? document.documentElement.clientWidth : screen.width;
+        const screenHeight = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight ? document.documentElement.clientHeight : screen.height;
+
+        const left = ((screenWidth / 2) - (sampleWidth / 2)) + dualScreenLeft;
+        const top = ((screenHeight / 2) - (sampleHeight / 2)) + dualScreenTop;
+
+        const sampleWindow = window.open(
+            'sample.html',
+            'SampleGallery',
+            `width=${sampleWidth},height=${sampleHeight},top=${top},left=${left},` +
+            `resizable=yes,scrollbars=yes,toolbar=no,location=no,status=no,menubar=no`
+        );
+
+        (window.focus && sampleWindow) && sampleWindow.focus();
     };
 </script>
 </body>

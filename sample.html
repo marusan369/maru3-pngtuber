@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>maruPNG - Sample Avatars</title>
+<style>
+    body {
+        font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+        background: #121216;
+        color: #e0e0e6;
+        margin: 0;
+        padding: 30px 20px;
+        box-sizing: border-box;
+        display: flex;
+        justify-content: center;
+    }
+    .container {
+        background: #1a1a24;
+        padding: 30px 40px;
+        border-radius: 24px;
+        text-align: center;
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);
+        border: 1px solid #2e2e42;
+        width: 100%;
+        max-width: 950px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 85vh;
+    }
+
+    h1 {
+        font-size: 24px;
+        color: #ff79c6;
+        margin-bottom: 8px;
+    }
+    p {
+        font-size: 13px;
+        margin-bottom: 20px;
+        color: #a0a0b0;
+    }
+
+    /* 4列 × 3行 のグリッドレイアウト */
+    .avatar-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: repeat(3, auto);
+        gap: 16px;
+        margin-bottom: 20px;
+        min-height: 480px; /* カードの高さが揃うように固定気味に */
+    }
+
+    .avatar-card {
+        background: #14141d;
+        border: 1px solid #2e2e42;
+        border-radius: 12px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .avatar-card img {
+        width: 100px;
+        height: 100px;
+        object-fit: contain;
+        background: #1a1a24;
+        border-radius: 8px;
+        border: 1px solid #36364f;
+        margin-bottom: 8px;
+    }
+
+    .avatar-name {
+        font-size: 12px;
+        font-weight: bold;
+        color: #c0c0d0;
+        margin-bottom: 10px;
+        word-break: break-all;
+    }
+
+    .btn-download {
+        background-color: #252536;
+        color: #ff79c6;
+        border: 1px solid #444460;
+        padding: 6px 12px;
+        font-size: 11px;
+        font-weight: bold;
+        border-radius: 20px;
+        text-decoration: none;
+        transition: background 0.2s, color 0.2s, transform 0.1s;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .btn-download:hover {
+        background-color: #ff79c6;
+        color: #121216;
+        transform: translateY(-1px);
+    }
+
+    /* ページネーション（次へ・前へ） */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    .page-btn {
+        background: #252536;
+        color: #e0e0e6;
+        border: 1px solid #444460;
+        padding: 6px 16px;
+        font-size: 12px;
+        border-radius: 16px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .page-btn:hover:not(:disabled) {
+        background: #ff79c6;
+        color: #121216;
+    }
+    .page-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+    #pageInfo {
+        font-size: 12px;
+        color: #a0a0b0;
+    }
+
+    /* 最下部の閉じるボタン */
+    .footer-area {
+        border-top: 1px solid #2e2e42;
+        padding-top: 15px;
+    }
+    .btn-close {
+        background-color: #ff79c6;
+        color: #121216;
+        border: none;
+        padding: 10px 30px;
+        font-size: 14px;
+        font-weight: bold;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: background-color 0.2s, transform 0.1s;
+        box-shadow: 0 4px 15px rgba(255, 121, 198, 0.3);
+    }
+    .btn-close:hover {
+        background-color: #ff92d0;
+        transform: translateY(-1px);
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div>
+        <h1>Sample Avatar Gallery</h1>
+        <p>Choose your favorite avatar set and download the ZIP file instantly!</p>
+
+        <!-- 4×3のカードが配置されるグリッド -->
+        <div id="avatarGrid" class="avatar-grid"></div>
+
+        <!-- ページ切り替え部分 -->
+        <div class="pagination" id="paginationArea">
+            <button id="prevBtn" class="page-btn" onclick="changePage(-1)">◀ Prev</button>
+            <span id="pageInfo">1 / 1</span>
+            <button id="nextBtn" class="page-btn" onclick="changePage(1)">Next ▶</button>
+        </div>
+    </div>
+
+    <!-- 最下部の閉じるボタン -->
+    <div class="footer-area">
+        <button class="btn-close" onclick="window.close()">Close Window</button>
+    </div>
+</div>
+
+<!-- 外部のデータファイルを読み込み -->
+<script src="avatars-data.js"></script>
+<script>
+    const itemsPerPage = 12; // 4列 × 3行 = 12体
+    let currentPage = 1;
+
+    function renderGallery() {
+        const grid = document.getElementById('avatarGrid');
+        const pageInfo = document.getElementById('pageInfo');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        grid.innerHTML = '';
+
+        const totalPages = Math.ceil(sampleAvatars.length / itemsPerPage) || 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        // 現在のページに表示するデータを切り出し
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const currentItems = sampleAvatars.slice(start, end);
+
+        // カードを生成して配置
+        currentItems.forEach(avatar => {
+            const card = document.createElement('div');
+            card.className = 'avatar-card';
+            card.innerHTML = `
+                <img src="${avatar.preview}" alt="${avatar.name}">
+                <div class="avatar-name">${avatar.name}</div>
+                <a href="${avatar.zipUrl}" class="btn-download" download>Download ZIP</a>
+            `;
+            grid.appendChild(card);
+        });
+
+        // ページ情報の更新
+        pageInfo.textContent = `${currentPage} / ${totalPages}`;
+        prevBtn.disabled = (currentPage === 1);
+        nextBtn.disabled = (currentPage === totalPages || totalPages === 0);
+
+        // データが少なくて1ページしかない場合はページネーション自体を隠すことも可能
+        document.getElementById('paginationArea').style.display = totalPages > 1 ? 'flex' : 'none';
+    }
+
+    function changePage(direction) {
+        currentPage += direction;
+        renderGallery();
+    }
+
+    // 初期描画
+    window.addEventListener('DOMContentLoaded', renderGallery);
+</script>
+
+</body>
+</html>
